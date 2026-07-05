@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -e          # exit on error
+set -o pipefail # exit on pipeline error
+set -u          # treat unset variable as error
+
+. "/minioslib" || exit 1
+. "/minios_build.conf" || exit 1
+
+if [ "${KERNEL_BUILD_DKMS}" = "true" ]; then
+    KERNEL="$(file /boot/vmlinuz-* | grep -oP 'version \K[^\s]+')"
+    # Determine the kernel version (major.minor).
+    KERNEL_VERSION=$(echo "$KERNEL" | cut -d'.' -f1,2)
+
+    # AUFS kernel headers selection (MiniOS custom kernel)
+    if [ "${KERNEL_AUFS}" = "true" ]; then
+        HEADERS="linux-headers-${KERNEL_VERSION}-mos-${KERNEL_ARCH}"
+    # Standard kernel headers selection
+    elif [ "${DISTRIBUTION_TYPE}" = "debian" ]; then
+        if [ "${KERNEL_FLAVOUR}" = "none" ]; then
+            HEADERS="linux-headers-${KERNEL_ARCH}"
+        else
+            HEADERS="linux-headers-${KERNEL_FLAVOUR}-${KERNEL_ARCH}"
+        fi
+    elif [ "${DISTRIBUTION_TYPE}" = "ubuntu" ]; then
+        if [ "${KERNEL_FLAVOUR}" = "none" ]; then
+            HEADERS="linux-headers-generic"
+        else
+            HEADERS="linux-headers-${KERNEL_FLAVOUR}"
+        fi
+    fi
+
+    # Check that the fixed build package list exists.
+    if [ ! -f "/packages.list" ]; then
+        error "Fixed build package list not found: /packages.list"
+        exit 1
+    fi
+
+    # Create a temporary combined package list file.
+    TMP_COMBINED=$(mktemp /tmp/combined_packages.list.XXXXXX)
+
+    # Write the kernel headers as the first line.
+    echo "${HEADERS}" >"${TMP_COMBINED}"
+    # Append the contents of the fixed package list, preserving one package per line.
+    cat "/packages.list" >>"${TMP_COMBINED}"
+
+    # Call the external condinapt command with the combined list.
+    /condinapt -l "${TMP_COMBINED}" -c "/minios_build.conf" -m "/condinapt.map"
+    if [ $? -ne 0 ]; then
+        error "Failed to install packages."
+        exit 1
+    fi
+
+    # Clean up the temporary file.
+    rm -f "${TMP_COMBINED}"
+fi

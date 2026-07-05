@@ -1,0 +1,11 @@
+/* * Legacy */
+@import "./../../root/themes/opera.css";
+@import "./../../root/themes/opera-dark.css";
+@import "./../../root/themes/opera-gx.css";
+@import "./../../root/themes/opera-gx-dark.css";
+@import "./../../root/themes/opera-air.css";
+
+/* Token-based abstraction */
+@import "./../../root/themes/abstraction/default.css";
+@import "./../../root/themes/abstraction/gx.css";
+@import "./../../root/themes/abstraction/air.css";

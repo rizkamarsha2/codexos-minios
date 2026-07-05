@@ -1,0 +1,79 @@
+[submodule "submodules/elementary-xfce-minios"]
+	path = submodules/elementary-xfce-minios
+	url = https://github.com/minios-linux/elementary-xfce-minios.git
+	branch = master
+[submodule "submodules/minios-linux.github.io"]
+	path = submodules/minios-linux.github.io
+	url = https://github.com/minios-linux/minios-linux.github.io.git
+[submodule "submodules/minios-live.wiki"]
+	path = submodules/minios-live.wiki
+	url = https://github.com/minios-linux/minios-live.wiki.git
+[submodule "submodules/minios-installer"]
+	path = submodules/minios-installer
+	url = https://github.com/minios-linux/minios-installer.git
+[submodule "submodules/minios-tools"]
+	path = submodules/minios-tools
+	url = https://github.com/minios-linux/minios-tools.git
+[submodule "submodules/minios-welcome"]
+	path = submodules/minios-welcome
+	url = https://github.com/minios-linux/minios-welcome.git
+[submodule "submodules/minios-configurator"]
+	path = submodules/minios-configurator
+	url = https://github.com/minios-linux/minios-configurator.git
+[submodule "submodules/flux-tools"]
+	path = submodules/flux-tools
+	url = https://github.com/minios-linux/flux-tools.git
+[submodule "submodules/ntfs3-dkms"]
+	path = submodules/ntfs3-dkms
+	url = https://github.com/minios-linux/ntfs3-dkms
+[submodule "submodules/minios-live-config"]
+	path = submodules/minios-live-config
+	url = https://github.com/minios-linux/minios-live-config.git
+[submodule "submodules/xlunch"]
+	path = submodules/xlunch
+	url = https://github.com/minios-linux/xlunch.git
+[submodule "submodules/docs"]
+	path = submodules/docs
+	url = https://github.com/minios-linux/docs.git
+[submodule "submodules/b43-firmware"]
+	path = submodules/b43-firmware
+	url = https://github.com/minios-linux/b43-firmware.git
+[submodule "submodules/rescuezilla-app"]
+	path = submodules/rescuezilla-app
+	url = https://github.com/minios-linux/rescuezilla-app.git
+[submodule "submodules/driveutility"]
+	path = submodules/driveutility
+	url = https://github.com/minios-linux/driveutility.git
+[submodule "submodules/ncurses-menu"]
+	path = submodules/ncurses-menu
+	url = https://github.com/minios-linux/ncurses-menu.git
+[submodule "submodules/minios-kernel-manager"]
+	path = submodules/minios-kernel-manager
+	url = https://github.com/minios-linux/minios-kernel-manager.git
+[submodule "submodules/dynfilefs-app"]
+	path = submodules/dynfilefs-app
+	url = https://github.com/minios-linux/dynfilefs-app.git
+[submodule "submodules/minios-session-manager"]
+	path = submodules/minios-session-manager
+	url = https://github.com/minios-linux/minios-session-manager
+[submodule "submodules/flux.minios.dev"]
+	path = submodules/flux.minios.dev
+	url = https://github.com/minios-linux/flux.minios.dev
+[submodule "submodules/minios-dracut"]
+	path = submodules/minios-dracut
+	url = https://github.com/minios-linux/minios-dracut
+[submodule "submodules/ncurses-menu-app"]
+	path = submodules/ncurses-menu-app
+	url = https://github.com/minios-linux/ncurses-menu-app
+[submodule "submodules/mini-commander-app"]
+	path = submodules/mini-commander-app
+	url = https://github.com/minios-linux/mini-commander-app
+[submodule "submodules/minios-translations"]
+	path = submodules/minios-translations
+	url = https://github.com/minios-linux/minios-translations.git
+[submodule "submodules/minios-store"]
+	path = submodules/minios-store
+	url = https://github.com/minios-linux/minios-store.git
+[submodule "submodules/lokit"]
+	path = submodules/lokit
+	url = https://github.com/minios-linux/lokit

@@ -1,0 +1,57 @@
+#!/bin/bash
+set -euo pipefail
+
+URL="http://localhost:5000/desktop.html"
+
+export DISPLAY="${DISPLAY:-:0}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+mkdir -p "$XDG_RUNTIME_DIR"
+
+wait_for_server() {
+  python3 - <<'PY' >/dev/null 2>&1
+import urllib.request
+import sys
+try:
+    with urllib.request.urlopen('http://localhost:5000/desktop.html', timeout=2) as resp:
+        sys.exit(0 if resp.status == 200 else 1)
+except Exception:
+    sys.exit(1)
+PY
+}
+
+if ! pgrep -f "/opt/codexsystem/server.py" >/dev/null 2>&1; then
+  echo "[codexsystem-launch] Starting local CodexSystem server"
+  python3 /opt/codexsystem/server.py >/tmp/codexsystem-server.log 2>&1 &
+fi
+
+for _ in $(seq 1 30); do
+  if wait_for_server; then
+    break
+  fi
+  sleep 1
+done
+
+if pgrep -f "localhost:5000/desktop.html" >/dev/null 2>&1; then
+  exit 0
+fi
+
+BROWSER=""
+for candidate in chromium chromium-browser google-chrome google-chrome-stable firefox firefox-esr xdg-open; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    BROWSER="$candidate"
+    break
+  fi
+done
+
+if [ -z "$BROWSER" ]; then
+  echo "[codexsystem-launch] No supported browser found" >&2
+  exit 1
+fi
+
+if [ "$BROWSER" = "chromium" ] || [ "$BROWSER" = "chromium-browser" ] || [ "$BROWSER" = "google-chrome" ] || [ "$BROWSER" = "google-chrome-stable" ]; then
+  exec "$BROWSER" --app="$URL" --window-size=1280,800 --no-first-run --disable-extensions-except= --disable-default-apps --start-fullscreen
+elif [ "$BROWSER" = "firefox" ] || [ "$BROWSER" = "firefox-esr" ]; then
+  exec "$BROWSER" --new-window "$URL"
+else
+  exec "$BROWSER" "$URL"
+fi

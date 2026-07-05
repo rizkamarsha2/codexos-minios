@@ -1,0 +1,35 @@
+html[data-theme="opera-gx"],
+html[data-theme="opera-gx-dark"] {
+  --spacing-1: 0.125rem;
+  --spacing-2: 0.25rem;
+  --spacing-3: 0.5rem;
+  --spacing-4: 0.75rem;
+  --spacing-5: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-7: 2rem;
+  --spacing-8: 2.5rem;
+  --spacing-9: 3rem;
+  --spacing-10: 4rem;
+  --spacing-11: 5rem;
+  --spacing-12: 6rem;
+  --spacing-13: 10rem;
+
+  --radius-1: 2px;
+  --radius-2: 4px;
+  --radius-3: 6px;
+  --radius-4: 8px;
+  --radius-5: 10px;
+  --radius-6: 14px;
+
+  /* TODO: make it abstract, token-based */
+  --opera-chatbot-message-highlight-bg-padding-y: 3.5px;
+  --opera-button-border-radius: 4px;
+  --opera-chatbot-button-border-radius: 2px;
+  --opera-chatbot-from: none;
+  --opera-chatbot-scroll-down-border-width: 6px;
+  --opera-menu-wrapper-width: 256px;
+  --opera-tab-view-menu-wrapper-width: 256px;
+  --opera-chatbot-message-highlight-bg-padding-y: 3.5px;
+
+  --opera-menu-wrapper-width-chat-2-0-gap: 136px;
+}

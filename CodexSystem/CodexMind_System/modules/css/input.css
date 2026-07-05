@@ -1,0 +1,4 @@
+/* CodexSystem — Input styles */
+input, textarea { box-sizing: border-box; font-family: inherit; }
+input[type="text"], input[type="search"] { border: 1px solid var(--opera-input-border-color, #41455a); border-radius: 8px; padding: 8px 14px; background: var(--opera-input-background-color, #252835); color: inherit; outline: none; width: 100%; }
+input[type="text"]:focus, input[type="search"]:focus { border-color: var(--opera-primary-color, #5021ff); }

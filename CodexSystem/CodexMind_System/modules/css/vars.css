@@ -1,0 +1,331 @@
+/* stylelint-disable comment-empty-line-before */
+
+/* Defaults (light theme) */
+
+:root,
+:host {
+  /* Search inputs animations, e.g. the one at opera:flags */
+  --opera-animation-tempo-hit: .5s;
+  --opera-animation-tempo: 1.8s;
+
+  --opera-icon-size: 20px;
+  --opera-logo-size: 32px;
+  --opera-menu-width: 240px;
+  --opera-menu-item-height: 32px;
+  --opera-section-spacing: 56px;
+
+  --opera-header-height: 64px;
+  --opera-header-padding: 16px 30px;
+  --opera-header-title-padding: 0 0 0 44px;
+  --opera-header-font-size: 17px;
+  --opera-header-font-weight: 450;
+
+  --max-search-box-width: 620px;
+  --max-news-section-width: 940px;
+
+  --opera-default-font-weight: 500;
+  /*  /*   */
+
+  --opera-default-font-size: 13px;
+  --opera-headline-font-size: 36px;
+
+  --opera-section-font-size: 15px;
+  --opera-section-font-weight: 500;
+  --opera-section-margin: 26px 0 12px 0;
+
+  --opera-uppercase-font-size: 14px;
+
+  --opera-font-family: -apple-system, "BlinkMacSystemFont", "Segoe UI", "Arial", sans-serif;
+
+  --opera-article-font-size: 16px;
+  --opera-article-font-weight: 600;
+
+  --opera-input-background-color: #ffffff;
+  --opera-input-background-color-hover: #fafafa;
+  --opera-input-background-color-pressed: #ededed;
+  --opera-input-font-size: 13px;
+  --opera-input-border-color: #d8e2eb;
+  --opera-input-border-radius: 3px;
+  --opera-input-border-width: 1px;
+  --opera-input-padding: 8px 16px;
+  --opera-input-height: 32px;
+  --opera-rounded-input-border-radius: 16px;
+
+  --opera-small-input-font-size: 11px;
+  --opera-small-input-height: 24px;
+
+  --opera-button-font-color: var(--opera-font-color);
+  --opera-button-background-color: var(--opera-input-background-color);
+  --opera-button-background-color-hover: #d8e2eb;
+  --opera-button-background-color-pressed: #b2cce3;
+  --opera-button-border-color: var(--opera-input-border-color);
+  --opera-button-border-radius: 3px;
+  --opera-button-padding: 6px 12px;
+
+  --opera-button-disabled-background-color: #ffffff;
+  --opera-button-disabled-border-color: #ebebee;
+  --opera-button-disabled-font-color: #a0a1a1;
+
+  --opera-primary-button-font-color: #ffffff;
+  --opera-primary-button-background-color: var(--opera-controls-primary-color);
+  --opera-primary-button-background-color-hover: var(--opera-controls-primary-hover-color);
+  --opera-primary-button-background-color-pressed: var(--opera-controls-primary-focus-color);
+  --opera-primary-button-border-color: #0084ff;
+  --opera-primary-button-padding: 6px 16px;
+
+  --opera-danger-button-font-color: #ffffff;
+  --opera-danger-button-background-color: var(--opera-controls-danger-color);
+  --opera-danger-button-background-color-hover: var(--opera-controls-danger-hover-color);
+  --opera-danger-button-background-color-pressed: var(--opera-controls-danger-focus-color);
+  --opera-danger-button-border-color: #E01B46;
+  --opera-danger-button-padding: 6px 16px;
+
+  --opera-warning-color: #d0021b;
+
+  --opera-switch-color: #ceced4;
+  --opera-switch-color-hover: #bcbcc6;
+  --opera-switch-color-pressed: #ceced4;
+  --opera-switch-active-color: var(--opera-controls-primary-color);
+  --opera-switch-active-color-hover: var(--opera-controls-primary-hover-color);
+  --opera-switch-active-color-pressed: var(--opera-controls-primary-color);
+  --opera-switch-toggle-color: #ffffff;
+  --opera-switch-height: 20px;
+  --opera-switch-width: 40px;
+
+  --opera-pad-border-radius: 5px;
+  --opera-pad-padding: 20px;
+  --opera-pad-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.04);
+  --opera-box-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.24);
+
+  --opera-text-line-height: 1.5;
+  --opera-text-shadow: 0px 0px 1.8px;
+
+  --speeddial-tile-width: 140px;
+  --speeddial-tile-height: 89px;
+  --speeddial-tile-spacing: 20px;
+
+  --opera-settings-menu-width: 240px;
+  --opera-settings-menu-color: #525252;
+  --opera-settings-menu-hover-color: #000000;
+
+  --opera-unchecked-radio-color: gray;
+  --opera-checked-radio-color: var(--opera-primary-color);
+
+  --limiters-number-color: var(--palette-default_color_032);
+  --limiters-label-color: var(--palette-default_color_075);
+  --limiters-gauge-needle-color: var(--palette-default_color_032);
+  --limiters-gauge-color-enabled: var(--opera-primary-color);
+  --limiters-gauge-color-disabled: var(--palette-default_color_009);
+  --limiters-gauge-background-color: var(--palette-default_color_036);
+  --limiters-gauge-stroke-color: var(--palette-default_color_022);
+  --limiters-slider-scale-color: var(--palette-default_color_058);
+  --limiters-options-border-disabled: var(--palette-default_color_194);
+  --limiters-hot-tabs-toggle-disabled: var(--palette-default_color_194);
+
+  /* start: opera-tree vars */
+  --opera-tree-hover-background: var(--opera-link-hover-background-color);
+  --opera-tree-input-border: var(--opera-primary-color);
+  --opera-tree-input-selection-background: var(--opera-primary-color);
+  --opera-tree-input-selection-color: white;
+  --opera-tree-primary-color: var(--opera-font-color);
+  --opera-tree-secondary-color: var(--opera-secondary-font-color);
+  --opera-tree-text-color: var(--opera-hint-font-color);
+  /* end: opera-tree vars */
+
+  --opera-shader-aspect-value: 0;
+}
+/* Dark theme */
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host {
+    --opera-input-background-color: #030615;
+    --opera-input-border-color: #3e4852;
+    --opera-input-background-color-hover: #494c4f;
+    --opera-input-background-color-pressed: #262729;
+
+    --opera-button-disabled-background-color: #030615;
+    --opera-button-disabled-border-color: var(--opera-button-border-color);
+    --opera-button-disabled-font-color: #3e4852;
+
+    --opera-warning-color: #ff5353;
+
+    --opera-switch-color: #3d4042;
+    --opera-switch-color-hover: #494c4f;
+    --opera-switch-color-pressed: #3d4042;
+
+    --opera-settings-menu-color: #b8b8b8;
+    --opera-settings-menu-hover-color: #ffffff;
+
+    --opera-pad-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.25);
+
+    --opera-button-background-color-hover: #3e4852;
+    --opera-button-background-color-pressed: #4d647a;
+
+    --opera-primary-button-font-color: var(--opera-font-color);
+    --opera-primary-button-border-color: var(--opera-primary-color);
+
+    --limiters-number-color: var(--palette-default_color_005);
+    --limiters-label-color: var(--palette-default_color_112);
+    --limiters-gauge-needle-color: var(--palette-default_color_005);
+    --limiters-gauge-color-enabled: var(--opera-primary-color);
+    --limiters-gauge-color-disabled: var(--palette-default_color_011);
+    --limiters-gauge-background-color: var(--palette-default_color_203);
+    --limiters-gauge-stroke-color: var(--palette-default_color_109);
+    --limiters-slider-scale-color: var(--palette-default_color_214);
+    --limiters-options-border-disabled: var(--palette-default_color_080);
+    --limiters-hot-tabs-toggle-disabled: var(--palette-default_color_080);
+  }
+}
+
+:root.neon,
+:host-context(html.neon) {
+  --opera-switch-active-color:var(--theme-color-webui-control-active);
+  --opera-switch-active-color-hover:var(--theme-color-webui-control-active-hover);
+  --opera-primary-button-font-color: var(--opera-font-color);
+  --opera-secondary-font-color: var(--theme-color-webui-text-secondary);
+  --opera-button-border-radius: 6px;
+  --opera-controls-primary-hover-color: var(--theme-color-webui-primary-button-background-hover);
+  --opera-controls-primary-focus-color: var(--theme-color-webui-primary-button-background-pressed);
+  --opera-controls-primary-color: var(--opera-primary-color);
+  --opera-button-background-color: var(--theme-color-webui-button-background);
+  --opera-button-background-color-hover: var(--theme-color-webui-button-background-hover);
+  --opera-button-background-color-pressed: var(--theme-color-webui-button-background-pressed);
+  --opera-input-background-color: var(--theme-color-webui-input-background);
+  --opera-input-background-color-pressed: var(--opera-button-background-color-pressed);
+}
+
+:root.gx,
+:host-context(html.gx) {
+  --opera-background-color: env(-gx-color-secondary-08-96);
+  --opera-button-background-color: env(-gx-color-secondary-16-88);
+  --opera-button-background-color-hover: env(-gx-color-secondary-20-80);
+  --opera-button-background-color-pressed: env(-gx-color-secondary-58-32);
+  --opera-button-border-color: env(-gx-color-secondary-80);
+  --opera-button-disabled-background-color: env(-gx-color-secondary-90);
+  --opera-button-disabled-border-color: env(-gx-color-secondary-80);
+  --opera-controls-disabled-color: env(-gx-color-secondary-80);
+  --opera-controls-primary-color: env(-gx-color-primary-100);
+  --opera-controls-primary-focus-color: env(-gx-color-primary-100);
+  --opera-controls-primary-hover-color: env(-gx-color-primary-100);
+  --opera-focus-outline-color: env(-gx-color-primary-60);
+  --opera-input-background-color: env(-gx-color-secondary-16-88);
+  --opera-input-background-color-hover: env(-gx-color-secondary-90);
+  --opera-input-background-color-pressed: env(-gx-color-secondary-90);
+  --opera-input-border-color: env(-gx-color-secondary-80);
+  --opera-link-color: env(-gx-color-primary-100);
+  --opera-link-focus-background-color: rgb(var(--opera-primary-color-rgb) / 0.5);
+  --opera-link-hover-background-color: rgb(var(--opera-primary-color-rgb) / 0.25);
+  --opera-menu-width: 320px;
+  --opera-modal-background-color: env(-gx-color-secondary-16-88);
+  --opera-modal-border-color: env(-gx-color-primary-60);
+  --opera-modal-header-color: env(-gx-color-secondary-16-88);
+  --opera-primary-button-background-color: env(-gx-color-primary-100);
+  --opera-primary-button-background-color-hover: env(-gx-color-primary-100);
+  --opera-primary-button-border-color: var(--opera-secondary-color);
+  --opera-primary-button-font-color: env(-gx-color-text-1);
+  --opera-primary-color: env(-gx-color-primary-100);
+  --opera-primary-color-rgb: env(-opera-accent-color-r) env(-opera-accent-color-g) env(-opera-accent-color-b);
+  --opera-secondary-background-color: env(-gx-color-secondary-98);
+  --opera-secondary-color: env(-gx-color-primary-60);
+  --opera-secondary-font-color: env(-gx-color-secondary-76-24);
+  --opera-separator-color: env(-gx-color-secondary-80);
+  --opera-switch-active-color: var(--opera-controls-primary-color);
+  --opera-switch-active-color-hover: var(--opera-controls-primary-hover-color);
+  --opera-switch-active-color-pressed: var(--opera-controls-primary-focus-color);
+  --opera-switch-color: env(-gx-color-secondary-80);
+  --opera-switch-gx-background-color: env(-gx-color-secondary-80);
+  --opera-switch-color-hover: env(-gx-color-secondary-90);
+  --opera-switch-color-pressed: env(-gx-color-secondary-76-24);
+  --opera-switch-toggle-color: env(-gx-color-secondary-100);
+  --opera-unchecked-radio-color: env(-gx-color-secondary-24);
+
+  /* TODO(wmaslowski): Try to unify these to some standard controls */
+  --chroma-animation-widget-focused-border-color: env(-gx-color-secondary-58-32);
+
+  --opera-gx-booster-background-gradient-light: env(-gx-color-secondary-16-88);
+  --opera-gx-booster-background-gradient-dark: env(-gx-color-secondary-04);
+
+  --limiters-number-color: env(-gx-color-secondary-100-00);
+  --limiters-label-color: env(-gx-color-secondary-76-24);
+  --limiters-gauge-needle-color: env(-gx-color-secondary-100-00);
+  --limiters-gauge-color-enabled: env(-gx-color-primary-100);
+  --limiters-gauge-color-disabled: env(-gx-color-secondary-80);
+  --limiters-gauge-background-color: env(-gx-color-secondary-92);
+  --limiters-gauge-stroke-color: env(-gx-color-secondary-08-96);
+  --limiters-slider-scale-color: env(-gx-color-secondary-90);
+  --limiters-options-border-disabled: env(-gx-color-secondary-16-88);
+  --limiters-hot-tabs-toggle-disabled: env(-gx-color-secondary-16-88);
+
+  --opera-tree-secondary-color: env(-gx-color-secondary-32-58);
+
+  --opera-text-shadow: 0px 0px 1.2px;
+
+  /*  */
+
+}
+
+:root.gx.underwave,
+:host-context(html.gx.underwave) {
+  --opera-default-font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.gx,
+  :host-context(html.gx) {
+    --opera-button-border-color: env(-gx-color-secondary-32);
+    --opera-button-disabled-background-color: env(-gx-color-secondary-20);
+    --opera-button-disabled-border-color: env(-gx-color-secondary-32);
+    --opera-controls-disabled-color: env(-gx-color-secondary-32);
+    --opera-input-background-color-hover: env(-gx-color-secondary-20);
+    --opera-input-background-color-pressed: env(-gx-color-secondary-20);
+    --opera-input-border-color: env(-gx-color-secondary-32);
+    --opera-secondary-background-color: env(-gx-color-secondary-12);
+    --opera-separator-color: env(-gx-color-secondary-32);
+    --opera-switch-color: env(-gx-color-secondary-32);
+    --opera-switch-gx-background-color: env(-gx-color-secondary-08);
+    --opera-switch-color-hover: env(-gx-color-secondary-20);
+    --opera-switch-toggle-color: env(-gx-color-secondary-76);
+    --opera-unchecked-radio-color: env(-gx-color-secondary-32);
+
+    --limiters-gauge-color-disabled: env(-gx-color-secondary-32);
+    --limiters-gauge-background-color: env(-gx-color-secondary-04);
+    --limiters-slider-scale-color: env(-gx-color-secondary-20);
+  }
+}
+
+:root.bigger-tiles,
+:host-context(html.bigger-tiles) {
+  --speeddial-tile-width: 188px;
+  --speeddial-tile-height: 120px;
+  --speeddial-tile-spacing: 28px;
+}
+
+:root,
+:host-context(html) {
+  --opera-input-background-color: #cdc9d9;
+  --opera-input-background-color-hover: #c4c0e3;
+  --opera-input-background-color-pressed: #dfdde9;
+
+  --opera-button-background-color-hover: #c4c0d3;
+  --opera-button-background-color-pressed: #dfdde9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host-context(html) {
+    --opera-input-background-color: #56535f;
+    --opera-input-background-color-hover: #5e5a6c;
+    --opera-input-background-color-pressed: #686478;
+
+    --opera-button-background-color-hover: #5e5a6c;
+    --opera-button-background-color-pressed: #686478;
+  }
+}
+
+/* DNA-86173 AB test */
+:root.compact-layout,
+:host-context(html.compact-layout) {
+  --opera-section-spacing: 28px;
+}
+/*  */

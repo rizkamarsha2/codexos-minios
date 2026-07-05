@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodexSystem AI
+GenericName=AI Desktop
+Comment=Open CodexOS — Powered by CodexMind AI
+Exec=/usr/local/bin/codexsystem-launch
+Icon=codexsystem
+Terminal=false
+Categories=Network;AI;
+StartupWMClass=chromium

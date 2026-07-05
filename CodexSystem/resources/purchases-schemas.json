@@ -1,0 +1,4850 @@
+// nT/e0fNNq9R2n1GNHggMQYT4GDR4XJHAsGYhnPcLb+eG0AT87u+hknCDu03zU4w1JTGc7yrHkkK17b8TIT5tk9x9KU8mgfFBqUYb39RlMQg/CzgtdoRj6qzpRGbApfZCt6JpUvp+64u5NUh1lWMayZmuKg+teFql4t1J77VVkoU5OgZxe5PGy4Hz6S+MzoiqHndxSpFPSEuIdFjOEhczMm6YPhqvMqg8IIoNGkqMcqVRM+gE/hIHPcmtvq/I8ddyvmKdB24FrzZDbUOCA704/zJrA90VqpJZYXjdYqYEH4Waa3TqqxD5HB5OJ/ps6pJS83kIVpH5qRL0pZbCnhl26Q==
+[
+  {
+    "partnerKey": "etsy.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.etsy\\.com\\/[a-z]{1,4}\\/cart\\/[0-9]+\\/review.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "etsy.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".order-total-cost .currency-value",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".order-total-cost .currency-symbol",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".summary-details tbody tr:nth-child(2) > td:nth-child(2) .currency-value",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".summary-details tbody tr:nth-child(2) > td:nth-child(2) .currency-symbol",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "div[data-item-summary-selector] > ul > li",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "div h3 > a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "div h3 > a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "select[data-quantity-dropdown-selector]",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "div > div:nth-child(2) > div > div:nth-child(2) > div > div:nth-child(2) div.wt-text-gray span.currency-value",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              },
+              {
+                "type": "querySelector",
+                "value": "div > div:nth-child(2) > div > div:nth-child(2) > div > div:nth-child(2) div.strong span.currency-value",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "div > div:nth-child(2) > div > div:nth-child(2) > div > div:nth-child(2) div.wt-text-gray span.currency-symbol",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              },
+              {
+                "type": "querySelector",
+                "value": "div > div:nth-child(2) > div > div:nth-child(2) > div > div:nth-child(2) div.strong span.currency-symbol",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "etsy.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.etsy\\.com\\/[a-zA-Z]{1,4}\\/cart\\/thanks\\/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "etsy.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": ".thanks-banner h3",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "String(location.href).match(/\\/([0-9]+)/)[1]"
+        }
+      ]
+
+    }
+  },
+  {
+    "partnerKey": "gearbest.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/order\\.gearbest\\.com\\/checkout\\/index.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "gearbest.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class$=priceConfirm] li div:nth-child(2) p span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class$=priceConfirm] li div:nth-child(2) p span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class$=totalPriceValue]  p span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class$=totalPriceValue]  p span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".order_item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".order_itemImg img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".order_itemTitle",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".order_itemNum",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".order_itemUprice-bold span",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".order_itemUprice-bold span",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "gearbest.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.gearbest\\.com\\/payment\\/result.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "gearbest.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('type') === 'success'"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('order')"
+        }
+      ],
+      "paymentOK2": [
+        {
+          "type": "querySelector",
+          "value": ".pay_online .payOnline_sucess .pay_title",
+          "property": "textContent"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "querySelector",
+          "value": ".pay_online .payOnline_sucess p:nth-child(2) > b:nth-child(1)",
+          "property": "textContent"
+        }
+      ]
+
+    }
+  },
+  {
+    "partnerKey": "canva.com",
+    "onfetch": "set-basket",
+    "disabled": true,
+    "urlMask": "^https:\\/\\/www\\.canva\\.com\\/*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "canva.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "options": {
+            "preQuerySelector": "window.frames[1].document"
+          },
+          "value": "div > div > span:nth-child(2) span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "options": {
+            "preQuerySelector": "window.frames[1].document"
+          },
+          "value": "div > div > span:nth-child(2) span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "eval",
+          "value": "[1]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "name": [
+              {
+                "options": {
+                  "preQuerySelector": "window.frames[1].document"
+                },
+                "type": "querySelector",
+                "value": "button div > span:nth-child(1) > p",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "eval",
+                "value": "1"
+              }
+            ],
+            "price": [
+              {
+                "options": {
+                  "preQuerySelector": "window.frames[1].document"
+                },
+                "type": "querySelector",
+                "value": "div > div > span:nth-child(2) span",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "options": {
+                  "preQuerySelector": "window.frames[1].document"
+                },
+                "type": "querySelector",
+                "value": "div > div > span:nth-child(2) span",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "canva.com",
+    "onfetch": "confirm-basket",
+    "disabled": true,
+    "urlMask": "^https:\\/\\/www\\.canva\\.com\\/*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "canva.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "options": {
+            "preQuerySelector": "window.frames[1].document"
+          },
+          "value": "#root main section:nth-child(2) div:nth-child(2) > p:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "options": {
+            "preQuerySelector": "window.frames[1].document"
+          },
+          "value": "#root main section:nth-child(2) div:nth-child(2) > p:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "just-eat.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.just-eat\\.es/pay\\/*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "just-eat.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-basket-order-total]",
+          "property": "dataset.basketOrderTotal"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "p.c-basket-price.c-basket-total.gamma",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "div.c-basket-totals > div.c-basket-group > div:nth-child(2) > p.c-basket-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".c-basket div:not([class])",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".c-basket-item",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".c-basket-item",
+                "property": "textContent",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "parseint"
+                ]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".c-basket-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "just-eat.es",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.just-eat\\.es\\/orders\\/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "just-eat.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "time[data-test-id=due-date]",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "span[data-test-id=order-number]",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".c-orderSummary-payment-totalPaid-amount[data-test-id=total]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-test-id=total]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "th[data-test-id=subtotal]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".c-orderSummary-payment-totalPaid-amount[data-test-id=total]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "td[data-test-id=delivery-fee]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-test-id=total]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".c-orderSummary-product tr .c-orderSummary-amount",
+          "postprocess": "fetchchildren",
+          "childrenPointer": ".parentElement",
+          "childrenSchema": {
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".c-orderSummary-parentProduct",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".c-orderSummary-parentProduct:first-child",
+                "property": "textContent",
+                "postprocess": [
+                  "number_prefix",
+                  "parseint"
+                ]
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".c-orderSummary-amount",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "booking.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/secure\\.booking\\.com/([a-z]{2,3}\\/)?book\\.html*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "booking.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-price]",
+          "property": "dataset.price"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-price]",
+          "property": "dataset.currencyCode"
+        }
+      ],
+      "hotelName": [
+        {
+          "type": "querySelector",
+          "value": "#content h1",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "hotelId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('hotel_id')"
+        }
+      ],
+      "lengthOfStay": [
+        {
+          "type": "querySelector",
+          "value": ".bp_sidebar_content_block--bookingdetails_summary .bui-group> div.bui-group__item:nth-child(2)>div:last-child",
+          "property": "textContent",
+          "postprocess": "parseint"
+        }
+      ],
+      "numberOfApartments": [
+        {
+          "type": "querySelector",
+          "value": ".bp_pricedetails_breakdown > .bp_pricedetails_room",
+          "property": "textContent",
+          "postprocess": "parseint"
+        }
+      ],
+      "details": [
+        {
+          "type": "querySelector",
+          "value": ".bp_sidebar_content_block__li--rooms .bp_sidebar_content_block__li_content",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "booking.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/secure\\.booking\\.com\\/confirmation\\.[a-z]{1,4}\\.html.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "booking.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div > span.room-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div > span.room-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "h1.reassurance__title",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": ".pb-conf-overview-table tr td",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "microsoft.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.microsoft\\.com\\/[a-zA-Z\\-]{3,7}\\/store\\/buy\\/checkout.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "microsoft.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#orderSummaryPriceInfo .order-total-amount span.ember-view",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#orderSummaryPriceInfo #order-subtotal-item-count span.ember-view",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".cart-item-review-list .cart-item-review-container .cart-item-review-details .cli_cart_item_price",
+          "childrenPointer": ".parentElement.parentElement",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_title a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_title a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_quantity",
+                "property": "textContent",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "parseint"
+                ]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli-discounted-price span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              },
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli-discounted-price span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              },
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "microsoft.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.microsoft\\.com\\/pl-pl\\/store\\/buy\\/congrats.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "microsoft.com"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "div.cli-congrats-messages a",
+          "property": "textContent",
+          "postprocess  ": "trim"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "value",
+          "value": "ok"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#orderSummaryPriceInfo .order-total-amount span.ember-view",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#orderSummaryPriceInfo #order-subtotal-item-count span.ember-view",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".cart-item-review-list .cart-item-review-container .cart-item-review-details .cli_cart_item_price",
+          "childrenPointer": ".parentElement.parentElement",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_title a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_title a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_quantity",
+                "property": "textContent",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "parseint"
+                ]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli-discounted-price span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              },
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli-discounted-price span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              },
+              {
+                "type": "querySelector",
+                "value": ".cart-item-review-details .cli_cart_item_price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "mediamarkt.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www.mediamarkt.es\\/webapp\\/wcs\\/stores\\/servlet\\/MultiChannelDisplayBasket.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "mediamarkt.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".cototal-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".cototal-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "tbody[product=product]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": "tr:first-child[data-reco-pid]",
+                "property": "dataset.recoPid",
+                "postprocess": "trim"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cproduct-info .cproduct-heading a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cproduct-info .cproduct-heading a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "select[name=\\'product[qty]\\']",
+                "property": "value",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "parseint"
+                ]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "p.cproduct-price-detail",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "p.cproduct-price-detail",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "adobe.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/commerce\\.adobe\\.com/([a-z]{2,3}\\/)?checkout\\/email*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "adobe.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-qe-id=total-amount]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-qe-id=total-amount]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".product-list",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-header > img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "subscriptionPlan": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription]",
+                "property": "attributes.value.value"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "adobe.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/commerce\\.adobe\\.com/checkout\\/payment.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "adobe.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-qe-id=total-amount]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-qe-id=total-amount]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".product-list",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-header > img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "subscriptionPlan": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription]",
+                "property": "attributes.value.value"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "adobe.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/commerce\\.adobe\\.com/checkout\\/confirmation.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "adobe.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div[data-qe-id=confirmation-details-price] span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[data-qe-id=confirmation-details-price] span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "div[data-qe-id=confirmation-details-order-number] span",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "div[data-qe-id=confirmation-banner-container] .banner-text",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".product-list",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-header > img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product-header .product-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "subscriptionPlan": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription]",
+                "property": "attributes.value.value"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-body [name=subscription] .v-dropdown-trigger-label > span:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "eneba.com",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.eneba\\.com/([a-z]{2,3}\\/)?checkout\\/payment*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "eneba.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "couponValue": [
+        {
+          "type": "querySelector",
+          "value": "#app > main > form > div > div > div._2m23v3 > div > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "couponCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#app > main > form > div > div > div._2m23v3 > div > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#app > main > form > div > div > div._2m23v3 > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#app > main > form > div > div > div._2m23v3 > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "#app > main > form > div > div > div > ul:first-child > li",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": "li a:nth-child(2)",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "li a:nth-child(2)",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "li a:nth-child(2)",
+                "property": "textContent"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "li div._174agL",
+                "property": "childNodes[1].textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "li div._2ufXqF > strong > span",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "li div._2ufXqF > strong > span",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "eneba.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.eneba\\.com\\/payment\\/accept\\/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "eneba.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "main h1 ~ span > span",
+          "property": "textContent"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "querySelector",
+          "value": "input[name=pid]",
+          "property": "value"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "value",
+          "value": "ok"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "asos.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https://secure.asos.com",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "asos.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "coupon": [
+        {
+          "type": "querySelector",
+          "value": ".discount-code",
+          "property": "textContent"
+        }
+      ],
+      "couponValue": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.discount > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "couponCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.discount > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryMethod": [
+        {
+          "type": "querySelector",
+          "value": "input[name=selectedDeliveryOption]:checked",
+          "property": "ariaLabel"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.delivery > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.delivery > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.total > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".bag-totals table tr.total > td.l-rtc > div",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".bag .items .item.product-item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".item-quantity strong",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".item-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".item-price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "asos.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/secure\\.asos\\.com\\/[a-z]{0,3}\\/order-accepted.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "asos.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > h2",
+          "property": "textContent"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": ".order-summary dd[data-bind=\"text: number\"]",
+          "property": "textContent"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".order-summary .order-grid dt[data-bind*=\"web_checkout_ordersummary_chkfilename_order_total\"] ~ dd",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".order-summary .order-grid dt[data-bind*=\"web_checkout_ordersummary_chkfilename_order_total\"] ~ dd",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "li.item.product-item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".item-quantity strong",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".item-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".item-price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "nike.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.nike\\.com/[a-z]{2,3}\\/checkout*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "nike.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryMethod": [
+        {
+          "type": "querySelector",
+          "value": "div[data-delivery-type][aria-checked=true]",
+          "property": "dataset.deliveryType"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "#checkout-wrapper aside .shippingTotal",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#checkout-wrapper aside .shippingTotal",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div[data-attr=cart-total]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[data-attr=cart-total]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "aside figure[data-attr=cloud-cart-item]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemStyleColor",
+                "property": "textContent"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemName",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemQuantity",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemPrice",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemPrice",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "nike.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.nike\\.com/[a-z]{2,3}\\/checkout/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "nike.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [{
+        "type": "querySelector",
+        "value": ".checkout-banner h1",
+        "property": "textContent",
+        "postprocess": "trim"
+      }],
+      "orderId": [{
+        "type": "querySelector",
+        "value": ".order-info p",
+        "property": "textContent",
+        "postprocess": "trim"
+      }],
+      "orderId2": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('checkoutId')"
+        }
+      ],
+      "orderId3": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "orderId4": [
+        {
+          "type": "querySelector",
+          "value": "input[name=pid]",
+          "property": "value"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".shippingTotal",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".shippingTotal",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div.subtotal",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.subtotal",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div[data-attr=cart-total]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[data-attr=cart-total]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "figure[data-attr=cloud-cart-item]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemStyleColor",
+                "property": "textContent"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemName",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemQuantity",
+                "property": "textContent",
+                "postprocess": ["remove_nan_prefix", "number_prefix", "parseint"]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemPrice",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "figcaption .itemPrice",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "euro.com.pl",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.euro.com\\.pl\\/cart\\.bhtml.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "euro.com.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "id": [
+        {
+          "type": "querySelector",
+          "value": "input[name=id]",
+          "property": "value"
+        }
+      ],
+      "coupon": [
+        {
+          "type": "querySelector",
+          "value": "#voucherInput",
+          "property": "value"
+        }
+      ],
+      "deliveryMethod": [
+        {
+          "type": "querySelector",
+          "value": "input[name=deliveryType][checked]",
+          "property": "id"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".delivery-type-list li.item-checked .name strong",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".delivery-type-list li.item-checked .name strong",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#summaryPayment",
+          "property": "value",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "span.summary-value",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".prod",
+          "property": "id",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".newCartproduct .plu",
+                "property": "value"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".newCartproduct h4 a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".newCartproduct h4 a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".quantity [name$=quantity]",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ],
+            "extraWarrantyName": [
+              {
+                "type": "querySelector",
+                "value": "~ tr .js-select-warranty.selected .name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "extraWarrantyPriceValue": [
+              {
+                "type": "querySelector",
+                "value": "~ tr .js-select-warranty.selected .price .price-postponed",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "extraWarrantyPriceCurrency": [
+              {
+                "type": "querySelector",
+                "value": "~ tr .js-select-warranty.selected .price .price-postponed",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ],
+            "extraWarrantyPeirod": [
+              {
+                "type": "querySelector",
+                "value": "~ tr .js-select-warranty.selected .price .warranty-period",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "extraServicesNameList": [
+              {
+                "type": "querySelectorAll",
+                "value": "~ tr ~ tr.item-services-summary a.cblue.service-info",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "extraServicesCodeList": [
+              {
+                "type": "querySelectorAll",
+                "value": "~ tr ~ tr.item-services-summary a.cblue.service-info",
+                "property": "rel",
+                "postprocess": "trim"
+              }
+            ],
+            "extraServicesTotalPriceValue": [
+              {
+                "type": "querySelector",
+                "value": "~ tr ~ tr.item-services-summary .price .normal",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "extraServicesTotalPriceCurrency": [
+              {
+                "type": "querySelector",
+                "value": "~ tr ~ tr.item-services-summary .price .normal",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "euro.com.pl",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.euro\\.com\\.pl\\/order-delivery-time\\.bhtml.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "euro.com.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "#deliveryPrice",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#deliveryPrice",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div.trSummary .price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.trSummary .price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "euro.com.pl",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.euro\\.com\\.pl\\/order-finalize\\.bhtml.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "euro.com.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": ".page-header .order-number",
+          "property": "textContent"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".summary-price .summary-price-total",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".summary-price .summary-price-total",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": ".summary-worth .summary-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".summary-worth .summary-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "bershka.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.bershka\\.com\\/[a-z]{2,3}\\/checkout\\.html.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "bershka.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryMethod": [
+        {
+          "type": "querySelector",
+          "value": "shipping-method.avtive .shipping-name-text",
+          "property": "id"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "div.sp-item-shipping localized-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.sp-item-shipping localized-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".sp-total localized-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".sp-total localized-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "shop-cart-item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-description-ref",
+                "property": "textContent"
+              }
+            ],
+            "color": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-color",
+                "property": "textContent"
+              }
+            ],
+            "size": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-size",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-image img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-description-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-quantity",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-price product-price .productPrice",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-price product-price .productPrice",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "bershka.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.bershka\\.com\\/[a-z]{1,4}\\/order-confirmation\\.html.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "bershka.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('RealPaymentStatus')"
+        }
+      ],
+      "paymentOK2": [
+        {
+          "type": "querySelector",
+          "value": ".confirmation-title span.ico.ico-check",
+          "property": "className"
+        }
+      ],
+      "deliveryMethod": [
+        {
+          "type": "querySelector",
+          "value": ".address h4.confirmation-subtitle span[data-ng-bind=\\'order.shipping.name\\']",
+          "property": "textContent"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "div.cart-summary-totals-shipping localized-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.cart-summary-totals-shipping localized-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".cart-summary-totals-products localized-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".cart-summary-totals-products localized-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".cart-summary-totals-total localized-price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".cart-summary-totals-total localized-price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "shop-cart-item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-description-ref",
+                "property": "textContent"
+              }
+            ],
+            "color": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-color",
+                "property": "textContent"
+              }
+            ],
+            "size": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-size",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-image img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-description-name",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-quantity",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-price product-price .productPrice",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cart-product-price product-price .productPrice",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "reserved.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.reserved\\.com\\/[a-z]{2,3}\\/[a-z]{2,3}\\/checkout\\/cart\\/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "reserved.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=cart-final-price]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=cart-final-price]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "#cartRoot > div > div:nth-child(1) > div > div",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "sku": [
+              {
+                "type": "querySelector",
+                "value": "",
+                "property": "dataset[sku]"
+              }
+            ],
+            "color": [
+              {
+                "type": "querySelector",
+                "value": "h3[data-selen=color]",
+                "property": "textContent"
+              }
+            ],
+            "size": [
+              {
+                "type": "querySelector",
+                "value": "h3[data-selen=size]",
+                "property": "textContent"
+              }
+            ],
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "h2 a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "h2 a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "div[data-selen=product-count]",
+                "property": "textContent"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "p[data-selen=final-price]",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "p[data-selen=final-price]",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "reserved.com",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.reserved\\.com\\/[a-z]{2,3}\\/[a-z]{2,3}\\/checkout\\/order\\/",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "reserved.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-total-price\\']",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-total-price\\']",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-final-price\\']",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-final-price\\']",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-freeshipping\\' ]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "dd[data-selen=\\'cart-freeshipping\\']",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "reserved.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.reserved\\.com\\/[a-z]{2,3}\\/[a-z]{2,3}\\/checkout\\/order\\/created\\/.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "reserved.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": ".thank-you-container .summary-cell .value",
+          "property": "textContent"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": ".thank-you-container .summary-cell .value",
+          "property": "textContent"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "decathlon.pl",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.decathlon\\.pl\\/checkout\\/shipping.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "decathlon.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "#shippingFees-orde-summary div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#shippingFees-orde-summary div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".sub-total div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".sub-total div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".dkt-total-line .js-total-with-shipping",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".dkt-total-line .js-total-with-shipping",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "#checkout-order-summary .recap-container > div",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-picture-cart a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc > p",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(1)",
+                "property": "textContent"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "decathlon.pl",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.decathlon\\.pl\\/checkout\\/payments.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "decathlon.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "#shippingFees-orde-summary div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#shippingFees-orde-summary div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".sub-total div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".sub-total div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".dkt-total-line .js-total-with-shipping",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".dkt-total-line .js-total-with-shipping",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "#checkout-order-summary .recap-container > div",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-picture-cart a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc > p",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(1)",
+                "property": "textContent"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".cont-desc-price small:nth-child(2)",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "decathlon.pl",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.decathlon\\.pl\\/confirmation.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "decathlon.pl"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "querySelector",
+          "value": ".order-summary__content .order-summary__title .order-summary__title-text p:nth-child(2) strong",
+          "property": "textContent",
+          "postprocess": "trim"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('status')"
+        }
+      ],
+      "paymentOK2": [
+        {
+          "type": "querySelector",
+          "value": ".order-summary__content .order-summary__title .order-summary__check-icon",
+          "property": "className"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "elcorteingles.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.elcorteingles\\.es\\/compra\\/tramitacion\\/envio.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "elcorteingles.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".total-box .price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".total-box .price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".items-list .item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".image-box img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "elcorteingles.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/pasarelapagos\\.elcorteingles\\.es\\/pgpweb\\/html\\/index\\.html.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "elcorteingles.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".dvTotal span.tRight",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".dvTotal span.tRight",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".tabla-envio tr td table .tdImg img",
+          "postprocess": "fetchchildren",
+          "childrenPointer": ".parentElement.parentElement.parentElement.parentElement",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".tdImg img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "td.tabla-description",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "td[ng-if=\\'item.quantity\\']",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": "tr td.ng-binding:last-child",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "tr td.ng-binding:last-child",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "elcorteingles.es",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.elcorteingles\\.es\\/compra\\/tramitacion\\/confirmacion.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "elcorteingles.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div.total b",
+          "property": "textContent",
+          "postprocess": ["remove_nan_prefix", "pricevalue"]
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.total b",
+          "property": "textContent",
+          "postprocess": ["remove_nan_prefix", "pricecurrency"]
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".send-price b",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".send-price b",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "div.product-box",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".image-box img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".title",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".units",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".price p:first-child",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price p:first-child",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "thecolvinco.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.thecolvinco\\.com\\/[a-z]{2,3}\\/payment.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "thecolvinco.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div > div > div:nth-last-child(3) > div > div:nth-child(2)",
+          "property": "price",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div > div > div:nth-last-child(3) > div > div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div > div > div:last-child > div > div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div > div > div:last-child > div > div:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "main > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div > div  > div > div img",
+          "postprocess": "fetchchildren",
+          "childrenPointer": ".parentElement.parentElement.parentElement.parentElement",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "div div:nth-child(1) img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "div div:nth-child(2) div",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "div div:nth-child(3) div",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "div div:nth-child(3) div",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "thecolvinco.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www.thecolvinco.com\\/[a-z]{2,3}\\/confirmation-b.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "thecolvinco.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('id')"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('hash')"
+        }
+      ],
+      "orderId3": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('code')"
+        }
+      ],
+      "orderPid": [
+        {
+          "type": "querySelector",
+          "value": "input[name=pid]",
+          "property": "value"
+        }
+      ],
+      "orderInput": [
+        {
+          "type": "querySelector",
+          "value": "input#clipboardInput",
+          "property": "value"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "main > div > div > div > div > div > div > div > div > span",
+          "property": "textContent"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "pccomponentes.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.pccomponentes\\.com\\/cart([^/].*|[/]$|$)",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "pccomponentes.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".js-premium-conditions-ok-premium-no b",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".js-premium-conditions-ok-premium-no b",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".concepto-total span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".concepto-total span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".shopping-list > div:not(:nth-child(1)",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".subtabla .celda:nth-child(1) div a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".subtabla .celda:nth-child(2) .h5 a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".subtabla .celda:nth-child(2) input.input-units",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".subtabla .celda:nth-child(3)",
+                "property": "textContent",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "pricevalue"
+                ]
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".subtabla .celda:nth-child(3)",
+                "property": "textContent",
+                "postprocess": [
+                  "remove_nan_prefix",
+                  "pricecurrency"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "pccomponentes.com",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.pccomponentes\\.com\\/cart\\/order([^/].*|[/]$|$)",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "pccomponentes.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".ticket-pago .concepto-envio > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".ticket-pago .concepto-envio > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".ticket-pago .concepto-articulos > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".ticket-pago .concepto-articulos > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".concepto-total span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".concepto-total span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "pccomponentes.com",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www.pccomponentes.com\\/cart\\/order\\/finished\\/ok.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "pccomponentes.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "value",
+          "value": "ok"
+        }
+      ],
+      "paymentOK2": [
+        {
+          "type": "querySelector",
+          "value": "p.h4 strong",
+          "property": "textContent"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('pccorder')"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "querySelector",
+          "value": "#orderId-js",
+          "property": "textContent"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "aliexpress.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/shoppingcart\\.aliexpress\\.com\\/shopcart\\/shopcartDetail\\.htm.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "aliexpress.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": "#shoppingcart-price .charges-group:last-child .charges-totle dd",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#shoppingcart-price .charges-group:last-child .charges-totle dd",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#price-overview .price .total-price dd",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#price-overview .price .total-price dd",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "input[type=checkbox][ae_button_type=select_item][aria-checked=true]",
+          "childrenPointer": ".parentElement.parentElement.parentElement.parentElement",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-title a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product-title a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".product-num-picker input",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .main-cost-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .main-cost-price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "aliexpress.com",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/shoppingcart\\.aliexpress\\.com\\/orders\\.htm.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "aliexpress.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": "#shoppingcart-price .charges-group:last-child .charges-totle dd",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#shoppingcart-price .charges-group:last-child .charges-totle dd",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#price-overview .price .total-price dd",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#price-overview .price .total-price dd",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".shopping-cart-product",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product-title a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product-title a",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".product-num-picker input",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .main-cost-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .main-cost-price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "aliexpress.com",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/shoppingcart\\.aliexpress\\.com\\/order\\/payResult\\.htm.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "aliexpress.com"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": ".check-out-root .feedback-container .next-message-success i.next-icon-success ~ div",
+          "property": "textContent"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "primeriti.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.primeriti\\.es\\/compra\\/tramitacion\\/cesta*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "primeriti.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-detail:nth-child(2) .current",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-detail:nth-child(2) .current",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-detail:nth-child(1) .current",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-detail:nth-child(1) .current",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-total:last-child .current",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".price-summary-container .price-total:last-child .current",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".product-info-box",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".cart-preview-image a:nth-child(2)",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "a h2.title",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "input.cart-preview-units-text",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .unit-price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".product-price h2.current",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product-price .unit-price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "primeriti.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.primeriti\\.es\\/compra\\/tramitacion\\/envio.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "primeriti.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .shipping-price span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .shipping-price span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .total-box .price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .total-box .price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".items-list li",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".image-box img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "value",
+                "postprocess": ["remove_nan_suffix", "parseint"]
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "primeriti.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.primeriti\\.es\\/compra\\/tramitacion\\/pago*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "primeriti.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".items-list .shipping-price > span:last-of-type",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".items-list .shipping-price > span:last-of-type",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "#total-box .price",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "#total-box .price",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".items-list .item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".image-box img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".item-description",
+                "property": "textContent",
+                "postprocess": ["number_prefix", "parseint"]
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "primeriti.es",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.primeriti\\.es\\/compra\\/tramitacion\\/confirmacion.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "primeriti.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('orderId')"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "querySelector",
+          "value": ".order-number span",
+          "property": "textContent"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "div.total b",
+          "property": "textContent",
+          "postprocess": ["remove_nan_prefix", "pricevalue"]
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div.total b",
+          "property": "textContent",
+          "postprocess": ["remove_nan_prefix", "pricecurrency"]
+        }
+      ],
+      "deliveryCost": [
+        {
+          "type": "querySelector",
+          "value": ".send-price b",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".send-price b",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "div.product-box",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".image-box img",
+                "property": "src"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".title",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": ".units",
+                "property": "textContent",
+                "postprocess": "parseint"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".price p:first-child",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".price p:first-child",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "fnac.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/secure\\.fnac\\.es\\/orderpipe\\/pop\\/panier.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "fnac.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .shipping-price span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": ".shipping_minibasket .shipping-price span:nth-child(2)",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-automation-id=txt-basketsummary-totalPrice]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-automation-id=txt-basketsummary-totalPrice]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": ".product__list .product__item",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": ".product__title a",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": ".product__title",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "select.product__dropdown",
+                "property": "value",
+                "postprocess": "parseint"
+              }
+            ],
+            "price_sum": [
+              {
+                "type": "querySelector",
+                "value": ".product__price.product__price--current[data-testid=productPrice]",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": ".product__price.product__price--current[data-testid=productPrice]",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "fnac.es",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/secure\\.fnac\\.es\\/orderpipe\\/pop\\/paiement.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "fnac.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "[data-automation-id=txt-basketsummary-totalPrice]",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "[data-automation-id=txt-basketsummary-totalPrice]",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "fnac.es",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/secure\\.fnac\\.es\\/orderpipe\\/pop\\/merci.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "fnac.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "value",
+          "value": "ok"
+        }
+      ],
+      "paymentOK2": [
+        {
+          "type": "querySelector",
+          "value": "h2[class$=title--OK]",
+          "property": "textContent"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "span[class*=orderNumberReference]",
+          "property": "textContent"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "mediamarkt.es",
+    "onfetch": "set-basket",
+    "urlMask": "^https:\\/\\/www\\.mediamarkt\\.es\\/checkout([^/].*|[/]$|$)",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "mediamarkt.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "div[data-test^=basket-lineitem]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "a[class^=Linkstyled]",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "a[class^=Linkstyled]",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "div[data-test=amount-picker]",
+                "property": "textContent",
+                "postprocess": ["remove_nan_prefix", "remove_nan_suffix", "parseint"]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "div[class^=LineItemPrice] > span > span",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "div[class^=LineItemPrice] > span > span",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "mediamarkt.es",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.mediamarkt\\.es\\/checkout\\/payment.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "mediamarkt.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "mediamarkt.es",
+    "onfetch": "merge-basket",
+    "urlMask": "^https:\\/\\/www\\.mediamarkt\\.es\\/checkout\\/summary.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "mediamarkt.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "cartProductsValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartProductsCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "deliveryCostValue": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "deliveryCostCurrency": [
+        {
+          "type": "querySelector",
+          "value": "div[class^=ResumeTable] > div[class^=FlexBox] > div > span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "cartTotalValue": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricevalue"
+        }
+      ],
+      "cartTotalValueCurrency": [
+        {
+          "type": "querySelector",
+          "value": "h3[data-test=checkout-total] span",
+          "property": "textContent",
+          "postprocess": "pricecurrency"
+        }
+      ],
+      "products": [
+        {
+          "type": "querySelectorAll",
+          "value": "div[class*=StyledProductLineItemWrapper]",
+          "postprocess": "fetchchildren",
+          "childrenSchema": {
+            "link": [
+              {
+                "type": "querySelector",
+                "value": "a[class^=Linkstyled]",
+                "property": "href"
+              }
+            ],
+            "name": [
+              {
+                "type": "querySelector",
+                "value": "a[class^=Linkstyled]",
+                "property": "textContent",
+                "postprocess": "trim"
+              }
+            ],
+            "quantity": [
+              {
+                "type": "querySelector",
+                "value": "div[data-test=amount-picker]",
+                "property": "textContent",
+                "postprocess": ["remove_nan_prefix", "remove_nan_suffix", "parseint"]
+              }
+            ],
+            "price": [
+              {
+                "type": "querySelector",
+                "value": "div[class^=LineItemPrice] > span > span",
+                "property": "textContent",
+                "postprocess": "pricevalue"
+              }
+            ],
+            "currency": [
+              {
+                "type": "querySelector",
+                "value": "div[class^=LineItemPrice] > span > span",
+                "property": "textContent",
+                "postprocess": "pricecurrency"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "partnerKey": "mediamarkt.es",
+    "onfetch": "confirm-basket",
+    "urlMask": "^https:\\/\\/www\\.mediamarkt\\.es\\/checkout\\/thank-you.*",
+    "recordSchema": {
+      "partner": [
+        {
+          "type": "value",
+          "value": "mediamarkt.es"
+        }
+      ],
+      "locationUrl": [
+        {
+          "type": "eval",
+          "value": "location.href"
+        }
+      ],
+      "paymentOK": [
+        {
+          "type": "querySelector",
+          "value": "h1[class*=ThankYou]",
+          "property": "textContent"
+        }
+      ],
+      "orderId": [
+        {
+          "type": "querySelector",
+          "value": "span[class*=OrderNumber]",
+          "property": "textContent"
+        }
+      ],
+      "orderId2": [
+        {
+          "type": "eval",
+          "value": "new URLSearchParams(location.search).get('id')"
+        }
+      ]
+    }
+  }
+]

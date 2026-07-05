@@ -1,0 +1,158 @@
+html {
+  --default-font-family:
+    ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --mono-font-family: "Space Mono", monospace;
+
+  /* text-header-xxl */
+  --header-xxl-font-family: var(--default-font-family);
+  --header-xxl-font-style: normal;
+  --header-xxl-font-size: 42px;
+  --header-xxl-font-weight: 400;
+  --header-xxl-line-height: normal;
+  --header-xxl-text-transform: none;
+
+  /* text-header-xl */
+  --header-xl-font-family: var(--default-font-family);
+  --header-xl-font-style: normal;
+  --header-xl-font-size: 26px;
+  --header-xl-font-weight: 400;
+  --header-xl-line-height: 34px;
+  --header-xl-text-transform: none;
+
+  /* text-header-l */
+  --header-l-font-family: var(--default-font-family);
+  --header-l-font-style: normal;
+  --header-l-font-size: 18px;
+  --header-l-font-weight: 700;
+  --header-l-line-height: 25px;
+  --header-l-text-transform: none;
+
+  /* text-header-m */
+  --header-m-font-family: var(--default-font-family);
+  --header-m-font-style: normal;
+  --header-m-font-size: 16px;
+  --header-m-font-weight: 700;
+  --header-m-line-height: normal;
+  --header-m-text-transform: none;
+
+  /* text-header-s */
+  --header-s-font-family: var(--default-font-family);
+  --header-s-font-style: normal;
+  --header-s-font-size: 14px;
+  --header-s-font-weight: 700;
+  --header-s-line-height: normal;
+  --header-s-text-transform: capitalize;
+
+  /* sub-header-l */
+  --sub-header-l-font-family: var(--default-font-family);
+  --sub-header-l-font-size: 16px;
+  --sub-header-l-font-style: normal;
+  --sub-header-l-font-weight: 600;
+  --sub-header-l-line-height: normal;
+  --sub-header-l-text-transform: none;
+
+  /* sub-header-m */
+  --sub-header-m-font-family: var(--default-font-family);
+  --sub-header-m-font-size: 14px;
+  --sub-header-m-font-style: normal;
+  --sub-header-m-font-weight: 600;
+  --sub-header-m-line-height: normal;
+  --sub-header-m-text-transform: none;
+
+  /* sub-header-s */
+  --sub-header-s-font-family: var(--default-font-family);
+  --sub-header-s-font-size: 12px;
+  --sub-header-s-font-style: normal;
+  --sub-header-s-font-weight: 600;
+  --sub-header-s-line-height: normal;
+  --sub-header-s-text-transform: none;
+
+  /* sub-header-xs */
+  --sub-header-xs-font-family: var(--default-font-family);
+  --sub-header-xs-font-size: 10px;
+  --sub-header-xs-font-style: normal;
+  --sub-header-xs-font-weight: 600;
+  --sub-header-xs-line-height: normal;
+  --sub-header-xs-text-transform: none;
+
+  /* body-l */
+  --body-l-font-family: var(--default-font-family);
+  --body-l-font-size: 16px;
+  --body-l-font-style: normal;
+  --body-l-font-weight: 400;
+  --body-l-line-height: 150%;
+  --body-l-text-transform: none;
+
+  /* body-m */
+  --body-m-font-family: var(--default-font-family);
+  --body-m-font-size: 14px;
+  --body-m-font-style: normal;
+  --body-m-font-weight: 400;
+  --body-m-line-height: normal;
+  --body-m-text-transform: none;
+
+  /* body-s */
+  --body-s-font-family: var(--default-font-family);
+  --body-s-font-size: 12px;
+  --body-s-font-style: normal;
+  --body-s-font-weight: 400;
+  --body-s-line-height: normal;
+  --body-s-text-transform: none;
+
+  /* body-xs */
+  --body-xs-font-family: var(--default-font-family);
+  --body-xs-font-size: 10px;
+  --body-xs-font-style: normal;
+  --body-xs-font-weight: 400;
+  --body-xs-line-height: normal;
+  --body-xs-text-transform: none;
+
+  /* button-l */
+  --button-l-font-family: var(--default-font-family);
+  --button-l-font-size: 14px;
+  --button-l-font-style: normal;
+  --button-l-font-weight: 700;
+  --button-l-line-height: normal;
+  --button-l-text-transform: capitalize;
+
+  /* button-m */
+  --button-m-font-family: var(--default-font-family);
+  --button-m-font-size: 12px;
+  --button-m-font-style: normal;
+  --button-m-font-weight: 700;
+  --button-m-line-height: normal;
+  --button-m-text-transform: capitalize;
+
+  /* button-s */
+  --button-s-font-family: var(--default-font-family);
+  --button-s-font-size: 10px;
+  --button-s-font-style: normal;
+  --button-s-font-weight: 700;
+  --button-s-line-height: normal;
+  --button-s-text-transform: capitalize;
+
+  /* code-bold */
+  --code-bold-font-family: var(--mono-font-family);
+  --code-bold-font-size: 10px;
+  --code-bold-font-style: normal;
+  --code-bold-font-weight: 700;
+  --code-bold-line-height: 20px;
+  --code-bold-text-transform: none;
+
+  /* code-regular */
+  --code-regular-font-family: var(--mono-font-family);
+  --code-regular-font-size: 12px;
+  --code-regular-font-style: normal;
+  --code-regular-font-weight: 400;
+  --code-regular-line-height: 15px;
+  --code-regular-text-transform: none;
+
+  /* quote-italic */
+  --quote-italic-font-family: var(--default-font-family);
+  --quote-italic-font-size: 14px;
+  --quote-italic-font-style: italic;
+  --quote-italic-font-weight: 400;
+  --quote-italic-line-height: 20px;
+  --quote-italic-text-transform: none;
+}

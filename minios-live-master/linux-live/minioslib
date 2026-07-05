@@ -1,0 +1,4037 @@
+#!/bin/bash
+
+# Library of functions for installation scripts
+# Author: crims0n <https://minios.dev>
+#
+
+# ========================= VARIABLES =============================
+
+SET_E=""
+SET_U=""
+
+LIVEKITNAME="minios"
+BEXT="sb"
+OUTPUT_MODE="console"
+
+common_variables() {
+    local locale layout layoutcode
+
+    console_colors
+    declare_locales
+
+    # List of variables passed to chroot.
+    VARIABLES="BUILD_SCRIPTS DEBIAN_FRONTEND_TYPE DESKTOP_ENVIRONMENT DISTRIBUTION DISTRIBUTION_TYPE PACKAGE_VARIANT COMP_TYPE KERNEL KERNEL_VERSION KERNEL_ARCH INSTALL_KERNEL KERNEL_FLAVOUR KERNEL_AUFS KERNEL_BUILD_DKMS LIVEKITNAME DISTRIBUTION_ARCH LOCALE LOCALES MULTILINGUAL LAYOUTDSC LAYOUTID LIVE_TIMEZONE MODULE LIVE_USERNAME LIVE_USER_PASSWORD LIVE_ROOT_PASSWORD LIVE_USER_PASSWORD_CRYPTED LIVE_ROOT_PASSWORD_CRYPTED BEXT EXPORT_LOGS USE_APT_CACHE DEBUG_SET_ROOT_PASSWORD BOOTLOADER MENU_LANG USE_UBUNTU_PRO UBUNTU_PRO_TOKEN"
+
+    : "${container:=}"
+    : "${MODULE:=}"
+    CONTAINER="false"
+
+    if [[ (-f /.dockerenv || "${container}" = "podman") ]]; then
+        CONTAINER="true"
+    fi
+
+    if [ "${DISTRIBUTION_ARCH}" = "amd64" ]; then
+        ISO_ARCH="amd64"
+        KERNEL_ARCH="amd64"
+    elif [ "${DISTRIBUTION_ARCH}" = "i386-pae" ]; then
+        ISO_ARCH="i386-pae"
+        KERNEL_ARCH="686-pae"
+        DISTRIBUTION_ARCH="i386"
+    elif [ "${DISTRIBUTION_ARCH}" = "i386" ]; then
+        ISO_ARCH="i386"
+        KERNEL_ARCH="686"
+    elif [ "${DISTRIBUTION_ARCH}" = "arm64" ]; then
+        ISO_ARCH="arm64"
+        KERNEL_ARCH="arm64"
+    fi
+
+    if [ "${DESKTOP_ENVIRONMENT}" = "flux" ]; then
+        PACKAGE_VARIANT="minimum"
+        LIVE_USERNAME="root"
+    fi
+
+    if [ "${DESKTOP_ENVIRONMENT}" = "cloud" ]; then
+        PACKAGE_VARIANT="cloud"
+        KERNEL_FLAVOUR="cloud"
+    fi
+
+    if [ "${PACKAGE_VARIANT}" = "puzzle" ] || [ "${PACKAGE_VARIANT}" = "standard" ] || [ "${DESKTOP_ENVIRONMENT}" = "flux" ]; then
+        LIVE_MODULE_MODE="merged"
+    else
+        LIVE_MODULE_MODE="simple"
+    fi
+
+    case "${DISTRIBUTION}" in
+    stretch | buster | bullseye | bookworm | trixie | kali-rolling | sid | orel)
+        DISTRIBUTION_TYPE="debian"
+        ;;
+    bionic | focal | jammy | noble | resolute)
+        DISTRIBUTION_TYPE="ubuntu"
+        ;;
+    *)
+        error "Unknown distribution: ${DISTRIBUTION}"
+        exit 1
+        ;;
+    esac
+
+    # Set distribution repository URL
+    case "${DISTRIBUTION}" in
+    buster)
+        if [ "${BUILD_FROM_SNAPSHOT}" = "true" ]; then
+            DISTRIBUTION_URL="https://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}"
+        else
+            DISTRIBUTION_URL="http://deb.freexian.com/extended-lts"
+        fi
+        ;;
+    bullseye | bookworm | trixie | sid)
+        if [ "${BUILD_FROM_SNAPSHOT}" = "true" ]; then
+            DISTRIBUTION_URL="https://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}"
+        else
+            DISTRIBUTION_URL="http://deb.debian.org/debian"
+        fi
+        ;;
+    bionic | focal | jammy | noble | resolute)
+        DISTRIBUTION_URL="http://archive.ubuntu.com/ubuntu"
+        ;;
+    kali-rolling)
+        DISTRIBUTION_URL="http://archive.kali.org/kali"
+        ;;
+    esac
+
+    # Detect initramfs type and set BUNDLES path
+    if [ -d /run/initramfs/memory/bundles ]; then
+        # livekit initramfs
+        BUNDLES=/run/initramfs/memory/bundles
+    elif [ -d /lib/live/mount/bundles ]; then
+        # dracut initramfs
+        BUNDLES=/lib/live/mount/bundles
+    fi
+
+    if [[ -n "${LOCALES[$LOCALE]}" ]]; then
+        LAYOUTID=$(echo "${LOCALES[$LOCALE]}" | cut -d',' -f1)
+        LAYOUTDSC=$(echo "${LOCALES[$LOCALE]}" | cut -d',' -f2)
+    else
+        warning "Locale not recognized, defaulting to English (US) layout"
+        LAYOUTID="us"
+        LAYOUTDSC="English (US)"
+    fi
+
+    if [ "${MULTILINGUAL}" = "true" ] || [ "${KEEP_LOCALES}" = "true" ] || [ "$LOCALE" = "C" ]; then
+        LANGID=""
+    else
+        LANGID="-$(echo ${LOCALE} | cut -d_ -f1)"
+    fi
+
+    if [ "${COMP_TYPE}" = "zstd" ]; then
+        ADDITIONAL_COMP_OPTS="-Xcompression-level 19"
+    elif [ "${COMP_TYPE}" = "xz" ]; then
+        ADDITIONAL_COMP_OPTS="-Xbcj x86"
+    else
+        ADDITIONAL_COMP_OPTS=""
+    fi
+
+    if [ "${PACKAGE_VARIANT}" = "toolbox" ] || [ "${PACKAGE_VARIANT}" = "ultra" ]; then
+        # Check if ENABLE_SERVICES contains the ssh service
+        if [[ ",${ENABLE_SERVICES}," != *",ssh,"* ]]; then
+            # If not, add it
+            if [ -z "${ENABLE_SERVICES}" ]; then
+                ENABLE_SERVICES="ssh"
+            else
+                ENABLE_SERVICES="${ENABLE_SERVICES},ssh"
+            fi
+        fi
+    fi
+}
+
+# ===================== COMMON FUNCTIONS ==========================
+
+#------- LIBMINIOSLIVE -------
+
+# The `console_colors` function defines a series of variables that correspond to different text colors and styles that can be used in console output.
+# Usage:
+#   console_colors
+#   echo -e "${RED}This is red text${ENDCOLOR}"
+#
+# The function does not take any arguments, and it needs to be called before using any of the color or style variables in your script.
+console_colors() {
+    # Standard colors
+    RED=$'\e[31m'
+    GREEN=$'\e[32m'
+    YELLOW=$'\e[33m'
+    BLUE=$'\e[34m'
+    MAGENTA=$'\e[35m'
+    CYAN=$'\e[36m'
+    WHITE=$'\e[37m'
+
+    # Dark colors
+    DARKGRAY=$'\e[90m'
+    DARKRED=$'\e[38;5;52m'
+    DARKGREEN=$'\e[38;5;22m'
+    DARKYELLOW=$'\e[38;5;226m'
+    DARKBLUE=$'\e[38;5;24m'
+
+    # Light colors
+    LIGHTGRAY=$'\e[37m'
+    LIGHTRED=$'\e[91m'
+    LIGHTGREEN=$'\e[92m'
+    LIGHTYELLOW=$'\e[93m'
+    LIGHTBLUE=$'\e[94m'
+    LIGHTMAGENTA=$'\e[95m'
+    LIGHTCYAN=$'\e[96m'
+
+    # Neon Colors
+    BRIGHTORANGE=$'\e[38;5;202m'
+    BRIGHTGREEN=$'\e[38;5;46m'
+
+    # Other colors
+    ORANGE=$'\e[38;5;214m'
+    GOLD=$'\e[38;5;220m'
+    PURPLE=$'\e[38;5;93m'
+    PINK=$'\e[38;5;13m'
+    TEAL=$'\e[38;5;6m'
+    NAVY=$'\e[38;5;18m'
+
+    # Text formatting
+    BOLD=$'\e[1m'
+    DIM=$'\e[2m'
+    UNDERLINED=$'\e[4m'
+    BLINK=$'\e[5m'
+    REVERSE=$'\e[7m'
+    HIDDEN=$'\e[8m'
+
+    # Formatting reset
+    ENDCOLOR=$'\e[0m'
+}
+
+# Function: spinner
+# Description: Display an animated spinner while waiting for a background process.
+# Arguments:
+#   $1 - Process ID (PID) of the background process.
+#   $2 - Custom message text to display.
+spinner() {
+    local PID="${1}"
+    local MSG="${2}"
+    local DELAY=0.1
+    local SPINSTR='|/-\\'
+    console_colors
+    while [ -d "/proc/${PID}" ]; do
+        for ((i = 0; i < ${#SPINSTR}; i++)); do
+            printf "\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${CYAN}${SPINSTR:$i:1}${ENDCOLOR}]"
+            sleep "${DELAY}"
+        done
+    done
+    printf "\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${GREEN}done${ENDCOLOR}]$(tput el)\n"
+}
+
+# Function: run_with_spinner
+# Description:
+#   Executes a command with an animated spinner if VERBOSITY_LEVEL is less than 1.
+#   If VERBOSITY_LEVEL is 1 or higher, runs the command normally with output.
+# Usage:
+#   run_with_spinner "Message to display" command [args...]
+# Arguments:
+#   $1 - Message to display alongside the spinner.
+#   $@ - Command and its arguments to execute.
+run_with_spinner() {
+    local MSG="$1"
+    shift
+    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+        "$@"
+    else
+        "$@" >/dev/null 2>&1 &
+        local CMD_PID="$!"
+        spinner "${CMD_PID}" "${MSG}"
+        wait "${CMD_PID}"
+    fi
+}
+
+# A function to read specific variables from a configuration file in Bash.
+# Usage:
+#   read_config CONFIG_FILE VAR1 VAR2 [...]
+#
+# Arguments:
+#   CONFIG_FILE - Required. This is the path to your configuration file.
+#   VAR1, VAR2, etc - Required. The names of variables you wish to read from the configuration file.
+#   Note: It's important to specify the variable names you want to read, as the function won't read any variables if none are specified.
+read_config() {
+    # Enable extended globbing. This is required for the pattern matching of variable names.
+    shopt -s extglob
+
+    # The first argument is the configuration file.
+    local CONFIG_FILE="${1}"
+
+    # All other arguments are the variable names to look for.
+    local KEYLIST="${@:2}"
+
+    # Check if the configuration file is set, exists and is readable.
+    if [[ ! "$CONFIG_FILE" ]]; then
+        error "No configuration file given"
+        exit 1
+    fi
+    if [[ ! -f "${CONFIG_FILE}" ]]; then
+        error "${CONFIG_FILE} is not a file!"
+        exit 1
+    fi
+    if [[ ! -r "${CONFIG_FILE}" ]]; then
+        error "${CONFIG_FILE} is not readable!"
+        exit 1
+    fi
+
+    # Convert the list of variable names to a regex pattern.
+    KEYLIST="${KEYLIST// /|}"
+
+    # Read each line of the file.
+    while IFS='= ' read -r LHS RHS; do
+        # If the variable name is in our list and the value is not empty...
+        if [[ "${LHS}" =~ ^(${KEYLIST})$ ]] && [[ -n ${RHS} ]]; then
+            # Remove any quotes around the value.
+            RHS="${RHS%\"*}"
+            RHS="${RHS#\"*}"
+            RHS="${RHS%\'*}"
+            RHS="${RHS#\'*}"
+
+            # Escape dollar signs to prevent variable expansion
+            RHS="${RHS//\$/\\\$}"
+
+            # If the value is an array (surrounded by parentheses)...
+            if [[ "${RHS}" =~ ^\((.*)\)$ ]]; then
+                # Assign the array to the variable.
+                eval ${LHS}=\("${BASH_REMATCH[1]}"\)
+            else
+                # Otherwise, assign the value to the variable.
+                eval ${LHS}=\"${RHS}\"
+            fi
+        fi
+    done <<<"$(tr -d '\r' <${CONFIG_FILE})"
+
+    # Disable extended globbing after we're done using it.
+    shopt -u extglob
+}
+
+# A function for updating a configuration file in bash.
+# Usage:
+#   update_config [-a] CONFIG_FILE [VAR1] [VAR2] [...]
+#
+# Arguments:
+#   -a: Update only declared variables, even if empty.
+#   CONFIG_FILE - required, this is the path to your configuration file.
+#   VAR1, VAR2, etc - the names of variables you wish to update in the configuration file.
+#   If variable names are not provided, the function will update all variables found in the file.
+update_config() {
+    local ALL_DECLARED=false
+    if [[ "$1" == "-a" ]]; then
+        ALL_DECLARED=true
+        shift
+    fi
+
+    local CONFIG_FILE="$1"
+    shift
+
+    if [[ ! "$CONFIG_FILE" ]]; then
+        error "No configuration file given."
+        exit 1
+    fi
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        error "$CONFIG_FILE is not a file!"
+        exit 1
+    fi
+    if [[ ! -r "$CONFIG_FILE" ]]; then
+        error "$CONFIG_FILE is not readable!"
+        exit 1
+    fi
+
+    local -a ARGS
+    if (($# > 0)); then
+        ARGS=("$@")
+    else
+        ARGS=($(grep -v '^#' "$CONFIG_FILE" | awk -F '=' '{print $1}'))
+    fi
+
+    for ARG in "${ARGS[@]}"; do
+        local -n VAR="$ARG"
+        local NEW_VALUE ELEMENT
+
+        if ! $ALL_DECLARED && [[ -z "${VAR[@]}" ]]; then
+            continue
+        elif $ALL_DECLARED && [[ -z "${VAR+x}" ]]; then
+            continue
+        fi
+
+        case "$(declare -p "$ARG" 2>/dev/null)" in
+        "declare -a"*)
+            NEW_VALUE="$ARG=("
+            for ELEMENT in "${VAR[@]}"; do
+                NEW_VALUE+="\"$ELEMENT\""
+                [[ "$ELEMENT" != "${VAR[-1]}" ]] && NEW_VALUE+=" "
+            done
+            NEW_VALUE+=")"
+            ;;
+        *)
+            NEW_VALUE="$ARG=\"$VAR\""
+            ;;
+        esac
+
+        if grep -q "^$ARG=" "$CONFIG_FILE"; then
+            sed -i "s|^$ARG=.*|$NEW_VALUE|" "$CONFIG_FILE"
+        else
+            echo -e "\n$NEW_VALUE" >>"$CONFIG_FILE"
+        fi
+    done
+}
+
+# A function to read a specific value from a configuration file in Bash.
+# Usage:
+#   VAR=$(read_config_value CONFIG_FILE VAR)
+#
+# Arguments:
+#   CONFIG_FILE - Required. This is the path to your configuration file.
+#   VAR - Required. The name of the variable you wish to read from the configuration file.
+read_config_value() {
+    if [ ! -f "$1" ]; then
+        echo
+        return
+    fi
+    if grep -q "^$2=" $1; then
+        grep "^$2=" $1 | cut -d "=" -f 2- | tail -n 1 | sed -e "s/^['\"]//;s/['\"]$//"
+    else
+        echo
+    fi
+}
+
+# only allow 'root' to run the script
+allow_root_only() {
+    if [ $(id -u) -ne 0 ]; then
+        error "This script should be run as 'root'!"
+        exit 1
+    fi
+
+    export HOME=/root
+    export LC_ALL=C
+}
+
+# Check the original value of the set options.
+determine_option_status() {
+    local OPTION="${1}"
+    local SET_OPTION="SET_${OPTION^^}"
+
+    if [[ $- == *${OPTION}* ]]; then
+        eval "${SET_OPTION}='true'"
+    else
+        eval "${SET_OPTION}='false'"
+    fi
+}
+
+# Print the current status of the set options.
+print_option_status() {
+    local OPTION="${1}"
+    local CALLER_LINE=${BASH_LINENO[1]}
+    local CALLER_FILE=${BASH_SOURCE[2]##*/}
+
+    if [[ $- == *${OPTION}* ]]; then
+        information "[$CALLER_FILE:$CALLER_LINE] set -${OPTION}"
+    else
+        information "[$CALLER_FILE:$CALLER_LINE] set +${OPTION}"
+    fi
+}
+
+# The toggle_shell_options function temporarily toggles Bash shell options for specific code segments.
+# Usage: toggle_shell_options "eu"
+# This will toggle the -e and -u options.
+#
+# Cycle in a script:
+#   #!/bin/bash
+#   set -eu
+#   SET_E=""
+#   SET_U=""
+#   toggle_shell_options "e"  # Disables "e"
+#   # Your code
+#   toggle_shell_options "e"  # Re-enables "e"
+#
+# Remember: Declare SET_x variables for each option you plan to toggle. For example, SET_E for "e".
+toggle_shell_options() {
+    local OPTIONS="${1}"
+    for ((i = 0; i < ${#OPTIONS}; i++)); do
+        local OPTION="${OPTIONS:$i:1}"
+        local SET_OPTION="SET_${OPTION^^}"
+
+        if [ -z "${!SET_OPTION}" ]; then
+            determine_option_status "${OPTION}"
+            if [ "${!SET_OPTION}" = "true" ]; then
+                set "+${OPTION}"
+                #print_option_status "${OPTION}"
+                continue
+            fi
+        fi
+
+        if [ "${!SET_OPTION}" = "true" ]; then
+            set "-${OPTION}"
+            eval "${SET_OPTION}=''"
+            #print_option_status "${OPTION}"
+        fi
+    done
+}
+
+# Display an error message.
+error() {
+    local MESSAGE="${1-}"
+    if [ "$OUTPUT_MODE" = "console" ]; then
+        echo -e "${BOLD}${RED}E:${ENDCOLOR} $MESSAGE" >&2
+    else
+        echo "E: $MESSAGE" >&2
+    fi
+}
+
+# Display a warning message.
+warning() {
+    local MESSAGE="${1-}"
+    if [ "$OUTPUT_MODE" = "console" ]; then
+        echo -e "${BOLD}${YELLOW}W:${ENDCOLOR} $MESSAGE"
+    else
+        echo "W: $MESSAGE"
+    fi
+}
+
+# Display an information message.
+information() {
+    local MESSAGE="${1-}"
+    if [ "$OUTPUT_MODE" = "console" ]; then
+        echo -e "${BOLD}${CYAN}I:${ENDCOLOR} $MESSAGE"
+    else
+        echo "I: $MESSAGE"
+    fi
+}
+
+# Display a question message.
+question() {
+    local MESSAGE="${1-}"
+    if [ "$OUTPUT_MODE" = "console" ]; then
+        echo -ne "${BOLD}${GREEN}Q:${ENDCOLOR} $MESSAGE "
+        read RESPONSE
+    else
+        echo -n "Q: $MESSAGE "
+        read RESPONSE
+    fi
+}
+
+pkg_is_installed() {
+    local PACKAGE="${1-}"
+    if [ -z "$PACKAGE" ]; then
+        error "pkg_is_installed() needs a package as parameter"
+        exit 1
+    fi
+    if dpkg-query -f'${db:Status-Status}\n' -W $PACKAGE 2>/dev/null | grep -q ^installed; then
+        return 0
+    fi
+    return 1
+}
+
+pkg_test_version() {
+    local PACKAGE="$1"
+    local RELATION="$2"
+    local VERSION="$3"
+    if [ -z "$PACKAGE" ] || [ -z "$RELATION" ] || [ -z "$VERSION" ]; then
+        error "pkg_test_version() takes three arguments: <package>, <relation>, <version>" >&2
+        exit 1
+    fi
+    local INSTVER=$(dpkg-query -f'${Version}\n' -W $PACKAGE 2>/dev/null)
+    if [ -z "$INSTVER" ]; then
+        error "can't test version of package $PACKAGE if it's not installed"
+        exit 1
+    fi
+    if dpkg --compare-versions "$INSTVER" "$RELATION" "$VERSION"; then
+        return 0
+    fi
+    return 1
+}
+
+declare_locales() {
+    # LOCALES is an associative array where each key-value pair is a locale with its related configurations.
+    # Key: Locale code (e.g., "en_US" for American English)
+    # Value: A comma-separated string that defines the following:
+    #   1. Keyboard layout code (e.g., "us" for U.S. layout)
+    #   2. Keyboard layout name (e.g., "English (US)")
+    #   3. Firefox locale name in Debian
+    #   4. Firefox locale name in Ubuntu (Mozilla repository)
+    #   5. LibreOffice locale name in Debian and in Ubuntu
+    #   6. LibreOffice LC_MESSAGES
+    declare -Ag LOCALES=(
+        ["C"]="us,English (US),,en,,"
+        ["de_DE"]="de,German,de,de,de,de"
+        ["en_US"]="us,English (US),,en,,"
+        ["es_ES"]="es,Spanish,es-es,es,es,es"
+        ["fr_FR"]="fr,French,fr,fr,fr,fr"
+        ["it_IT"]="it,Italian,it,it,it,it"
+        ["pt_BR"]="br,Portuguese (Brazil),pt-br,pt,pt-br,br"
+        ["ru_RU"]="ru,Russian,ru,ru,ru,ru"
+    )
+}
+
+################################################################################
+# Functions for processing and analyzing command line arguments
+################################################################################
+# The `process_flag` function handles a flag and its arguments.
+# Its usage is as follows:
+#    process_flag CHECK TYPE VAR [CMDLINE]
+#
+# Parameters:
+#    CHECK: It is a string that can be either "check" or "skip".
+#           - If CHECK is set to "check", it triggers the validation of the option. This ensures that the option is
+#             provided with a valid argument. If the argument is missing, nonexistent, or another option
+#             (starts with `-` or `--`), it will terminate the program with an error.
+#           - If CHECK is set to "skip", the function will skip the validation of the option and proceed directly
+#             to parsing the argument. "skip" is mainly used for flags that do not always require an argument.
+#
+#    TYPE: Specifies the type of the variable to be updated. This can either be "string" or "array".
+#          Depending on the TYPE, the function will correctly parse the arguments and assign them to VAR:
+#              - If TYPE is "string", the function assigns the single argument to VAR.
+#              - If TYPE is "array", the function parses multiple arguments and appends them to VAR.
+#
+#    VAR: Is the variable name that will be updated. VAR is passed by reference and is updated with parsed arguments.
+#
+#    CMDLINE: The rest of the command-line arguments. The function will stop parsing arguments once another flag (an argument starting with "-" or "--") is encountered.
+#
+# Returns:
+#    The function returns the number of arguments processed.
+#    with 'shift' command to remove the processed arguments from the positional parameters list.
+#
+# It's commonly called inside a loop that goes through each command-line argument, like so:
+#
+#    while (("${#}")); do
+#      case "${1}" in
+#        -yf | --your-flag)
+#          process_flag "check" "string" "YOUR_VAR" "${@}"
+#          shift "$?"
+#          ;;
+#      esac
+#    done
+#
+# In this example, the loop checks each command-line argument. If it encounters "--your-flag", it invokes `process_flag`,
+# which validates the argument following the flag, parses it, and assigns its value to YOUR_VAR.
+#
+# Example:
+#    process_flag "check" "string" "AUTOLOGIN" "${@}"
+#
+# Note:
+#    This function will not work as expected when 'set -e' is enabled in the script.
+#    To handle errors within these functions and keep the script running after an error, consider using custom error handling and avoid using 'set -e'.
+
+# Check if an option has a valid argument.
+check_option() {
+    local FLAG="${1}"
+    local ARG="${2}"
+
+    if [[ -z "${ARG}" || "${ARG}" == -* || "${ARG}" == --* ]]; then
+        error "No arguments provided for the option ${FLAG}"
+        exit 1
+    fi
+}
+
+# Parse arguments, assign variables, and return the number of arguments processed.
+parse_arguments() {
+    local -n VAR="${1}"
+    local TYPE="${2}"
+    local FLAG="${3}"
+    shift 3
+    local SHIFT_COUNT=1
+
+    while (("${#}")) && [[ "${1}" != -* ]] && [[ "${1}" != --* ]]; do
+        ARG="${1}"
+        if [ "${TYPE}" = "array" ]; then
+            IFS='; , ' read -ra ADDR <<<"${ARG}"
+            for i in "${ADDR[@]}"; do
+                if [[ -n "${i}" ]]; then
+                    VAR+=("${i}")
+                fi
+            done
+        else
+            VAR="${ARG}"
+        fi
+        shift
+        SHIFT_COUNT=$((SHIFT_COUNT + 1))
+    done
+
+    return "${SHIFT_COUNT}"
+}
+
+# Process a flag and its arguments.
+process_flag() {
+    local CHECK="${1}"
+    local TYPE="${2}"
+    local VAR="${3}"
+    local FLAG="${4}"
+    local ARG="${5}"
+    shift 3
+
+    if [ "${CHECK}" = "check" ]; then
+        check_option "${FLAG}" "${ARG}"
+    fi
+    parse_arguments "${VAR}" "${TYPE}" "${@}"
+}
+
+#------- LIBMINIOSLIVE -------
+
+current_process() {
+    echo -e "${LIGHTYELLOW}=> running ${CYAN}${CMD[ii]}${ENDCOLOR}${LIGHTYELLOW} ...${ENDCOLOR}"
+}
+
+current_function() {
+    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+        echo -e "=> ${CYAN}${FUNCNAME[1]}${ENDCOLOR} function is executing ..."
+    fi
+}
+
+# Checks the index of a given command string in the context of global CMD
+# array. If the command doesn't exist in CMD, it displays the help.
+get_command_index() {
+    local i
+    for ((i = 0; i < "${#CMD[*]}"; i++)); do
+        if [ "${CMD[i]}" == "${1}" ]; then
+            INDEX="${i}"
+            return
+        fi
+    done
+    help "$(gettext 'Command not found:') ${1}"
+}
+
+# Processes script arguments to decide a range, defined by a start
+# index and end index, of commands to execute from the CMD array.
+determine_command_range() {
+    if (($# < 1 || $# > 3)); then
+        help
+    fi
+
+    DASH_FLAG="false"
+    START_INDEX="0"
+    END_INDEX="${#CMD[@]}"
+
+    for ARG in "$@"; do
+        if [[ "${ARG}" == "-" ]]; then
+            DASH_FLAG="true"
+            continue
+        fi
+        get_command_index "${ARG}"
+        if [[ "${DASH_FLAG}" == "false" ]]; then
+            START_INDEX="${INDEX}"
+        else
+            END_INDEX=$((INDEX + 1))
+        fi
+    done
+
+    if [[ "${DASH_FLAG}" == "false" ]]; then
+        END_INDEX=$((START_INDEX + 1))
+    fi
+}
+
+# Check internet connectivity
+check_internet_connection() {
+    if [ "${CHECK_INTERNET_CONNECTION:-true}" != "true" ]; then
+        if [ "${VERBOSITY_LEVEL:-0}" -ge 1 ]; then
+            information "Skipping internet connection check as CHECK_INTERNET_CONNECTION is set to false."
+        fi
+        return
+    fi
+
+    if [ "${VERBOSITY_LEVEL:-0}" -ge 1 ]; then
+        information "Checking internet connection..."
+        information "Connecting to ${CHECK_INTERNET_ADDRESS:-http://deb.debian.org} to verify connectivity."
+    fi
+
+    if command -v wget >/dev/null; then
+        wget -q --spider --timeout=5 "${CHECK_INTERNET_ADDRESS:-http://deb.debian.org}"
+    elif command -v curl >/dev/null; then
+        curl --silent --head --max-time 5 "${CHECK_INTERNET_ADDRESS:-http://deb.debian.org}"
+    else
+        error "Neither wget nor curl is available on this system."
+        exit 1
+    fi
+
+    if [ $? -eq 0 ]; then
+        if [ "${VERBOSITY_LEVEL:-0}" -ge 1 ]; then
+            information "Internet connection is available."
+        fi
+    else
+        error "Internet connection is not available."
+        exit 1
+    fi
+}
+
+# Function to create a log file to record script output
+create_log_file() {
+    toggle_shell_options u
+    if [ -z "${LOG_FILE}" ]; then
+        export LOG_FILE="${BUILD_DIR}/log/build-$(date +%Y%m%d-%H%M%S).log"
+        mkdir -p "${BUILD_DIR}/log"
+        ARGS=""
+        # Loop over all arguments and add them to ARGS in quotes
+        for VAR in "$@"; do
+            ARGS="${ARGS}\"${VAR}\" "
+        done
+        script -q -e -c "${0} ${ARGS}" "${LOG_FILE}"
+
+        # Check if LOG_FILE exists and clean it from escape sequences
+        if [ -f "${LOG_FILE}" ]; then
+            sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "${LOG_FILE}"
+        fi
+
+        exit $?
+    fi
+    toggle_shell_options u
+}
+
+# Function to unmount all file systems under a given directory
+# Parameters:
+#   $1 - Absolute or relative path to the directory
+unmount_dirs() {
+    current_function
+    # Get the directory path from argument and normalize to absolute
+    local DIR_PATH="$(realpath -m "$1")"
+    local MOUNTS
+    local FAILED=0
+
+    # Change to a safe directory to avoid CWD blocking unmount
+    cd / 2>/dev/null || true
+
+    # 1) Collect all mount points strictly inside DIR_PATH (deepest first)
+    mapfile -t MOUNTS < <(
+        findmnt -rn -o TARGET |
+            while read -r TARGET; do
+                TARGET_ABS="$(realpath -m "$TARGET")"
+                if [[ "$TARGET_ABS" == "$DIR_PATH"/* ]]; then
+                    echo "$TARGET_ABS"
+                fi
+            done |
+            # Sort by path length descending to unmount deepest first
+            awk '{ print length, $0 }' |
+            sort -rn |
+            cut -d' ' -f2-
+    )
+
+    if [ "${#MOUNTS[@]}" -eq 0 ]; then
+        if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+            information "No mount points found under ${DIR_PATH}."
+        fi
+        return 0
+    fi
+
+    local MAX_PASSES=3
+    local PASS=1
+    local TO_UNMOUNT=("${MOUNTS[@]}")
+
+    while [ "$PASS" -le "$MAX_PASSES" ] && [ "${#TO_UNMOUNT[@]}" -gt 0 ]; do
+        if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+            information "Pass $PASS: attempting to unmount ${#TO_UNMOUNT[@]} point(s)..."
+        fi
+        local NEXT=()
+        for MOUNT in "${TO_UNMOUNT[@]}"; do
+            if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                information "Processing ${MOUNT} (pass $PASS)"
+            fi
+
+            # Check if mount point is still mounted before attempting to unmount
+            if findmnt "${MOUNT}" >/dev/null 2>&1; then
+                if umount "${MOUNT}" 2>/dev/null; then
+                    if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                        information "Successfully unmounted ${MOUNT}."
+                    fi
+                else
+                    # Double-check if it's still mounted after failed umount
+                    # (it might have been unmounted by another process between checks)
+                    if findmnt "${MOUNT}" >/dev/null 2>&1; then
+                        if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                            warning "Could not unmount ${MOUNT} on pass $PASS; will retry."
+                        fi
+                        NEXT+=("${MOUNT}")
+                    else
+                        if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                            information "Mount point ${MOUNT} was unmounted between checks, skipping."
+                        fi
+                    fi
+                fi
+            else
+                if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                    information "Mount point ${MOUNT} is already unmounted, skipping."
+                fi
+            fi
+        done
+        TO_UNMOUNT=("${NEXT[@]}")
+        ((PASS++))
+
+        # Add a delay between passes to allow processes to release resources
+        if [ "$PASS" -le "$MAX_PASSES" ] && [ "${#TO_UNMOUNT[@]}" -gt 0 ]; then
+            sleep 1
+        fi
+    done
+
+    # If still unable to unmount after MAX_PASSES, try lazy unmount as a last resort
+    if [ "${#TO_UNMOUNT[@]}" -gt 0 ]; then
+        if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+            warning "Attempting lazy unmount for remaining ${#TO_UNMOUNT[@]} point(s)..."
+        fi
+        local LAZY_FAILED=()
+        for MOUNT in "${TO_UNMOUNT[@]}"; do
+            if findmnt "${MOUNT}" >/dev/null 2>&1; then
+                if umount -l "${MOUNT}" 2>/dev/null; then
+                    if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+                        information "Successfully lazy-unmounted ${MOUNT}."
+                    fi
+                else
+                    LAZY_FAILED+=("${MOUNT}")
+                fi
+            fi
+        done
+
+        if [ "${#LAZY_FAILED[@]}" -gt 0 ]; then
+            error "Failed to unmount ${#LAZY_FAILED[@]} point(s) even with lazy unmount. Remaining:"
+            for M in "${LAZY_FAILED[@]}"; do
+                warning "  * ${M}"
+            done
+            return 1
+        fi
+    fi
+
+    if [ ${VERBOSITY_LEVEL:-1} -ge 2 ]; then
+        information "All file systems under ${DIR_PATH} have been successfully unmounted."
+    fi
+    return 0
+}
+
+directory_cleanup() {
+    current_function
+
+    local DIR="$1"
+
+    if [ -n "${DIR}" ]; then
+        unmount_dirs "${DIR}"
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            information "Deleting directory ${DIR}"
+        fi
+        if [ -d "${DIR}" ]; then
+            rm -rf "${DIR}"
+            if [ $? -eq 0 ]; then
+                if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                    information "Successfully deleted ${DIR}"
+                fi
+            else
+                error "Failed to delete directory ${DIR}"
+                exit 1
+            fi
+        else
+            if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                warning "Directory ${DIR} does not exist, thus not removed."
+            fi
+        fi
+        mkdir -p "${DIR}"
+    fi
+}
+
+setup_chroot_environment() {
+    current_function
+
+    local DIR_PATH="$1"
+
+    for DIR in dev run proc sys tmp; do
+        mkdir -p "${DIR_PATH}/${DIR}"
+    done
+
+    mount --bind /dev "${DIR_PATH}/dev"
+    mount --bind /run "${DIR_PATH}/run"
+    mount none -t proc "${DIR_PATH}/proc"
+    mount none -t sysfs "${DIR_PATH}/sys"
+    mount none -t devpts "${DIR_PATH}/dev/pts"
+    mount none -t tmpfs "${DIR_PATH}/tmp"
+}
+
+setup_apt_cache() {
+    if [ "${USE_APT_CACHE}" = "true" ] || [ "${USE_APT_CACHER}" = "true" ] || [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+        current_function
+
+        local DIR_PATH="$1"
+
+        # Set up the apt cache directory
+        if [ "${USE_APT_CACHE}" = "true" ]; then
+            mkdir -p "${APTCACHE_DIR}" "${DIR_PATH}/var/cache/apt/archives"
+            mount --bind "${APTCACHE_DIR}" "${DIR_PATH}/var/cache/apt/archives"
+            if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                information "The apt cache is set up in ${CYAN}${APTCACHE_DIR}${ENDCOLOR}"
+            fi
+        fi
+
+        # Set up the apt cache repository via reprepro
+        if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+            APTCACHE_REPO_DIR="$BUILD_DIR/repo/$DISTRIBUTION"
+            APT_CACHE_REPO_CONFIGURED=${APT_CACHE_REPO_CONFIGURED-"false"}
+
+            # Prompt before initializing or reinitializing the reprepro repo
+            if [ "${APT_CACHE_REPO_CONFIGURED}" = "false" ] && [ -f "${APTCACHE_REPO_DIR}/conf/distributions" ]; then
+                question "${BOLD}APT cache repository already initialized.${ENDCOLOR}\n   Do you want to reconfigure the repository (recreate distributions file and re-import packages)? (${GREEN}y${ENDCOLOR}/${RED}n${ENDCOLOR})"
+                if [[ "${RESPONSE}" =~ ^[Yy]$ ]]; then
+                    # Prepare reprepro directory and distributions config
+                    mkdir -p "${APTCACHE_REPO_DIR}/conf"
+                    cat <<EOF >"${APTCACHE_REPO_DIR}/conf/distributions"
+Origin: LocalCache
+Label: Local APT cache repository
+Suite: ${DISTRIBUTION}
+AlsoAcceptFor: unstable experimental
+Codename: ${DISTRIBUTION}
+Architectures: ${DISTRIBUTION_ARCH}
+Components: main
+Description: Local APT cache repository for ${DISTRIBUTION}
+EOF
+
+                    # Import all .deb packages into the repository
+                    mkdir -p "${APTCACHE_REPO_DIR}/pool"
+                    reprepro -b "${APTCACHE_REPO_DIR}" includedeb "${DISTRIBUTION}" "${APTCACHE_DIR}"/*.deb >/dev/null 2>&1
+
+                    # Export and update package indices
+                    if reprepro -b "${APTCACHE_REPO_DIR}" export; then
+                        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                            information "Successfully updated repository indices in ${CYAN}${APTCACHE_REPO_DIR}${ENDCOLOR}"
+                        fi
+                        APT_CACHE_REPO_CONFIGURED="true"
+                    else
+                        error "Failed to update repository indices in ${CYAN}${APTCACHE_REPO_DIR}${ENDCOLOR}"
+                        exit 1
+                    fi
+                else
+                    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                        information "Skipping repository reconfiguration in ${CYAN}${APTCACHE_REPO_DIR}${ENDCOLOR}"
+                    fi
+                    APT_CACHE_REPO_CONFIGURED="true"
+                fi
+            fi
+
+            local IDX=0
+            local PORT=18010
+            start_http_server "${APTCACHE_REPO_DIR}" "${IDX}" "${PORT}"
+            mkdir -p "${DIR_PATH}/etc/apt/sources.list.d"
+            cat <<EOF >"${DIR_PATH}/etc/apt/sources.list.d/aptcache.list"
+# Local reprepro APT cache
+deb [trusted=yes] http://127.0.0.1:${PORT} ${DISTRIBUTION} main
+EOF
+            DISTRIBUTION_URL="http://127.0.0.1:${PORT}"
+        fi
+
+        # Set up the apt cacher
+        if [ "${USE_APT_CACHER}" = "true" ]; then
+            mkdir -p "${DIR_PATH}/etc/apt/apt.conf.d"
+            cat <<EOF >"${DIR_PATH}/etc/apt/apt.conf.d/02aptcache"
+Acquire::http::Proxy "http://$APT_CACHER_ADDRESS";
+Acquire::https::Proxy "http://$APT_CACHER_ADDRESS";
+Acquire::ftp::proxy "http://$APT_CACHER_ADDRESS";
+EOF
+        fi
+    fi
+}
+
+# Start an HTTP server for a given image/directory.
+start_http_server() {
+    local REPO="${1}"
+    local IDX="${2}"
+    local PORT="${3}"
+
+    # If port is already in use, assume our server is running and bail out
+    if netstat -npl 2>/dev/null | grep -qE "127\.0\.0\.1:${PORT}.*LISTEN"; then
+        information "HTTP server already running on port ${CYAN}${PORT}${ENDCOLOR}, skipping startup."
+        return 0
+    fi
+
+    # If REPO isn’t a directory, mount it temporarily
+    if [ ! -d "${REPO}" ]; then
+        local RBIND=$(mktemp -d /tmp/minios-image-XXXXX)
+        mount $(realpath "${REPO}") "${RBIND}" #2>/dev/null
+        if [ $? -ne 0 ]; then
+            error "Failed to mount image ${REPO} at ${RBIND}"
+            exit 1
+        fi
+        RBINDS+=("${RBIND}")
+        REPO="${RBIND}"
+    fi
+
+    # Start a HTTP server for local repository
+    information "Starting a HTTP server for the local repository at ${CYAN}${REPO}${ENDCOLOR}.
+   This will make it accessible from the chroot environment where the system is being installed."
+
+    #python3 "${BUILD_SCRIPTS_DIR}/image-http-server.py" --bind 127.0.0.1 --port "${PORT}" --directory "${REPO}" >/dev/null 2>&1 &
+    python3 -m http.server --bind 127.0.0.1 --directory "${REPO}" "${PORT}" >/dev/null 2>&1 &
+    PIDS+=($!)
+    toggle_shell_options e
+    local BINDED=$(netstat -npl | grep python3 | grep -e "127.0.0.1:${PORT}" | wc -l)
+    while [ "${BINDED}" -eq 0 ]; do
+        BINDED=$(netstat -npl | grep python3 | grep -e "127.0.0.1:${PORT}" | wc -l)
+        sleep 0.2
+    done
+    toggle_shell_options e
+    if curl -Is "http://127.0.0.1:${PORT}" | head -1 | grep "200 OK" >/dev/null; then
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            information "The repository is now available at the following URL: ${CYAN}http://127.0.0.1:${PORT}${ENDCOLOR}"
+        fi
+    else
+        error "Web server at http://127.0.0.1:${PORT} is not accessible"
+        exit 1
+    fi
+}
+
+# Function to stop the web server.
+stop_http_server() {
+    toggle_shell_options e
+    netstat -npl 2>/dev/null | grep python3 | grep -e "127.0.0.1" | awk '{print $7}' | cut -d'/' -f1 | xargs -r kill 2>/dev/null
+    unmount_dirs "/tmp/minios-image-"
+    rm -rf "/tmp/minios-image-"* 2>/dev/null
+    toggle_shell_options e
+}
+
+update_resolv_conf() {
+    current_function
+
+    local DIR_PATH="${1}"
+    local RESOLV_PATH="${DIR_PATH}/etc/resolv.conf"
+    local BACKUP_PATH="${RESOLV_PATH}.bak"
+
+    if [ -f "/.dockerenv" ] || [ "${container}" = "podman" ] || [ "${DISTRIBUTION_TYPE}" = "ubuntu" ]; then
+        if [ -L "${RESOLV_PATH}" ]; then
+            mv "${RESOLV_PATH}" "${BACKUP_PATH}"
+            echo "nameserver 8.8.8.8" >"${RESOLV_PATH}"
+        elif [ -e "${BACKUP_PATH}" ]; then
+            mv "${BACKUP_PATH}" "${RESOLV_PATH}"
+        fi
+    fi
+}
+
+# mount filesystems inside chroot
+chroot_mount_fs() {
+    current_function
+
+    unmount_dirs "${WORK_DIR}"
+
+    setup_chroot_environment "${INSTALL_DIR}"
+
+    setup_apt_cache "${INSTALL_DIR}"
+
+    update_resolv_conf "${INSTALL_DIR}"
+}
+
+# Displaying information about the start of the build for a more
+# convenient search in the logs
+new_run() {
+    DATE=$(date +"%Y.%m.%d %H:%M")
+    echo ""
+    echo "================================================================="
+    echo "================================================================="
+    echo "============================ NEW RUN ============================"
+    echo "======================== $DATE ======================="
+    echo "================================================================="
+    echo "================================================================="
+    echo "================================================================="
+    echo "========== Distribution: ${DISTRIBUTION}"
+    echo "========== Desktop environment: ${DESKTOP_ENVIRONMENT}"
+    echo "========== Package variant: ${PACKAGE_VARIANT}"
+    echo "========== Arch: ${DISTRIBUTION_ARCH}"
+    echo "========== Install kernel: ${INSTALL_KERNEL}"
+    echo "========== Kernel flavour: ${KERNEL_FLAVOUR}"
+    echo "========== Kernel AUFS: ${KERNEL_AUFS}"
+    echo "========== Install additional drivers: ${KERNEL_BUILD_DKMS}"
+    echo "========== Named boot files: ${NAMED_BOOT_FILES}"
+    echo "========== Compression: ${COMP_TYPE}"
+    echo "========== Locale: ${LOCALE}"
+    echo "========== Time zone: ${LIVE_TIMEZONE}"
+    echo "================================================================="
+    echo "================================================================="
+    echo ""
+}
+
+generate_chroot_configuration_file() {
+    toggle_shell_options u
+    if [ "${DISTRIBUTION}" = "buster" ]; then
+        LIVE_ROOT_PASSWORD_CRYPTED="${LIVE_ROOT_PASSWORD_CRYPTED_LEGACY}"
+    fi
+    cat <<EOF >"${1}"
+# Temporary configuration file for chroot environment
+# This file is generated by the script and should not be modified manually.
+
+# Distribution settings
+DISTRIBUTION="${DISTRIBUTION}"
+DISTRIBUTION_ARCH="${DISTRIBUTION_ARCH}"
+DESKTOP_ENVIRONMENT="${DESKTOP_ENVIRONMENT}"
+PACKAGE_VARIANT="${PACKAGE_VARIANT}"
+COMP_TYPE="${COMP_TYPE}"
+DISTRIBUTION_TYPE="${DISTRIBUTION_TYPE}"
+
+# Kernel settings
+KERNEL_ARCH="${KERNEL_ARCH}"
+INSTALL_KERNEL="${INSTALL_KERNEL}"
+KERNEL_FLAVOUR="${KERNEL_FLAVOUR}"
+KERNEL_AUFS="${KERNEL_AUFS}"
+KERNEL_BUILD_ARCH="${KERNEL_BUILD_ARCH}"
+KERNEL_BUILD_DKMS="${KERNEL_BUILD_DKMS}"
+INITRAMFS_BUILDER="${INITRAMFS_BUILDER}"
+
+# Locale, timezone, layout settings
+LOCALE="${LOCALE}"
+MULTILINGUAL="${MULTILINGUAL}"
+KEEP_LOCALES="${KEEP_LOCALES}"
+LIVE_TIMEZONE="${LIVE_TIMEZONE}"
+LAYOUTDSC="${LAYOUTDSC}"
+LAYOUTID="${LAYOUTID}"
+
+# User settings
+LIVE_USERNAME="${LIVE_USERNAME}"
+LIVE_ROOT_PASSWORD_CRYPTED='${LIVE_ROOT_PASSWORD_CRYPTED}'
+
+# Builder settings
+VERBOSITY_LEVEL=${VERBOSITY_LEVEL}
+BUILD_SCRIPTS="${BUILD_SCRIPTS}"
+BEXT="${BEXT}"
+DEBIAN_FRONTEND_TYPE="${DEBIAN_FRONTEND_TYPE}"
+LIVEKITNAME="${LIVEKITNAME}"
+MODULE="${MODULE}"
+USE_APT_CACHE="${USE_APT_CACHE}"
+DEBUG_SET_ROOT_PASSWORD="${DEBUG_SET_ROOT_PASSWORD}"
+EOF
+    toggle_shell_options u
+}
+
+generate_squashfs_exclude_file() {
+    cat <<EOF >"${1}"
+${2}/boot
+${2}/root/.bash_history
+${2}/root/.cache
+${2}/root/.local/share/mc
+${2}/root/.wget-hsts
+${2}/var/lib/apt/extended_states
+${2}/var/lib/dhcp/dhclient.leases
+${2}/var/lib/systemd/random-seed
+${2}/initrd.img
+${2}/initrd.img.old
+${2}/vmlinuz
+${2}/vmlinuz.old
+${2}/minios_build.conf
+${2}/minioslib
+${2}/linux-live
+${2}/install
+${2}/build
+EOF
+}
+
+# This function creates two configuration files for chroot environment
+# The first file contains various environment variables and their values
+# The second file contains several utility functions
+add_chroot_configuration_files() {
+    generate_chroot_configuration_file "${1}/minios_build.conf"
+    cp "${BUILD_SCRIPTS_DIR}/minioslib" "$1/minioslib"
+}
+
+remove_chroot_configuration_files() {
+    rm -f "$1/minios_build.conf"
+    rm -f "$1/minioslib"
+}
+
+is_in_chroot() {
+    if [ -d /proc/1/root ] && [ "$(stat -c %m /proc/1/root)" != "/" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# ==================== UBUNTU PRO FUNCTIONS =======================
+
+# Check if Ubuntu Pro is available for the current distribution
+# Returns: 0 if available, 1 if not
+ubuntu_pro_is_available() {
+    if [ "${DISTRIBUTION_TYPE}" != "ubuntu" ]; then
+        return 1
+    fi
+
+    # Pro is available for all Ubuntu LTS versions
+    case "${DISTRIBUTION}" in
+    bionic | focal | jammy | noble)
+        return 0
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+}
+
+# Activate Ubuntu Pro subscription in chroot environment
+# Arguments:
+#   $1 - Path to chroot directory
+# Returns: 0 on success, 1 on failure
+ubuntu_pro_attach() {
+    current_function
+
+    local CHROOT_DIR="${1}"
+    local TOKEN="${UBUNTU_PRO_TOKEN:-}"
+
+    # Skip if no token provided
+    if [ -z "${TOKEN}" ]; then
+        if [ "${VERBOSITY_LEVEL}" -ge 2 ]; then
+            information "Ubuntu Pro token not provided, skipping activation"
+        fi
+        return 0
+    fi
+
+    # Skip if Ubuntu Pro is not available for this distribution
+    if ! ubuntu_pro_is_available; then
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            warning "Ubuntu Pro is not available for ${DISTRIBUTION}, skipping"
+        fi
+        return 0
+    fi
+
+    information "Activating Ubuntu Pro subscription..."
+
+    # Update package lists first
+    run_with_spinner "Updating package lists" chroot "${CHROOT_DIR}" apt-get update -qq
+
+    # Install or upgrade ubuntu-advantage-tools to ensure we have the latest version
+    if ! chroot "${CHROOT_DIR}" dpkg -l ubuntu-advantage-tools >/dev/null 2>&1; then
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            information "Installing ubuntu-advantage-tools package..."
+        fi
+        run_with_spinner "Installing ubuntu-advantage-tools" chroot "${CHROOT_DIR}" apt-get install -y ubuntu-advantage-tools
+    else
+        # Upgrade to the latest version (important for Bionic which ships with old version 17)
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            information "Upgrading ubuntu-advantage-tools to latest version..."
+        fi
+        run_with_spinner "Upgrading ubuntu-advantage-tools" chroot "${CHROOT_DIR}" apt-get install --only-upgrade -y ubuntu-advantage-tools
+    fi
+
+    # Attach the token using 'pro' command (available after upgrade)
+    if chroot "${CHROOT_DIR}" pro attach "${TOKEN}" --no-auto-enable 2>&1 | tee /tmp/pro-attach.log; then
+        information "Ubuntu Pro successfully activated"
+
+        # Enable ESM repositories for fresh packages
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            information "Enabling ESM repositories for security updates..."
+        fi
+
+        # Enable ESM Infra (infrastructure packages)
+        chroot "${CHROOT_DIR}" pro enable esm-infra --assume-yes 2>&1 | grep -v "^$" || true
+
+        # Enable ESM Apps (application packages) if available
+        chroot "${CHROOT_DIR}" pro enable esm-apps --assume-yes 2>&1 | grep -v "^$" || true
+
+        # Update package lists with Pro repositories
+        run_with_spinner "Updating package lists with Pro repositories" chroot "${CHROOT_DIR}" apt-get update -qq
+
+        information "Ubuntu Pro repositories are now active"
+        rm -f /tmp/pro-attach.log
+        return 0
+    else
+        error "Failed to activate Ubuntu Pro subscription"
+        cat /tmp/pro-attach.log
+        rm -f /tmp/pro-attach.log
+        return 1
+    fi
+}
+
+# Deactivate Ubuntu Pro subscription in chroot environment
+# Arguments:
+#   $1 - Path to chroot directory
+# Returns: 0 on success
+ubuntu_pro_detach() {
+    current_function
+
+    local CHROOT_DIR="${1}"
+
+    # Skip if Ubuntu Pro is not available
+    if ! ubuntu_pro_is_available; then
+        return 0
+    fi
+
+    # Skip if no token was provided
+    if [ -z "${UBUNTU_PRO_TOKEN:-}" ]; then
+        return 0
+    fi
+
+    information "Deactivating Ubuntu Pro subscription..."
+
+    # Detach the subscription using 'pro' command
+    chroot "${CHROOT_DIR}" pro detach --assume-yes 2>/dev/null || true
+
+    # Clean up all traces
+    ubuntu_pro_cleanup_traces "${CHROOT_DIR}"
+}
+
+# Remove all traces of Ubuntu Pro from the system
+# Arguments:
+#   $1 - Path to chroot directory
+# Returns: 0 on success
+ubuntu_pro_cleanup_traces() {
+    current_function
+
+    local CHROOT_DIR="${1}"
+
+    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+        information "Removing Ubuntu Pro traces from the system..."
+    fi
+
+    # Remove Pro configuration and state directories
+    rm -rf "${CHROOT_DIR}/var/lib/ubuntu-advantage" 2>/dev/null || true
+    rm -rf "${CHROOT_DIR}/etc/ubuntu-advantage" 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/var/log/ubuntu-advantage"* 2>/dev/null || true
+
+    # Remove ESM and Pro source lists
+    rm -f "${CHROOT_DIR}/etc/apt/sources.list.d/ubuntu-"*".list" 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/sources.list.d/ubuntu-esm-"*.list 2>/dev/null || true
+
+    # Remove authentication files for ESM repositories
+    rm -f "${CHROOT_DIR}/etc/apt/auth.conf.d/"*"ubuntu-advantage"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/auth.conf.d/"*"ubuntu-pro"* 2>/dev/null || true
+
+    # Remove apt preferences for Pro
+    rm -f "${CHROOT_DIR}/etc/apt/preferences.d/ubuntu-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/preferences.d/ubuntu-pro-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/preferences.d/ubuntu-esm-"* 2>/dev/null || true
+
+    # Remove keyrings
+    rm -f "${CHROOT_DIR}/etc/apt/trusted.gpg.d/ubuntu-advantage-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/trusted.gpg.d/ubuntu-pro-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/apt/trusted.gpg.d/ubuntu-esm-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/usr/share/keyrings/ubuntu-advantage-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/usr/share/keyrings/ubuntu-pro-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/usr/share/keyrings/ubuntu-esm-"* 2>/dev/null || true
+
+    # Remove Pro systemd services and timers
+    rm -f "${CHROOT_DIR}/etc/systemd/system/multi-user.target.wants/ua-"* 2>/dev/null || true
+    rm -f "${CHROOT_DIR}/etc/systemd/system/timers.target.wants/ua-"* 2>/dev/null || true
+
+    # Update apt cache after removing repositories
+    chroot "${CHROOT_DIR}" apt-get update -qq 2>/dev/null || true
+
+    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+        information "Ubuntu Pro traces successfully removed"
+    fi
+}
+
+# ====================== HOST FUNCTIONS ===========================
+
+# Creating a $PACKAGE_VARIANT list from a template
+create_apt_list() {
+    current_function
+    if [ "${BUILD_FROM_SNAPSHOT}" = "true" ]; then
+        if [ "${DISTRIBUTION}" = "sid" ] || [ "${DISTRIBUTION}" = "bookworm" ]; then
+            echo "deb     https://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/ ${DISTRIBUTION} main contrib non-free" >"${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list"
+            echo "#deb-src https://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/ ${DISTRIBUTION} main contrib non-free" >>"${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list"
+        else
+            cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION_TYPE}-snapshot.list" "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list"
+            sed -i "s,distro,${DISTRIBUTION},g;s,datetime,${SNAPSHOT_DATE},g" "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list"
+        fi
+    else
+        if [ ! -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list" ]; then
+            cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION_TYPE}.list" "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list"
+            sed -i "s,distro,${DISTRIBUTION},g" "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list"
+            sed -i "s,http://archive.ubuntu.com/ubuntu,${DISTRIBUTION_URL},g" "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list"
+        fi
+    fi
+}
+
+export_chroot_variables() {
+    current_function
+    add_chroot_configuration_files /
+    . /minioslib
+    read_config /minios_build.conf "${VARIABLES}"
+    export ${VARIABLES}
+}
+
+chroot_run() {
+    current_function
+    add_chroot_configuration_files "${1}"
+    chroot "${1}" /bin/bash <<EOF
+. /minioslib
+read_config /minios_build.conf "${VARIABLES}"
+export ${VARIABLES}
+${@:2}
+EOF
+}
+
+# Installing the base system
+extract_tarball() {
+    local TARBALL="${1}"
+    local DESTINATION="${2}"
+    if [ ! -f "${TARBALL}" ]; then
+        error "File ${TARBALL} not found!"
+        exit 1
+    fi
+    mkdir -p "${DESTINATION}"
+    if [ "$(id -u)" -eq 0 ]; then
+        tar --same-owner -xzf "${TARBALL}" -C "${DESTINATION}"
+        chown root:root "${DESTINATION}"
+    else
+        sudo tar --same-owner -xzf "${TARBALL}" -C "${DESTINATION}"
+        sudo chown root:root "${DESTINATION}"
+    fi
+    if [ $? -ne 0 ]; then
+        error "Error extracting tarball ${TARBALL}!"
+        exit 1
+    fi
+}
+
+build_bootstrap() {
+    current_process
+
+    local DEBOOTSTRAP_INCLUDE="--include=ca-certificates,wget,dbus,sudo,curl"
+
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    directory_cleanup "${INSTALL_DIR}"
+    directory_cleanup "${WORK_DIR}/image"
+
+    if [ "${USE_ROOTFS}" = "true" ]; then
+        if [ -f "${ROOTFS_TARBALL}" ]; then
+            information "Found rootfs tarball ${CYAN}${ROOTFS_TARBALL}${ENDCOLOR}."
+            extract_tarball "${ROOTFS_TARBALL}" "${INSTALL_DIR}" >/dev/null 2>&1 &
+            local EXT_PID=$!
+            spinner "${EXT_PID}" "Extracting rootfs tarball"
+            wait "${EXT_PID}"
+        else
+            setup_apt_cache "${INSTALL_DIR}"
+
+            if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                sudo DEBIAN_FRONTEND="noninteractive" \
+                    debootstrap --no-check-gpg --arch="${DISTRIBUTION_ARCH}" ${DEBOOTSTRAP_INCLUDE} \
+                    "${DISTRIBUTION}" "${INSTALL_DIR}" "${DISTRIBUTION_URL}"
+            else
+                sudo DEBIAN_FRONTEND="noninteractive" \
+                    debootstrap --no-check-gpg --arch="${DISTRIBUTION_ARCH}" ${DEBOOTSTRAP_INCLUDE} \
+                    "${DISTRIBUTION}" "${INSTALL_DIR}" "${DISTRIBUTION_URL}" >/dev/null 2>&1 &
+                local DB_PID=$!
+                spinner "${DB_PID}" "Bootstrapping ${DISTRIBUTION}"
+                wait "${DB_PID}"
+            fi
+
+            unmount_dirs "${INSTALL_DIR}"
+
+            mkdir -p "${BUILD_DIR}/rootfs"
+
+            if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+                tar -czf "${ROOTFS_TARBALL}" -C "${INSTALL_DIR}" .
+            else
+                tar -czf "${ROOTFS_TARBALL}" -C "${INSTALL_DIR}" . >/dev/null 2>&1 &
+                local TAR_PID=$!
+                spinner "${TAR_PID}" "Creating rootfs tarball"
+                wait "${TAR_PID}"
+            fi
+        fi
+    else
+        setup_apt_cache "${INSTALL_DIR}"
+
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            sudo DEBIAN_FRONTEND="noninteractive" \
+                debootstrap --no-check-gpg --arch="${DISTRIBUTION_ARCH}" ${DEBOOTSTRAP_INCLUDE} \
+                "${DISTRIBUTION}" "${INSTALL_DIR}" "${DISTRIBUTION_URL}"
+        else
+            sudo DEBIAN_FRONTEND="noninteractive" \
+                debootstrap --no-check-gpg --arch="${DISTRIBUTION_ARCH}" ${DEBOOTSTRAP_INCLUDE} \
+                "${DISTRIBUTION}" "${INSTALL_DIR}" "${DISTRIBUTION_URL}" >/dev/null 2>&1 &
+            local DB_PID=$!
+            spinner "${DB_PID}" "Bootstrapping ${DISTRIBUTION}"
+            wait "${DB_PID}"
+        fi
+
+        unmount_dirs "${INSTALL_DIR}"
+    fi
+
+    #if [ "${USE_APT_CACHER}" = "true" ]; then
+    rm -f "${INSTALL_DIR}/etc/apt/apt.conf.d/02aptcache" 2>/dev/null
+    #fi
+
+    if [ "${DISTRIBUTION}" = "kali-rolling" ]; then
+        DISTRIBUTION="testing"
+        create_apt_list
+        cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list" "${INSTALL_DIR}/etc/apt/sources.list"
+        chroot_run "${INSTALL_DIR}" apt-get update
+        chroot_run "${INSTALL_DIR}" apt-get -y install install gnupg
+        chroot_run "${INSTALL_DIR}" apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ED444FF07D8D0BF6
+        DISTRIBUTION="kali-rolling"
+    fi
+
+    create_apt_list
+
+    if [ "${BUILD_FROM_SNAPSHOT}" = "true" ]; then
+        cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list" "${INSTALL_DIR}/etc/apt/sources.list"
+        echo 'Acquire::Check-Valid-Until "false";' | sudo tee "${INSTALL_DIR}/etc/apt/apt.conf.d/00snapshot"
+    else
+        cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list" "${INSTALL_DIR}/etc/apt/sources.list"
+    fi
+}
+
+copy_build_scripts() {
+    current_function
+
+    local DESTINATION=${1:-$INSTALL_DIR}
+
+    mkdir -p "${DESTINATION}/linux-live"
+    rsync -a --exclude='.git' "${BUILD_SCRIPTS_DIR}/" "${DESTINATION}/${BUILD_SCRIPTS}/"
+
+    cp $BUILD_CONF "${DESTINATION}/${BUILD_SCRIPTS}"
+
+    chmod +x "${DESTINATION}/${BUILD_SCRIPTS}/install-chroot"
+}
+
+build_chroot() {
+    current_process
+
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    chroot_mount_fs "${INSTALL_DIR}"
+
+    copy_build_scripts
+
+    create_apt_list
+
+    if [ "${BUILD_FROM_SNAPSHOT}" = "true" ]; then
+        cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}-snapshot.list" \
+            "${INSTALL_DIR}/etc/apt/sources.list"
+    else
+        cp -f "${BUILD_SCRIPTS_DIR}/aptsources/${DISTRIBUTION}.list" \
+            "${INSTALL_DIR}/etc/apt/sources.list"
+    fi
+
+    CACHE_DIR="${BUILD_DIR}/cache/${DISTRIBUTION}"
+    mkdir -p "${CACHE_DIR}"
+
+    cache_cp() {
+        local SRC="$1"
+        (cd "${INSTALL_DIR}" && [ -f "${SRC}" ] && cp --parents "${SRC}" "${CACHE_DIR}")
+    }
+
+    if [ "${USE_APT_CACHE_REPO}" = "false" ]; then
+        cache_cp "etc/apt/sources.list"
+
+        curl --silent -k http://deb.minios.dev/minios-linux.asc |
+            gpg --dearmor >"${INSTALL_DIR}/etc/apt/trusted.gpg.d/minios-linux.gpg"
+        cache_cp "etc/apt/trusted.gpg.d/minios-linux.gpg"
+
+        curl --silent -k http://deb.freexian.com/extended-lts/archive-key.gpg \
+            >"${INSTALL_DIR}/etc/apt/trusted.gpg.d/freexian-archive-extended-lts.gpg"
+        cache_cp "etc/apt/trusted.gpg.d/freexian-archive-extended-lts.gpg"
+
+        if [ ! -f "${INSTALL_DIR}/etc/apt/apt.conf.d/000MiniOS" ]; then
+            mkdir -p "${INSTALL_DIR}/etc/apt/apt.conf.d"
+            cat <<'EOF' >"${INSTALL_DIR}/etc/apt/apt.conf.d/000MiniOS"
+APT::Install-Recommends "0";
+APT::Install-Suggests "0";
+Acquire::Languages { "none"; }
+EOF
+        fi
+        cache_cp "etc/apt/apt.conf.d/000MiniOS"
+
+        mkdir -p "${INSTALL_DIR}/etc/apt/sources.list.d"
+        # Add MiniOS Linux repository
+        {
+            [[ "${DISTRIBUTION}" =~ ^(buster|bookworm|trixie|sid)$ ]] && cat <<EOF
+deb http://deb.minios.dev/debian/ ${DISTRIBUTION} main contrib non-free
+#deb-src http://deb.minios.dev/debian/ ${DISTRIBUTION} main contrib non-free
+
+EOF
+            [[ "${DISTRIBUTION}" =~ ^(bionic|focal|jammy|noble)$ ]] && cat <<EOF
+deb http://deb.minios.dev/debian/ ${DISTRIBUTION} main contrib non-free
+#deb-src http://deb.minios.dev/debian/ ${DISTRIBUTION} main contrib non-free
+
+EOF
+            cat <<EOF
+deb http://deb.minios.dev/debian/ generic main contrib non-free
+#deb-src http://deb.minios.dev/debian/ generic main contrib non-free
+EOF
+
+        } >"${INSTALL_DIR}/etc/apt/sources.list.d/minios-linux.list"
+
+        cache_cp "etc/apt/sources.list.d/minios-linux.list"
+
+        mkdir -p "${INSTALL_DIR}/etc/apt/preferences.d"
+        cat >"${INSTALL_DIR}/etc/apt/preferences.d/minios-linux" <<EOF
+Package: *
+Pin: release l=MiniOS Repository
+Pin-Priority: 1001
+EOF
+        cache_cp "etc/apt/preferences.d/minios-linux"
+    fi
+
+    if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+        rm "${INSTALL_DIR}/etc/apt/sources.list"
+    fi
+
+    # Activate Ubuntu Pro if token is provided (before package installation)
+    if [ "${USE_UBUNTU_PRO:-false}" = "true" ] && [ -n "${UBUNTU_PRO_TOKEN:-}" ]; then
+        ubuntu_pro_attach "${INSTALL_DIR}"
+    fi
+
+    if [ -f /.minios-live-container ]; then
+        chroot_run "${INSTALL_DIR}" /${BUILD_SCRIPTS}/install-chroot
+    else
+        chroot "${INSTALL_DIR}" bash -c "BUILD_SCRIPTS=${BUILD_SCRIPTS} /${BUILD_SCRIPTS}/install-chroot"
+    fi
+
+    # Deactivate Ubuntu Pro and clean up traces (after package installation)
+    if [ "${USE_UBUNTU_PRO:-false}" = "true" ] && [ -n "${UBUNTU_PRO_TOKEN:-}" ]; then
+        ubuntu_pro_detach "${INSTALL_DIR}"
+    fi
+
+    if [ "${RELEASE}" = "true" ]; then
+        MINIOS_VERSION="${RELEASE_VERSION}"
+    else
+        MINIOS_VERSION="$(date +%Y%m%d)"
+    fi
+    cat >"${INSTALL_DIR}/etc/minios-release" <<EOF
+NAME="MiniOS Linux"
+VERSION="${MINIOS_VERSION}"
+EDITION="${PACKAGE_VARIANT}"
+EOF
+
+    if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+        cp -a "${CACHE_DIR}/." "${INSTALL_DIR}/"
+    fi
+
+    unmount_dirs "${WORK_DIR}"
+}
+
+mkmod_corefs() {
+    local FOLDER
+    cd "${1}"
+    COREFS=""
+    # List of directories for root filesystem
+    # No subdirectories are allowed, no slashes,
+    # so You can't use /var/tmp here for example
+    # Exclude directories like proc sys tmp
+    MKMOD="bin etc home lib lib64 opt root sbin srv usr var"
+    for FOLDER in ${MKMOD}; do
+        if [ -d "${1}/${FOLDER}" ]; then
+            COREFS="${COREFS} ${FOLDER}"
+        fi
+    done
+}
+
+build_live() {
+    current_process
+
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    copy_build_scripts
+
+    mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}"/{boot,changes,modules}
+
+    # create compressed 00-core.sb
+    mkmod_corefs "${INSTALL_DIR}"
+
+    information "Compression of ${YELLOW}core${ENDCOLOR} data is in progress ..."
+    mksquashfs ${COREFS} "${WORK_DIR}/image/${LIVEKITNAME}/00-core-${DISTRIBUTION_ARCH}.${BEXT}" -comp "${COMP_TYPE}" ${ADDITIONAL_COMP_OPTS} -b 1024K -always-use-fragments -noappend -quiet -progress || {
+        error "Failed to compress ${YELLOW}core${ENDCOLOR} data."
+        exit 1
+    }
+
+}
+
+build_config() {
+    current_process
+
+    if [ "${DISTRIBUTION}" = "buster" ] || [ "${DISTRIBUTION}" = "bionic" ]; then
+        LIVE_USER_PASSWORD_CRYPTED="${LIVE_USER_PASSWORD_CRYPTED_LEGACY}"
+        LIVE_ROOT_PASSWORD_CRYPTED="${LIVE_ROOT_PASSWORD_CRYPTED_LEGACY}"
+    fi
+
+    if [ -d "${WORK_DIR}/image/${LIVEKITNAME}" ]; then
+        cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/config.conf"
+# You can get information about minios-live-config and other options:
+# man live-config
+LIVE_CONFIG_CMDLINE="${LIVE_CONFIG_CMDLINE}"
+LIVE_HOSTNAME="${LIVE_HOSTNAME}"
+LIVE_USERNAME="${LIVE_USERNAME}"
+LIVE_USER_FULLNAME="${LIVE_USER_FULLNAME}"
+LIVE_USER_DEFAULT_GROUPS="${LIVE_USER_DEFAULT_GROUPS}"
+LIVE_USER_PASSWORD_CRYPTED='${LIVE_USER_PASSWORD_CRYPTED}'
+LIVE_ROOT_PASSWORD_CRYPTED='${LIVE_ROOT_PASSWORD_CRYPTED}'
+LIVE_CONFIG_NOROOT="${LIVE_CONFIG_NOROOT}"
+LIVE_LOCALES="${LOCALE}.UTF-8"
+LIVE_TIMEZONE="${LIVE_TIMEZONE}"
+LIVE_KEYBOARD_MODEL="pc105"
+LIVE_KEYBOARD_LAYOUTS="us,${LAYOUTID}"
+LIVE_KEYBOARD_OPTIONS="grp:alt_shift_toggle,grp_led:scroll"
+LIVE_KEYBOARD_VARIANTS=","
+LIVE_CONFIG_DEBUG="${LIVE_CONFIG_DEBUG}"
+LIVE_LINK_USER_DIRS="${LIVE_LINK_USER_DIRS}"
+LIVE_BIND_USER_DIRS="${LIVE_BIND_USER_DIRS}"
+LIVE_USER_DIRS_PATH="${LIVE_USER_DIRS_PATH}"
+LIVE_MODULE_MODE="${LIVE_MODULE_MODE}"
+
+# MiniOS LiveKit settings.
+DEFAULT_TARGET="${DEFAULT_TARGET}"
+ENABLE_SERVICES="${ENABLE_SERVICES}"
+DISABLE_SERVICES="${DISABLE_SERVICES}"
+EXPORT_LOGS="${EXPORT_LOGS}"
+EOF
+    fi
+}
+
+create_config_files() {
+    local VMLINUZNAME
+    local INITRFSNAME
+    if [ "$NAMED_BOOT_FILES" = "true" ]; then
+        VMLINUZNAME=$(basename "${WORK_DIR}"/image/"${LIVEKITNAME}"/boot/vmlinuz-*)
+        INITRFSNAME=${VMLINUZNAME/vmlinuz/initrfs}.img
+    else
+        VMLINUZNAME="vmlinuz"
+        INITRFSNAME="initrfs.img"
+    fi
+
+    DEFAULT_SETTINGS="boot=live load_ramdisk=1 prompt_ramdisk=0 rw printk.time=0 consoleblank=0 net.ifnames=0 biosdevname=0"
+    DEBUG_SETTINGS="boot=live load_ramdisk=1 prompt_ramdisk=0 rw printk.time=0 debug net.ifnames=0 biosdevname=0"
+
+    BOOT_SETTINGS="quiet"
+
+    BOOT_SETTINGS="${BOOT_SETTINGS} nottyautologin"
+
+    if [ "${PACKAGE_VARIANT}" = "ultra" ]; then
+        BOOT_SETTINGS="${BOOT_SETTINGS} apparmor=0 selinux=0"
+    fi
+
+    get_language_font() {
+        local LANG="$1"
+        case "$LANG" in
+        ru_RU) echo "fonts/ruscii_8x16.psf" ;;
+        de_DE | es_ES | fr_FR | id_ID | it_IT | pt_BR) echo "fonts/lat1_8x16.psf" ;;
+        *) echo "fonts/lat1_8x16.psf" ;;
+        esac
+    }
+
+    get_language_timezone() {
+        local LANG="$1"
+        case "$LANG" in
+        en_US) echo "Etc/UTC" ;;
+        ru_RU) echo "Europe/Moscow" ;;
+        de_DE) echo "Europe/Berlin" ;;
+        es_ES) echo "Europe/Madrid" ;;
+        fr_FR) echo "Europe/Paris" ;;
+        id_ID) echo "Asia/Jakarta" ;;
+        it_IT) echo "Europe/Rome" ;;
+        pt_BR) echo "America/Sao_Paulo" ;;
+        pt_PT) echo "Europe/Lisbon" ;;
+        *) echo "Etc/UTC" ;;
+        esac
+    }
+
+    get_language_keyboard() {
+        local LANG="$1"
+        case "$LANG" in
+        en_US) echo "us" ;;
+        ru_RU) echo "us,ru" ;;
+        de_DE) echo "us,de" ;;
+        es_ES) echo "us,es" ;;
+        fr_FR) echo "us,fr" ;;
+        id_ID) echo "id" ;;
+        it_IT) echo "us,it" ;;
+        pt_BR) echo "us,br" ;;
+        pt_PT) echo "us,pt" ;;
+        *) echo "us" ;;
+        esac
+    }
+
+    # Create SYSLINUX configuration based on bootloader choice
+    if [ "${BOOTLOADER}" = "syslinux-grub" ] || [ "${BOOTLOADER}" = "syslinux-native" ]; then
+        mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux"
+
+        # Create multilingual SYSLINUX configuration for all SYSLINUX modes
+        information "Creating multilingual SYSLINUX configuration..."
+
+        # Create main language selection menu
+        cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/syslinux.multilang.cfg"
+UI vesamenu.c32
+
+PROMPT 0
+TIMEOUT 100
+
+MENU CLEAR
+MENU BACKGROUND ../bootlogo788.png
+MENU RESOLUTION 800 600
+
+MENU WIDTH 97
+MENU MARGIN 15
+MENU ROWS 9
+MENU TABMSGROW 26
+MENU CMDLINEROW 21
+MENU HSHIFT 0
+MENU VSHIFT 10
+MENU HELPMSGENDROW 27
+MENU TIMEOUTROW 22
+
+MENU COLOR BORDER  30;40      #00000000 #00000000 none
+MENU COLOR SEL     47;30      #FF000000 #40FFFFFF none
+MENU COLOR UNSEL   37;40      #99FFFFFF #00000000 none
+MENU COLOR TABMSG  32;40      #FFA500   #00000000 none
+
+F1 help/en_US.txt zblack.png
+
+MENU AUTOBOOT Press Esc for options, automatic boot in # second{,s} ...
+MENU TABMSG [F1] help                                                        [Tab] cmdline >
+
+MENU TITLE Choose Language
+
+LABEL en_US
+MENU LABEL English
+CONFIG lang/en_US.cfg
+
+LABEL ru_RU
+MENU LABEL Russian
+CONFIG lang/ru_RU.cfg
+
+LABEL de_DE
+MENU LABEL German
+CONFIG lang/de_DE.cfg
+
+LABEL es_ES
+MENU LABEL Spanish
+CONFIG lang/es_ES.cfg
+
+LABEL fr_FR
+MENU LABEL French
+CONFIG lang/fr_FR.cfg
+
+LABEL id_ID
+MENU LABEL Indonesian
+CONFIG lang/id_ID.cfg
+
+LABEL it_IT
+MENU LABEL Italian
+CONFIG lang/it_IT.cfg
+
+LABEL pt_BR
+MENU LABEL Portuguese (Brazil)
+CONFIG lang/pt_BR.cfg
+
+LABEL pt_PT
+MENU LABEL Portuguese (Portugal)
+CONFIG lang/pt_PT.cfg
+
+EOF
+
+        # Create fonts and lang directories
+        mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/fonts" "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/lang"
+
+        # Copy fonts from bootfiles
+        if [ -d "${BUILD_SCRIPTS_DIR}/bootfiles/boot/syslinux/fonts" ]; then
+            cp "${BUILD_SCRIPTS_DIR}/bootfiles/boot/syslinux/fonts/"*.psf "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/fonts/"
+            information "Copied PSF1 fonts for multilingual support"
+        else
+            warning "PSF1 fonts not found in bootfiles, using default font"
+        fi
+
+        # Generate configurations for each language
+        for CURRENT_LANG in en_US ru_RU de_DE es_ES fr_FR id_ID it_IT pt_BR pt_PT; do
+            local MO_FILE="${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/locale/${CURRENT_LANG}.mo"
+            local FONT_FILE=$(get_language_font "$CURRENT_LANG")
+            local LOCALE_UTF="${CURRENT_LANG}.UTF-8"
+
+            # For English, don't set timezone and keyboard (use config.conf defaults)
+            if [ "$CURRENT_LANG" = "en_US" ]; then
+                local TIMEZONE=""
+                local KEYBOARD=""
+            else
+                local TIMEZONE=$(get_language_timezone "$CURRENT_LANG")
+                local KEYBOARD=$(get_language_keyboard "$CURRENT_LANG")
+            fi
+
+            # Extract translations from mo file if it exists
+            local RESUME="Resume previous session"
+            local START_NEW="Start a new session"
+            local CHOOSE_SESSION="Choose session during startup"
+            local FRESH_START="Fresh start"
+            local COPY_RAM="Copy to RAM"
+            local PRESS_ESC="Press Esc for options, automatic boot in # second{,s} ..."
+            local F1_HELP="[F1] help"
+            local TAB_CMDLINE="[Tab] cmdline >"
+            local CHOOSE_LANGUAGE="Choose Language"
+
+            # Parse translations from po file
+            local PO_FILE="${BUILD_SCRIPTS_DIR}/bootfiles/boot/grub/po/${CURRENT_LANG}.po"
+            if [ -f "$PO_FILE" ]; then
+                local TEMP_RESUME=$(awk '/^msgid "Resume previous session"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_START_NEW=$(awk '/^msgid "Start a new session"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_CHOOSE_SESSION=$(awk '/^msgid "Choose session during startup"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_FRESH_START=$(awk '/^msgid "Fresh start"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_COPY_RAM=$(awk '/^msgid "Copy to RAM"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_PRESS_ESC=$(awk '/^msgid "Press Esc for options, automatic boot in # second/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_F1_HELP=$(awk '/^msgid "\[F1\] help"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_TAB_CMDLINE=$(awk '/^msgid "\[Tab\] cmdline >"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+                local TEMP_CHOOSE_LANGUAGE=$(awk '/^msgid "Choose Language"/{getline; gsub(/^msgstr "|"$/, ""); if($0 != "") print; exit}' "$PO_FILE")
+
+                # Use translations if found
+                [ -n "$TEMP_RESUME" ] && RESUME="$TEMP_RESUME"
+                [ -n "$TEMP_START_NEW" ] && START_NEW="$TEMP_START_NEW"
+                [ -n "$TEMP_CHOOSE_SESSION" ] && CHOOSE_SESSION="$TEMP_CHOOSE_SESSION"
+                [ -n "$TEMP_FRESH_START" ] && FRESH_START="$TEMP_FRESH_START"
+                [ -n "$TEMP_COPY_RAM" ] && COPY_RAM="$TEMP_COPY_RAM"
+                [ -n "$TEMP_PRESS_ESC" ] && PRESS_ESC="$TEMP_PRESS_ESC"
+                [ -n "$TEMP_F1_HELP" ] && F1_HELP="$TEMP_F1_HELP"
+                [ -n "$TEMP_TAB_CMDLINE" ] && TAB_CMDLINE="$TEMP_TAB_CMDLINE"
+                [ -n "$TEMP_CHOOSE_LANGUAGE" ] && CHOOSE_LANGUAGE="$TEMP_CHOOSE_LANGUAGE"
+            fi
+
+            # Create configuration with appropriate encoding based on language
+            local ENCODING=""
+            local OUTPUT_FILE="${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/lang/${CURRENT_LANG}.cfg"
+
+            case "$CURRENT_LANG" in
+            ru_RU)
+                ENCODING="CP866"
+                ;;
+            de_DE | es_ES | fr_FR | it_IT | pt_BR | pt_PT)
+                ENCODING="ISO-8859-1"
+                ;;
+            *)
+                # No encoding conversion for other languages
+                ;;
+            esac
+
+            # Determine help file (localized or fallback to English)
+            local HELP_FILE="help/${CURRENT_LANG}.txt"
+            if [ ! -f "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/${HELP_FILE}" ]; then
+                HELP_FILE="help/en_US.txt"
+            fi
+
+            # Generate configuration
+            (
+                cat <<EOF
+FONT ${FONT_FILE}
+UI vesamenu.c32
+
+PROMPT 0
+TIMEOUT 100
+
+MENU CLEAR
+MENU HIDDEN
+MENU HIDDENKEY Enter default
+MENU BACKGROUND ../bootlogo788.png
+MENU RESOLUTION 800 600
+
+MENU WIDTH 97
+MENU MARGIN 15
+MENU ROWS 5
+MENU TABMSGROW 24
+MENU CMDLINEROW 21
+MENU HSHIFT 0
+MENU VSHIFT 12
+MENU HELPMSGENDROW 25
+MENU TIMEOUTROW 22
+
+MENU COLOR BORDER  30;40      #00000000 #00000000 none
+MENU COLOR SEL     47;30      #FF000000 #40FFFFFF none
+MENU COLOR UNSEL   37;40      #99FFFFFF #00000000 none
+MENU COLOR TABMSG  32;40      #FFA500   #00000000 none
+
+F1 ${HELP_FILE} zblack.png
+
+MENU AUTOBOOT ${PRESS_ESC}
+MENU TABMSG ${F1_HELP}                                                        ${TAB_CMDLINE}
+
+LABEL default
+MENU LABEL ${RESUME}
+KERNEL /${LIVEKITNAME}/boot/${VMLINUZNAME}
+APPEND vga=788 initrd=/${LIVEKITNAME}/boot/${INITRFSNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=resume locales=${LOCALE_UTF}$([ -n "${TIMEZONE}" ] && echo " timezone=${TIMEZONE}")$([ -n "${KEYBOARD}" ] && echo " keyboard-layouts=${KEYBOARD}")
+
+LABEL perch
+MENU LABEL ${START_NEW}
+KERNEL /${LIVEKITNAME}/boot/${VMLINUZNAME}
+APPEND vga=788 initrd=/${LIVEKITNAME}/boot/${INITRFSNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=new locales=${LOCALE_UTF}$([ -n "${TIMEZONE}" ] && echo " timezone=${TIMEZONE}")$([ -n "${KEYBOARD}" ] && echo " keyboard-layouts=${KEYBOARD}")
+
+LABEL asksession
+MENU LABEL ${CHOOSE_SESSION}
+KERNEL /${LIVEKITNAME}/boot/${VMLINUZNAME}
+APPEND vga=788 initrd=/${LIVEKITNAME}/boot/${INITRFSNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=ask locales=${LOCALE_UTF}$([ -n "${TIMEZONE}" ] && echo " timezone=${TIMEZONE}")$([ -n "${KEYBOARD}" ] && echo " keyboard-layouts=${KEYBOARD}")
+
+LABEL live
+MENU LABEL ${FRESH_START}
+KERNEL /${LIVEKITNAME}/boot/${VMLINUZNAME}
+APPEND vga=788 initrd=/${LIVEKITNAME}/boot/${INITRFSNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} locales=${LOCALE_UTF}$([ -n "${TIMEZONE}" ] && echo " timezone=${TIMEZONE}")$([ -n "${KEYBOARD}" ] && echo " keyboard-layouts=${KEYBOARD}")
+
+LABEL toram
+MENU LABEL ${COPY_RAM}
+KERNEL /${LIVEKITNAME}/boot/${VMLINUZNAME}
+APPEND vga=788 initrd=/${LIVEKITNAME}/boot/${INITRFSNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} toram locales=${LOCALE_UTF}$([ -n "${TIMEZONE}" ] && echo " timezone=${TIMEZONE}")$([ -n "${KEYBOARD}" ] && echo " keyboard-layouts=${KEYBOARD}")
+
+EOF
+            ) | if [ -n "$ENCODING" ] && command -v iconv >/dev/null 2>&1; then
+                iconv -f UTF-8 -t "$ENCODING" >"$OUTPUT_FILE" 2>/dev/null
+            else
+                cat >"$OUTPUT_FILE"
+            fi
+        done
+
+        information "Created multilingual SYSLINUX configuration with support for all available languages"
+
+        # For syslinux-grub mode, also create a minimalist config that loads GRUB as default
+        if [ "${BOOTLOADER}" = "syslinux-grub" ]; then
+            cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/syslinux.cfg"
+PROMPT 0
+TIMEOUT 1
+
+DEFAULT grub2
+
+LABEL grub2
+MENU LABEL GRUB2
+LINUX /${LIVEKITNAME}/boot/grub/i386-pc/lnxboot.img
+INITRD /${LIVEKITNAME}/boot/grub/i386-pc/core.img
+
+EOF
+            information "Created minimalist SYSLINUX configuration"
+        fi
+    fi
+
+    # Create multilingual GRUB configuration (always needed for UEFI)
+    information "Creating multilingual GRUB configuration..."
+    cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.multilang.cfg"
+set default=0
+set timeout=10
+set message="Loading kernel and ramdisk..."
+
+insmod regexp
+insmod gettext
+set localedir=\$prefix/locale
+
+# Detect lockdown mode (Secure Boot)
+set lockdown=n
+insmod font
+if ! loadfont \$prefix/unicode.pf2 ; then
+    set lockdown=y
+fi
+
+# Language selection (title in theme)
+
+# Language selection
+menuentry "English" {
+    lang="en_US"
+    lang_utf="en_US.UTF-8"
+    lang_timezone=""
+    lang_keyboard=""
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Русский" {
+    lang="ru_RU"
+    lang_utf="ru_RU.UTF-8"
+    lang_timezone="Europe/Moscow"
+    lang_keyboard="us,ru"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Deutsch" {
+    lang="de_DE"
+    lang_utf="de_DE.UTF-8"
+    lang_timezone="Europe/Berlin"
+    lang_keyboard="us,de"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Español" {
+    lang="es_ES"
+    lang_utf="es_ES.UTF-8"
+    lang_timezone="Europe/Madrid"
+    lang_keyboard="us,es"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Français" {
+    lang="fr_FR"
+    lang_utf="fr_FR.UTF-8"
+    lang_timezone="Europe/Paris"
+    lang_keyboard="us,fr"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Bahasa Indonesia" {
+    lang="id_ID"
+    lang_utf="id_ID.UTF-8"
+    lang_timezone="Asia/Jakarta"
+    lang_keyboard="id"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Italiano" {
+    lang="it_IT"
+    lang_utf="it_IT.UTF-8"
+    lang_timezone="Europe/Rome"
+    lang_keyboard="us,it"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Português (Brasil)" {
+    lang="pt_BR"
+    lang_utf="pt_BR.UTF-8"
+    lang_timezone="America/Sao_Paulo"
+    lang_keyboard="us,br"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+menuentry "Português (Portugal)" {
+    lang="pt_PT"
+    lang_utf="pt_PT.UTF-8"
+    lang_timezone="Europe/Lisbon"
+    lang_keyboard="us,pt"
+    export lang
+    export lang_utf
+    export lang_timezone
+    export lang_keyboard
+    configfile /${LIVEKITNAME}/boot/grub/main.cfg
+}
+
+# Help text handled by theme
+
+# Load fonts
+if [ "\$lockdown" = "y" ]; then
+    loadfont (memdisk)/fonts/unicode.pf2
+else
+    loadfont \$prefix/dejavu-bold-16.pf2
+    loadfont \$prefix/dejavu-bold-14.pf2
+    loadfont \$prefix/roboto-bold-20.pf2
+    loadfont \$prefix/roboto-regular-20.pf2
+    loadfont \$prefix/unicode.pf2
+fi
+
+if [ "\$grub_platform" = "pc" ]; then
+    set gfxmode=1024x768x32
+    set gfxpayload=1024x768x32,1024x768
+else
+    set gfxmode=auto
+    set gfxpayload=auto
+fi
+
+insmod all_video
+insmod gfxterm
+insmod png
+
+set color_normal=light-gray/black
+set color_highlight=white/black
+
+if [ -e /minios/boot/bootlogo791.png ]; then
+    set theme=/minios/boot/grub/minios-theme/theme.txt
+else
+    set color_normal=white/black
+    set color_highlight=black/white
+fi
+
+terminal_output gfxterm
+
+EOF
+
+    # Create main menu config
+    cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/main.cfg"
+set default=0
+set timeout=10
+
+# Initialize gettext support
+insmod regexp
+insmod gettext
+set localedir=\$prefix/locale
+
+# Build extra boot parameters (timezone and keyboard) only if set
+set extra_params=""
+if [ -n "\$lang_timezone" ]; then
+    set extra_params="timezone=\$lang_timezone"
+fi
+if [ -n "\$lang_keyboard" ]; then
+    if [ -n "\$extra_params" ]; then
+        set extra_params="\$extra_params keyboard-layouts=\$lang_keyboard"
+    else
+        set extra_params="keyboard-layouts=\$lang_keyboard"
+    fi
+fi
+
+# Set GRUB language for gettext
+if [ -n "\$lang" ]; then
+    set locale="\$lang"
+fi
+
+# Gettext-based localized menu strings
+set OS=\$"MiniOS"
+set resume=\$"Resume previous session"
+set newsession=\$"Start a new session"
+set choosesession=\$"Choose session during startup"
+set freshstart=\$"Fresh start"
+set copyram=\$"Copy to RAM"
+set loading=\$"Loading kernel and ramdisk..."
+
+# Export variables for proper gettext functionality
+export OS
+export resume
+export newsession
+export choosesession
+export freshstart
+export copyram
+export backtolang
+export loading
+
+# Detect lockdown mode (Secure Boot) if not already set
+if [ -z "\$lockdown" ]; then
+    set lockdown=n
+    insmod font
+    if ! loadfont \$prefix/unicode.pf2 ; then
+        set lockdown=y
+    fi
+fi
+
+# Load fonts
+if [ "\$lockdown" = "y" ]; then
+    loadfont (memdisk)/fonts/unicode.pf2
+else
+    loadfont \$prefix/dejavu-bold-16.pf2
+    loadfont \$prefix/dejavu-bold-14.pf2
+    loadfont \$prefix/roboto-bold-20.pf2
+    loadfont \$prefix/roboto-regular-20.pf2
+    loadfont \$prefix/unicode.pf2
+fi
+
+if [ "\$grub_platform" = "pc" ]; then
+    set gfxmode=1024x768x32
+    set gfxpayload=1024x768x32,1024x768
+else
+    set gfxmode=auto
+    set gfxpayload=auto
+fi
+
+insmod all_video
+insmod gfxterm
+insmod png
+
+set color_normal=light-gray/black
+set color_highlight=white/black
+
+# Set theme based on language
+if [ -n "\$lang" ]; then
+    if [ -e /${LIVEKITNAME}/boot/grub/minios-theme/theme_\$lang.txt ]; then
+        set theme=/${LIVEKITNAME}/boot/grub/minios-theme/theme_\$lang.txt
+    elif [ -e /${LIVEKITNAME}/boot/bootlogo791.png ]; then
+        set theme=/${LIVEKITNAME}/boot/grub/minios-theme/theme.txt
+    else
+        set color_normal=white/black
+        set color_highlight=black/white
+    fi
+else
+    if [ -e /${LIVEKITNAME}/boot/bootlogo791.png ]; then
+        set theme=/${LIVEKITNAME}/boot/grub/minios-theme/theme.txt
+    else
+        set color_normal=white/black
+        set color_highlight=black/white
+    fi
+fi
+
+terminal_output gfxterm
+
+menuentry "\$resume" --class resume {
+    echo \$loading
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=resume locales=\$lang_utf \$extra_params
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "\$newsession" --class new {
+    echo \$loading
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=new locales=\$lang_utf \$extra_params
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "\$choosesession" --class switch {
+    echo \$loading
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=ask locales=\$lang_utf \$extra_params
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "\$freshstart" --class live {
+    echo \$loading
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} locales=\$lang_utf \$extra_params
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "\$copyram" --class ram {
+    echo \$loading
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} toram locales=\$lang_utf \$extra_params
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+
+EOF
+
+    # Create English template GRUB configuration for installer
+    cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.template.cfg"
+set default=0
+set timeout=10
+set message="Loading kernel and ramdisk..."
+
+# Detect lockdown mode (Secure Boot)
+set lockdown=n
+insmod font
+if ! loadfont \$prefix/unicode.pf2 ; then
+    set lockdown=y
+fi
+
+# Load fonts
+if [ "\$lockdown" = "y" ]; then
+    loadfont (memdisk)/fonts/unicode.pf2
+else
+    loadfont \$prefix/dejavu-bold-16.pf2
+    loadfont \$prefix/dejavu-bold-14.pf2
+    loadfont \$prefix/roboto-bold-20.pf2
+    loadfont \$prefix/roboto-regular-20.pf2
+    loadfont \$prefix/unicode.pf2
+fi
+
+if [ "\$grub_platform" = "pc" ]; then
+    set gfxmode=1024x768x32
+    set gfxpayload=1024x768x32,1024x768
+else
+    set gfxmode=auto
+    set gfxpayload=auto
+fi
+
+insmod all_video
+insmod gfxterm
+insmod png
+
+set color_normal=light-gray/black
+set color_highlight=white/black
+
+if [ -e /minios/boot/bootlogo791.png ]; then
+    set theme=/minios/boot/grub/minios-theme/theme.txt
+else
+    set color_normal=white/black
+    set color_highlight=black/white
+fi
+
+terminal_output gfxterm
+
+menuentry "Resume previous session" --class resume {
+    echo \$message
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=resume
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "Start a new session" --class new {
+    echo \$message
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=new
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "Choose session during startup" --class switch {
+    echo \$message
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} perchdir=ask
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "Fresh start" --class live {
+    echo \$message
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS}
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+menuentry "Copy to RAM" --class ram {
+    echo \$message
+    search --set -f /${LIVEKITNAME}/boot/${VMLINUZNAME}
+    set gfxpayload=\$gfxpayload
+    linux /${LIVEKITNAME}/boot/${VMLINUZNAME} ${DEFAULT_SETTINGS} ${BOOT_SETTINGS} toram
+    initrd /${LIVEKITNAME}/boot/${INITRFSNAME}
+}
+
+EOF
+
+    # Create active grub.cfg as copy of multilingual configuration
+    cp "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.multilang.cfg" "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.cfg"
+    information "Created multilingual GRUB configuration"
+}
+
+build_initrd() {
+    if [ "${INSTALL_KERNEL}" = "false" ]; then
+        return 0
+    fi
+    current_function
+
+    OVERLAYS="${WORK_DIR}/overlays"
+    BUNDLES_DIR="${OVERLAYS}/bundles"
+    declare -A OVERLAY=(
+        [upper]="${OVERLAYS}/initrd/upper"
+        [work]="${OVERLAYS}/initrd/work"
+        [merged]="${OVERLAYS}/initrd/merged"
+    )
+
+    overlay_cleanup
+
+    overlay_chroot_mount_fs
+
+    read_config "${WORK_DIR}/minios_build.conf" KERNEL
+
+    mkdir -p "${OVERLAY[upper]}/boot"
+    cp "${WORK_DIR}/kernel/vmlinuz"-* "${OVERLAY[upper]}/boot/"
+    cp "${WORK_DIR}/kernel/config"-* "${OVERLAY[upper]}/boot/"
+    KERNEL="${KERNEL:-$(file "${OVERLAY[upper]}/boot/vmlinuz"-* | grep -oP 'version \K[^\s]+')}"
+
+    copy_build_scripts "${OVERLAY[merged]}"
+    chmod +x "${OVERLAY[merged]}/${BUILD_SCRIPTS}/build-initramfs"
+    chroot_run "${OVERLAY[merged]}" "/${BUILD_SCRIPTS}/build-initramfs"
+
+    if [ "$NAMED_BOOT_FILES" = "true" ]; then
+        VMLINUZNAME="vmlinuz-$KERNEL"
+        INITRFSNAME="initrfs-$KERNEL.img"
+    else
+        VMLINUZNAME="vmlinuz"
+        INITRFSNAME="initrfs.img"
+    fi
+
+    cp "${OVERLAY[merged]}/boot/vmlinuz"-* "${WORK_DIR}/image/${LIVEKITNAME}/boot/${VMLINUZNAME}"
+    cp "${OVERLAY[merged]}/boot/initrfs.img" "${WORK_DIR}/image/${LIVEKITNAME}/boot/${INITRFSNAME}"
+
+    # Create compatibility symlinks for Ventoy
+    if [ "$NAMED_BOOT_FILES" = "true" ]; then
+        cd "${WORK_DIR}/image/${LIVEKITNAME}/boot"
+        ln -sf "${VMLINUZNAME}" "vmlinuz" 2>/dev/null || true
+        ln -sf "${INITRFSNAME}" "initrfs.img" 2>/dev/null || true
+        cd - >/dev/null
+    fi
+
+    overlay_chroot_finish_up
+
+    overlay_unmount_dirs
+}
+
+debug_ssh_keys() {
+    if [ "${DEBUG_SSH_KEYS}" = "false" ]; then
+        return 0
+    fi
+    current_function
+
+    # Generate SSH key pair in temporary location
+    local TEMP_SSH_DIR=$(mktemp -d)
+    ssh-keygen -t rsa -b 4096 -N "" -f "${TEMP_SSH_DIR}/id_rsa" -C "minios-debug" <<<y >/dev/null 2>&1
+
+    # Create authorized_keys files for system users
+    # Root user
+    cp "${TEMP_SSH_DIR}/id_rsa.pub" "${WORK_DIR}/image/${LIVEKITNAME}/authorized_keys.root"
+
+    # Live user
+    if [ -n "${LIVE_USERNAME}" ] && [ "${LIVE_USERNAME}" != "root" ]; then
+        cp "${TEMP_SSH_DIR}/id_rsa.pub" "${WORK_DIR}/image/${LIVEKITNAME}/authorized_keys.${LIVE_USERNAME}"
+    fi
+
+    # Save private key for debugging access
+    cp "${TEMP_SSH_DIR}/id_rsa" "${WORK_DIR}/image/${LIVEKITNAME}/debug_ssh_key"
+    chmod 600 "${WORK_DIR}/image/${LIVEKITNAME}/debug_ssh_key"
+
+    # Also save in build directory
+    cp "${TEMP_SSH_DIR}/id_rsa" "${WORK_DIR}/debug_ssh_key"
+    chmod 600 "${WORK_DIR}/debug_ssh_key"
+
+    # Cleanup temporary directory
+    rm -rf "${TEMP_SSH_DIR}"
+
+    information "Debug SSH keys created: authorized_keys.root"
+    if [ -n "${LIVE_USERNAME}" ] && [ "${LIVE_USERNAME}" != "root" ]; then
+        information "Debug SSH keys created: authorized_keys.${LIVE_USERNAME}"
+    fi
+    information "Private key saved on media: ${WORK_DIR}/image/${LIVEKITNAME}/debug_ssh_key"
+    information "Private key saved in build dir: ${WORK_DIR}/debug_ssh_key"
+}
+
+remove_unused_grub_modules() {
+    # Auto-optimize GRUB modules based on bootloader choice
+    local should_optimize=false
+
+    if [ "${GRUB_REMOVE_UNUSED_MODULES}" = "true" ]; then
+        should_optimize=true
+    elif [ "${BOOTLOADER}" = "syslinux-native" ]; then
+        # Always optimize when using syslinux-native
+        should_optimize=true
+    fi
+
+    if [ "$should_optimize" != "true" ]; then
+        return 0
+    fi
+
+    information "Removing unused GRUB modules to save space (bootloader: ${BOOTLOADER})..."
+
+    # Essential modules needed for MiniOS boot process
+    # GRUB modules
+    local ESSENTIAL_MODULES=(
+        # Core boot functionality
+        "normal.mod" "boot.mod" "linux.mod" "chain.mod" "configfile.mod" "loopback.mod"
+
+        # File systems
+        "iso9660.mod" "udf.mod" "fat.mod" "ext2.mod" "btrfs.mod" "ntfs.mod" "exfat.mod"
+
+        # Partition support
+        "part_msdos.mod" "part_gpt.mod" "part_acorn.mod" "part_apple.mod" "part_bsd.mod"
+        "part_dvh.mod" "part_plan.mod" "part_sun.mod" "part_sunpc.mod"
+
+        # Search functionality
+        "search.mod" "search_fs_file.mod" "search_fs_uuid.mod" "search_label.mod"
+
+        # Video and graphics
+        "all_video.mod" "gfxterm.mod" "gfxmenu.mod" "png.mod" "jpeg.mod"
+        "video.mod" "video_fb.mod" "video_colors.mod"
+
+        # EFI specific
+        "efi_gop.mod" "efi_uga.mod" "efinet.mod" "efitextmode.mod"
+
+        # BIOS specific (i386-pc only)
+        "biosdisk.mod" "vbe.mod" "vga.mod"
+
+        # Font and terminal
+        "font.mod" "terminal.mod" "gfxterm_background.mod" "gfxterm_menu.mod"
+
+        # Utilities used in configs
+        "loadenv.mod" "minicmd.mod" "cat.mod" "echo.mod" "ls.mod" "test.mod"
+        "true.mod" "help.mod" "probe.mod" "gettext.mod" "regexp.mod"
+
+        # Audio
+        "play.mod"
+
+        # Archive and compression
+        "gzio.mod" "xzio.mod" "lzopio.mod"
+
+        # Basic file operations
+        "file.mod" "bufio.mod" "blocklist.mod"
+
+        # Disk and hardware
+        "disk.mod" "ahci.mod" "ata.mod" "pata.mod" "scsi.mod" "ohci.mod" "uhci.mod" "ehci.mod"
+        "usb.mod" "usbms.mod" "usb_keyboard.mod"
+
+        # Crypto
+        "crypto.mod" "gcry_sha256.mod" "gcry_sha512.mod" "gcry_rsa.mod"
+
+        # Memory and CPU
+        "relocator.mod" "mmap.mod" "cpuid.mod"
+
+        # Other essential
+        "halt.mod" "reboot.mod" "sleep.mod" "date.mod" "keystatus.mod"
+    )
+
+    # Remove unused modules from all GRUB directories
+    for grub_dir in "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub"/{i386-pc,i386-efi,x86_64-efi}; do
+        if [ -d "$grub_dir" ]; then
+            local removed_count=0
+            local total_count=0
+
+            for module in "$grub_dir"/*.mod; do
+                [ -f "$module" ] || continue
+                total_count=$((total_count + 1))
+
+                local module_name=$(basename "$module")
+                local keep_module=false
+
+                # Check if this module is in our essential list
+                for essential in "${ESSENTIAL_MODULES[@]}"; do
+                    if [ "$module_name" = "$essential" ]; then
+                        keep_module=true
+                        break
+                    fi
+                done
+
+                # Remove non-essential modules
+                if [ "$keep_module" = false ]; then
+                    rm -f "$module"
+                    removed_count=$((removed_count + 1))
+                fi
+            done
+
+            information "$(basename "$grub_dir"): Removed $removed_count/$total_count modules"
+        fi
+    done
+}
+
+# Function to parse .po files for translations
+parse_po_file() {
+    local PO_FILE="$1"
+    local TEMP_FILE=$(mktemp)
+
+    if [ ! -e "$PO_FILE" ]; then
+        rm -f "$TEMP_FILE"
+        return 1
+    fi
+
+    # Extract msgid and msgstr pairs, handling multiline strings
+    awk '
+    BEGIN { msgid = ""; msgstr = ""; in_msgid = 0; in_msgstr = 0; }
+
+    /^msgid / {
+        if (msgid != "" && msgstr != "") {
+            # Remove quotes and unescape
+            gsub(/^"|"$/, "", msgid); gsub(/\\n/, "\n", msgid); gsub(/\\"/, "\"", msgid);
+            gsub(/^"|"$/, "", msgstr); gsub(/\\n/, "\n", msgstr); gsub(/\\"/, "\"", msgstr);
+            if (msgid != "" && msgstr != "") print msgid "|||" msgstr;
+        }
+        msgid = substr($0, 7); in_msgid = 1; in_msgstr = 0;
+    }
+
+    /^msgstr / {
+        msgstr = substr($0, 8); in_msgstr = 1; in_msgid = 0;
+    }
+
+    /^"/ {
+        if (in_msgid) msgid = msgid substr($0, 2, length($0) - 2);
+        else if (in_msgstr) msgstr = msgstr substr($0, 2, length($0) - 2);
+    }
+
+    /^$/ { in_msgid = 0; in_msgstr = 0; }
+
+    END {
+        if (msgid != "" && msgstr != "") {
+            gsub(/^"|"$/, "", msgid); gsub(/\\n/, "\n", msgid); gsub(/\\"/, "\"", msgid);
+            gsub(/^"|"$/, "", msgstr); gsub(/\\n/, "\n", msgstr); gsub(/\\"/, "\"", msgstr);
+            if (msgid != "" && msgstr != "") print msgid "|||" msgstr;
+        }
+    }
+    ' "$PO_FILE" >"$TEMP_FILE"
+
+    if [ -s "$TEMP_FILE" ]; then
+        echo "$TEMP_FILE"
+        return 0
+    else
+        rm -f "$TEMP_FILE"
+        return 1
+    fi
+}
+
+# Function to get translation from parsed po file
+get_translation() {
+    local TRANSLATIONS_FILE="$1"
+    local MSGID="$2"
+
+    if [ ! -e "$TRANSLATIONS_FILE" ]; then
+        echo "$MSGID"
+        return
+    fi
+
+    local RESULT=$(grep -F "${MSGID}|||" "$TRANSLATIONS_FILE" 2>/dev/null | head -n1 | cut -d'|' -f4-)
+    if [ -n "$RESULT" ]; then
+        echo "$RESULT"
+    else
+        echo "$MSGID"
+    fi
+}
+
+# Function to generate localized GRUB config
+generate_localized_grub_config() {
+    local GRUB_DIR="$1"
+    local LANG_CODE="$2"
+    local OUTPUT_FILE="$3"
+
+    # Parse po file for the language
+    local PO_FILE="$GRUB_DIR/po/${LANG_CODE}.po"
+    local TRANSLATIONS_FILE
+
+    if ! TRANSLATIONS_FILE=$(parse_po_file "$PO_FILE"); then
+        warning "$(gettext "No translations found for $LANG_CODE, using English fallback")"
+        return 1
+    fi
+
+    # Get template config
+    local TEMPLATE_CFG="$GRUB_DIR/grub.template.cfg"
+    if [ ! -e "$TEMPLATE_CFG" ]; then
+        error "$(gettext "grub.template.cfg template not found")"
+        rm -f "$TRANSLATIONS_FILE"
+        return 1
+    fi
+
+    # Read template content
+    local TEMPLATE_CONTENT=$(cat "$TEMPLATE_CFG")
+    local LOCALIZED_CONTENT="$TEMPLATE_CONTENT"
+
+    # Define menu entries to translate
+    local ENGLISH_TEXTS=(
+        "Resume previous session"
+        "Start a new session"
+        "Choose session during startup"
+        "Fresh start"
+        "Copy to RAM"
+        "Loading kernel and ramdisk..."
+        "MiniOS"
+    )
+
+    local VAR_NAMES=(
+        "resume"
+        "newsession"
+        "choosesession"
+        "freshstart"
+        "copyram"
+        "loading"
+        "OS"
+    )
+
+    # Replace English menu text with localized versions
+    for i in "${!ENGLISH_TEXTS[@]}"; do
+        local ENGLISH_TEXT="${ENGLISH_TEXTS[$i]}"
+        local VAR_NAME="${VAR_NAMES[$i]}"
+        local LOCALIZED_TEXT=$(get_translation "$TRANSLATIONS_FILE" "$ENGLISH_TEXT")
+
+        if [ "$LOCALIZED_TEXT" != "$ENGLISH_TEXT" ]; then
+            # Replace menuentry labels
+            LOCALIZED_CONTENT=$(echo "$LOCALIZED_CONTENT" | sed "s/menuentry \"$ENGLISH_TEXT\"/menuentry \"$LOCALIZED_TEXT\"/g")
+            # Replace variable assignments
+            LOCALIZED_CONTENT=$(echo "$LOCALIZED_CONTENT" | sed "s/set ${VAR_NAME}=\"$ENGLISH_TEXT\"/set ${VAR_NAME}=\"$LOCALIZED_TEXT\"/g")
+        fi
+    done
+
+    # Set localized theme if available
+    local THEME_PATH="/minios/boot/grub/minios-theme/theme_${LANG_CODE}.txt"
+    if [ -e "$GRUB_DIR/minios-theme/theme_${LANG_CODE}.txt" ]; then
+        # Replace theme setting with localized version
+        LOCALIZED_CONTENT=$(echo "$LOCALIZED_CONTENT" | sed "s|set theme=/minios/boot/grub/minios-theme/theme\.txt|set theme=$THEME_PATH|g")
+    fi
+
+    # Add locale, timezone and keyboard parameters to kernel command line
+    local LOCALE_UTF="${LANG_CODE}.UTF-8"
+    local EXTRA_PARAMS=""
+
+    # Map language codes to timezone and keyboard settings (based on grub.multilang.cfg)
+    case "$LANG_CODE" in
+    en_US)
+        # No extra params for English
+        ;;
+    ru_RU)
+        EXTRA_PARAMS="timezone=Europe/Moscow keyboard-layouts=us,ru"
+        ;;
+    de_DE)
+        EXTRA_PARAMS="timezone=Europe/Berlin keyboard-layouts=us,de"
+        ;;
+    es_ES)
+        EXTRA_PARAMS="timezone=Europe/Madrid keyboard-layouts=us,es"
+        ;;
+    fr_FR)
+        EXTRA_PARAMS="timezone=Europe/Paris keyboard-layouts=us,fr"
+        ;;
+    id_ID)
+        EXTRA_PARAMS="timezone=Asia/Jakarta keyboard-layouts=id"
+        ;;
+    it_IT)
+        EXTRA_PARAMS="timezone=Europe/Rome keyboard-layouts=us,it"
+        ;;
+    pt_BR)
+        EXTRA_PARAMS="timezone=America/Sao_Paulo keyboard-layouts=us,br"
+        ;;
+    pt_PT)
+        EXTRA_PARAMS="timezone=Europe/Lisbon keyboard-layouts=us,pt"
+        ;;
+    esac
+
+    # Add locales parameter and extra params to all linux command lines
+    if [ -n "$EXTRA_PARAMS" ]; then
+        LOCALIZED_CONTENT=$(echo "$LOCALIZED_CONTENT" | sed -E "s|(linux .*/vmlinuz[^ ]* .*)|\1 locales=${LOCALE_UTF} ${EXTRA_PARAMS}|g")
+    else
+        LOCALIZED_CONTENT=$(echo "$LOCALIZED_CONTENT" | sed -E "s|(linux .*/vmlinuz[^ ]* .*)|\1 locales=${LOCALE_UTF}|g")
+    fi
+
+    # Write localized config
+    echo "$LOCALIZED_CONTENT" >"$OUTPUT_FILE"
+
+    # Cleanup
+    rm -f "$TRANSLATIONS_FILE"
+    return 0
+}
+
+build_boot() {
+    current_process
+
+    local OLD_KERNEL
+
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}"
+    cp -r "${BUILD_SCRIPTS_DIR}/bootfiles/"* "${WORK_DIR}/image/${LIVEKITNAME}"
+
+    # Generate SYSLINUX help files from UTF-8 sources
+    if [ -d "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/help/UTF-8" ]; then
+        information "Generating SYSLINUX help files..."
+        mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/help"
+
+        for LANG_FILE in "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/help/UTF-8"/*.txt; do
+            if [ -f "$LANG_FILE" ]; then
+                local CURRENT_LANG=$(basename "$LANG_FILE" .txt)
+                local TARGET_HELP="${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/help/${CURRENT_LANG}.txt"
+
+                case "$CURRENT_LANG" in
+                ru_RU)
+                    # Russian uses CP866 encoding
+                    iconv -f UTF-8 -t CP866 "$LANG_FILE" >"$TARGET_HELP" 2>/dev/null
+                    ;;
+                de_DE | es_ES | pt_PT | pt_BR | it_IT | fr_FR)
+                    # Latin languages use ISO-8859-1 encoding
+                    iconv -f UTF-8 -t ISO-8859-1 "$LANG_FILE" >"$TARGET_HELP" 2>/dev/null
+                    ;;
+                *)
+                    # English and Indonesian remain UTF-8
+                    cp "$LANG_FILE" "$TARGET_HELP"
+                    ;;
+                esac
+                information "Generated help file: $TARGET_HELP"
+            fi
+        done
+
+        # Remove UTF-8 help directory from final image
+        rm -rf "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux/help/UTF-8"
+    fi
+
+    # Create translations for both GRUB and SYSLINUX
+    information "Creating translations..."
+    mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/locale"
+
+    # Copy po files and compile them to mo files in shared locale directory
+    for po_file in "${BUILD_SCRIPTS_DIR}/bootfiles/boot/grub/po/"*.po; do
+        if [ -f "$po_file" ]; then
+            # Extract language code from filename
+            lang_full=$(basename "$po_file" .po)
+
+            # Create mo file in shared locale directory
+            if command -v msgfmt >/dev/null 2>&1; then
+                msgfmt "$po_file" -o "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/locale/${lang_full}.mo"
+                information "Created translation: ${lang_full}"
+            else
+                warning "msgfmt not found, translations will not work properly"
+            fi
+        fi
+    done
+
+    # Handle SYSLINUX files based on bootloader choice
+    if [ "${BOOTLOADER}" = "grub-only" ]; then
+        information "Removing all SYSLINUX/ISOLINUX files (using GRUB only)..."
+        rm -rf "${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux"
+        information "Removed all SYSLINUX files and Windows installation scripts"
+    fi
+
+    # Generate GRUB BIOS boot files
+    if [ "${BOOTLOADER}" != "syslinux-native" ]; then
+        information "Generating GRUB BIOS boot files..."
+
+        # Generate eltorito boot image for BIOS
+        grub-mkimage -d "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc" -O i386-pc-eltorito \
+            -p "/${LIVEKITNAME}/boot/grub" \
+            -o "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc/eltorito.img" \
+            --compression=xz \
+            biosdisk vbe \
+            iso9660 udf fat ext2 btrfs ntfs exfat \
+            part_msdos part_gpt part_acorn part_apple part_bsd part_dvh part_plan part_sun part_sunpc \
+            search search_fs_file search_fs_uuid search_label \
+            normal boot linux chain configfile loopback \
+            all_video gfxterm gfxmenu \
+            loadenv minicmd cat echo ls test true help probe font terminal \
+            gettext regexp \
+            play png
+
+        # Generate core.img for installed systems
+        grub-mkimage -d "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc" -O i386-pc \
+            -c "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/stub.cfg" \
+            -p "/${LIVEKITNAME}/boot/grub" \
+            -o "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc/core.img" \
+            --compression=xz \
+            biosdisk vbe \
+            iso9660 udf fat ext2 btrfs ntfs exfat \
+            part_msdos part_gpt part_acorn part_apple part_bsd part_dvh part_plan part_sun part_sunpc \
+            search search_fs_file search_fs_uuid search_label \
+            normal boot linux chain configfile loopback \
+            all_video gfxterm gfxmenu \
+            loadenv minicmd cat echo ls test true help probe font terminal \
+            gettext regexp \
+            play png
+    fi
+
+    # Remove GRUB BIOS components when using syslinux-native
+    if [ "${BOOTLOADER}" = "syslinux-native" ]; then
+        information "Using native SYSLINUX for BIOS boot, removing GRUB BIOS components..."
+        rm -rf "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc"
+        information "Removed GRUB BIOS components (i386-pc directory)"
+    fi
+
+    build_initrd
+
+    if [ "${DISTRIBUTION_ARCH}" = "amd64" ]; then
+        ARCH="x86_64"
+    elif [[ "${DISTRIBUTION_ARCH}" == *"i386"* ]]; then
+        ARCH="i386"
+    fi
+
+    mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/EFI/debian"
+    cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/EFI/debian/grub.cfg"
+search --file --set=root /.disk/info
+set prefix=(\$root)/minios/boot/grub
+source \$prefix/${ARCH}-efi/grub.cfg
+EOF
+
+    cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/${ARCH}-efi/grub.cfg"
+# GRUB EFI bootstrap configuration
+
+insmod part_acorn
+insmod part_amiga
+insmod part_apple
+insmod part_bsd
+insmod part_dfly
+insmod part_dvh
+insmod part_gpt
+insmod part_msdos
+insmod part_plan
+insmod part_sun
+insmod part_sunpc
+
+search --file --set=root /.disk/info
+source /${LIVEKITNAME}/boot/grub/grub.cfg
+EOF
+
+    # Create GRUB BIOS configuration only if not using syslinux-native
+    if [ "${BOOTLOADER}" != "syslinux-native" ]; then
+        mkdir -p "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc"
+        cat <<EOF >"${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/i386-pc/grub.cfg"
+# GRUB BIOS bootstrap configuration
+
+insmod part_acorn
+insmod part_amiga
+insmod part_apple
+insmod part_bsd
+insmod part_dfly
+insmod part_dvh
+insmod part_gpt
+insmod part_msdos
+insmod part_plan
+insmod part_sun
+insmod part_sunpc
+
+search --file --set=root /.disk/info
+source /${LIVEKITNAME}/boot/grub/grub.cfg
+EOF
+    fi
+
+    mkdir -p "${WORK_DIR}/image/EFI"
+    cp -r "${WORK_DIR}/image/${LIVEKITNAME}/boot/EFI/"* "${WORK_DIR}/image/EFI"
+
+    mkdir -p "${WORK_DIR}/image/.disk"
+    echo "MiniOS" >"${WORK_DIR}/image/.disk/info"
+
+    create_config_files
+
+    remove_unused_grub_modules
+
+    # Configure menu language based on MENU_LANG setting
+    information "Configuring menu language: ${MENU_LANG:-multilang}"
+    case "${MENU_LANG:-multilang}" in
+    multilang)
+        # Use multilingual menus with language selection
+        if [ -f "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.multilang.cfg" ]; then
+            information "Using multilingual GRUB menu"
+            cp "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.multilang.cfg" \
+                "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.cfg"
+        fi
+
+        # For SYSLINUX modes, use multilingual configuration
+        if [ "${BOOTLOADER}" = "syslinux-native" ] || [ "${BOOTLOADER}" = "syslinux-grub" ]; then
+            local SYSLINUX_DIR="${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux"
+            if [ -f "${SYSLINUX_DIR}/syslinux.multilang.cfg" ]; then
+                information "Using multilingual SYSLINUX menu"
+                cp "${SYSLINUX_DIR}/syslinux.multilang.cfg" "${SYSLINUX_DIR}/syslinux.cfg"
+            fi
+        fi
+        ;;
+    en_US | ru_RU | de_DE | es_ES | it_IT | id_ID | pt_BR | pt_PT | fr_FR)
+        # Generate localized GRUB configuration
+        generate_localized_grub_config "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub" "${MENU_LANG}" "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.cfg" || {
+            warning "Failed to generate localized GRUB config for ${MENU_LANG}, using template"
+            if [ -f "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.template.cfg" ]; then
+                cp "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.template.cfg" \
+                    "${WORK_DIR}/image/${LIVEKITNAME}/boot/grub/grub.cfg"
+            fi
+        }
+
+        # For SYSLINUX modes, use localized configuration
+        if [ "${BOOTLOADER}" = "syslinux-native" ] || [ "${BOOTLOADER}" = "syslinux-grub" ]; then
+            local SYSLINUX_DIR="${WORK_DIR}/image/${LIVEKITNAME}/boot/syslinux"
+            local LANG_CFG="${SYSLINUX_DIR}/lang/${MENU_LANG}.cfg"
+
+            # Copy localized configuration to main syslinux.cfg
+            if [ -f "$LANG_CFG" ]; then
+                information "Using localized SYSLINUX configuration for: ${MENU_LANG}"
+                cp "$LANG_CFG" "${SYSLINUX_DIR}/syslinux.cfg"
+            else
+                information "Localized SYSLINUX config not found for ${MENU_LANG}, using English"
+                cp "${SYSLINUX_DIR}/lang/en_US.cfg" "${SYSLINUX_DIR}/syslinux.cfg"
+            fi
+        fi
+        ;;
+    *)
+        warning "Invalid MENU_LANG setting: ${MENU_LANG}, using multilingual"
+        ;;
+    esac
+
+    debug_ssh_keys
+}
+
+build_iso() {
+    current_process
+
+    local DIR IMAGE ISO SUFFIX PERCHIMG
+
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    cd "${WORK_DIR}/image" || exit 1
+    mkdir -p "${ISO_DIR}"
+    DIR="${WORK_DIR}/image"
+
+    if [[ "${DESKTOP_ENVIRONMENT}" =~ ^(xfce-ultra|xfce-puzzle|xfce-puzzle-base)$ ]]; then
+        IMAGE="${LIVEKITNAME}-${DISTRIBUTION}-${DESKTOP_ENVIRONMENT}${LANGID}"
+    else
+        IMAGE="${LIVEKITNAME}-${DISTRIBUTION}-${DESKTOP_ENVIRONMENT}-${PACKAGE_VARIANT}${LANGID}"
+    fi
+
+    if [[ "${RELEASE}" = "true" ]]; then
+        SUFFIX="-${RELEASE_VERSION}"
+        if [[ "${KERNEL_FLAVOUR}" != "none" ]]; then
+            IMAGE+="-${KERNEL_FLAVOUR}"
+        fi
+    else
+        if [[ "${KERNEL_AUFS}" == "true" ]]; then
+            IMAGE+="-aufs"
+        fi
+        if [[ "${KERNEL_FLAVOUR}" != "none" ]]; then
+            IMAGE+="-${KERNEL_FLAVOUR}"
+        fi
+        if [[ "${BUILD_FROM_SNAPSHOT}" == "true" ]]; then
+            IMAGE+="-${SNAPSHOT_DATE}"
+        fi
+        SUFFIX="-$(date +%Y%m%d_%H%M)"
+    fi
+
+    IMAGE+="-${ISO_ARCH}"
+    ISO="${ISO_DIR}/${IMAGE}${SUFFIX}.iso"
+
+    if [[ "${REMOVE_OLD_ISO}" == "true" ]]; then
+        toggle_shell_options e
+        rm -f "${ISO_DIR}/${IMAGE}-"*".iso"
+        rm -f "${ISO_DIR}/${IMAGE}-"*".iso.sha256"
+        rm -f "${ISO_DIR}/${IMAGE}-"*"-${RELEASE_VERSION}.iso"
+        rm -f "${ISO_DIR}/${IMAGE}-"*"-${RELEASE_VERSION}.iso.sha256"
+        while [[ -f "${ISO_DIR}/${LIVEKITNAME}.iso" ]]; do
+            rm "${ISO_DIR}/${LIVEKITNAME}.iso"
+            rm -f "${ISO_DIR}/${LIVEKITNAME}.iso.sha256"
+            sleep 1
+        done
+        toggle_shell_options e
+    fi
+
+    PERCHIMG=$(mktemp --suffix=.img)
+
+    # Set bootloader-specific parameters
+    if [ "${BOOTLOADER}" = "syslinux-grub" ] || [ "${BOOTLOADER}" = "syslinux-native" ]; then
+        # SYSLINUX/ISOLINUX parameters
+        BIOS_BOOT_IMG="${LIVEKITNAME}/boot/syslinux/isolinux.bin"
+        BIOS_BOOT_CATALOG="${LIVEKITNAME}/boot/syslinux/isolinux.boot"
+        BIOS_MBR_IMG="${DIR}/${LIVEKITNAME}/boot/syslinux/isohdpfx.bin"
+        BIOS_BOOT_PARAMS="-eltorito-catalog ${BIOS_BOOT_CATALOG}"
+        HYBRID_PARAMS="-isohybrid-gpt-basdat"
+        HYBRID_PARAMS=""
+    else
+        # GRUB parameters
+        BIOS_BOOT_IMG="${LIVEKITNAME}/boot/grub/i386-pc/eltorito.img"
+        BIOS_BOOT_CATALOG="${LIVEKITNAME}/boot/grub/boot.cat"
+        BIOS_MBR_IMG="${DIR}/${LIVEKITNAME}/boot/grub/i386-pc/boot_hybrid.img"
+        BIOS_BOOT_PARAMS="-eltorito-catalog ${BIOS_BOOT_CATALOG}"
+        HYBRID_PARAMS=""
+    fi
+
+    # Prepare persistence image
+    dd if=/dev/zero of="${PERCHIMG}" bs=1 count=0 seek=128k
+    mkfs.ext2 -b 1024 -L resizeme "${PERCHIMG}"
+
+    # Build ISO creation command
+    create_iso_cmd() {
+        xorriso \
+            --as mkisofs \
+            -iso-level 3 \
+            -volid "MINIOS" \
+            -A "MiniOS" \
+            -joliet -joliet-long -rational-rock \
+            -eltorito-boot "${BIOS_BOOT_IMG}" \
+            ${BIOS_BOOT_PARAMS} \
+            -no-emul-boot \
+            -boot-load-size 4 \
+            -boot-info-table \
+            -eltorito-alt-boot \
+            -e "${LIVEKITNAME}/boot/grub/efi64.img" \
+            -no-emul-boot \
+            -eltorito-alt-boot \
+            -e "${LIVEKITNAME}/boot/grub/efi32.img" \
+            -no-emul-boot \
+            --isohybrid-mbr "${BIOS_MBR_IMG}" \
+            ${HYBRID_PARAMS} \
+            -append_partition 2 0x83 "${PERCHIMG}" \
+            -partition_cyl_align on \
+            -partition_offset 16 \
+            -part_like_isohybrid \
+            -output "${ISO}" \
+            "${DIR}"
+    }
+
+    # Execute with appropriate verbosity
+    if [[ "${VERBOSITY_LEVEL}" -ge 1 ]]; then
+        create_iso_cmd && information "The image ${CYAN}${ISO}${ENDCOLOR} has been created." || exit 1
+    else
+        create_iso_cmd >/dev/null 2>&1 &
+        iso_pid=$!
+        spinner "${iso_pid}" "Creating ISO image"
+        wait "${iso_pid}"
+        if [ $? -eq 0 ]; then
+            information "The image ${CYAN}${ISO}${ENDCOLOR} has been created."
+        else
+            exit 1
+        fi
+    fi
+
+    rm -f "${PERCHIMG}"
+
+    if [[ -f "${ISO}" ]]; then
+        pushd "$(dirname "${ISO}")" >/dev/null
+        sha256sum "$(basename "${ISO}")" >"${ISO}.sha256"
+        popd >/dev/null
+        information "SHA256 checksum saved to ${CYAN}${ISO}.sha256${ENDCOLOR}."
+    fi
+
+    if [[ "${BUILD_TEST_ISO}" == "true" ]]; then
+        rm -f "${ISO_DIR}/${LIVEKITNAME}.iso"
+        ln "${ISO}" "${ISO_DIR}/${LIVEKITNAME}.iso" &&
+            information "A hard link to the image has been created: ${CYAN}${ISO_DIR}/${LIVEKITNAME}.iso${ENDCOLOR}."
+    fi
+}
+
+# If the REMOVE_SOURCES is set to "true", removes all sources
+remove_sources() {
+    if [ "${REMOVE_SOURCES}" = "true" ]; then
+        current_function
+        directory_cleanup "${WORK_DIR}"
+    fi
+}
+
+# ====================== INSTALL FUNCTIONS ========================
+
+# Unzip gzipped files (man pages), so LZMA can compress 2times better.
+# First we fix symlinks, then uncompress files
+# $1 = search directory
+uncompress_files() {
+    current_function
+    local LINK LINE
+
+    find "${1}" -type l -name "*.gz" | while read LINE; do
+        LINK="$(readlink "${LINE}" | sed -r 's/.gz$//')"
+        FILE="$(echo "${LINE}" | sed -r 's/.gz$//')"
+        ln -sfn "${LINK}" "${FILE}"
+        rm -f "${LINE}"
+    done
+    find "${1}" -type f -name "*.gz" | xargs -r gunzip 2>/dev/null
+}
+
+# remove broken links
+# $1 = search directory
+remove_broken_links() {
+    current_function
+    find "${1}" -type l -exec test ! -e {} \; -print | xargs rm -f
+}
+
+get_base_path() {
+    local BASE_PATH=""
+    if [ "${1}" == "core" ]; then
+        BASE_PATH=""
+    elif [ "${1}" == "module" ]; then
+        BASE_PATH="${OVERLAY[upper]}"
+    else
+        error "Invalid mode. Choose either 'core' or module."
+        exit 1
+    fi
+    echo "${BASE_PATH}"
+}
+
+# Performs cleanup within the chroot environment
+chroot_cleanup() {
+    current_function
+
+    local BASE_PATH=$(get_base_path "${1}")
+    local FILE FILENAME
+
+    toggle_shell_options eu
+
+    rm -rf "${BASE_PATH}/patches" 2>/dev/null
+    rm -rf "${BASE_PATH}/rootcopy" 2>/dev/null
+    rm -rf "${BASE_PATH}/rootcopy-install" 2>/dev/null
+    rm -rf "${BASE_PATH}/rootcopy-postinstall" 2>/dev/null
+    rm -rf "${BASE_PATH}/.cache" 2>/dev/null
+    rm -rf "${BASE_PATH}/etc/systemd/system/timers.target.wants" 2>/dev/null
+    rm -rf "${BASE_PATH}/root/.cache" 2>/dev/null
+    rm -rf "${BASE_PATH}/root/.local/share/mc" 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/doc/"* 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/gnome/help" 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/icons/elementaryXubuntu-dark" 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/icons/gnome/256x256" 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/info/"* 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/man/??" 2>/dev/null
+    rm -rf "${BASE_PATH}/usr/share/man/"*_* 2>/dev/null
+    rm -f "${BASE_PATH}/kernel.conf" 2>/dev/null
+    rm -f "${BASE_PATH}/packages.list" 2>/dev/null
+    rm -f "${BASE_PATH}/build" 2>/dev/null
+    rm -f "${BASE_PATH}/cleanup" 2>/dev/null
+    rm -f "${BASE_PATH}/minioslib" 2>/dev/null
+    rm -f "${BASE_PATH}/install" 2>/dev/null
+    rm -f "${BASE_PATH}/postinstall" 2>/dev/null
+    rm -f "${BASE_PATH}/root/.bash_history" 2>/dev/null
+    rm -f "${BASE_PATH}/root/.wget-hsts" 2>/dev/null
+    rm -f "${BASE_PATH}/usr/share/images/fluxbox/debian-squared.jpg" 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/dhcp/dhclient.leases" 2>/dev/null
+
+    if [ "$1" == "module" ]; then
+        rm -f "${BASE_PATH}/etc/machine-id" 2>/dev/null
+    fi
+
+    if [[ "${MODULE}" == *"${LIVEKITNAME}"* ]]; then
+        rm -rf "${BASE_PATH}/var/lib/dpkg" 2>/dev/null
+    fi
+
+    rm -f "${BASE_PATH}/etc/ssh/ssh_host"* 2>/dev/null
+    rm -f "${BASE_PATH}/var/backups/"* 2>/dev/null
+    rm -f "${BASE_PATH}/var/cache/debconf/"* 2>/dev/null
+    rm -f "${BASE_PATH}/var/cache/debconf/"*-old 2>/dev/null
+    rm -f "${BASE_PATH}/var/cache/fontconfig/"* 2>/dev/null
+    rm -f "${BASE_PATH}/var/cache/ldconfig/"* 2>/dev/null
+    rm -rf "${BASE_PATH}/var/cache/mandb" 2>/dev/null
+    rm -rf "${BASE_PATH}/var/cache/man" 2>/dev/null
+    if [ "${USE_APT_CACHE}" = "false" ]; then
+        rm -f "${BASE_PATH}/var/cache/apt/archives/"*.deb 2>/dev/null
+    fi
+    #if [ "${USE_APT_CACHER}" = "true" ]; then
+    rm -f "${BASE_PATH}/etc/apt/apt.conf.d/02aptcache" 2>/dev/null
+    #fi
+    #if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+    rm -f "${BASE_PATH}/etc/apt/apt.conf.d/99ignore-localcache" 2>/dev/null
+    #fi
+    rm -f "${BASE_PATH}/var/cache/apt/"*.bin 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/apt/lists/"*Packages 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/apt/lists/"*Translation* 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/apt/lists/"*InRelease 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/apt/lists/deb."* 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/apt/extended_states" 2>/dev/null
+    rm -f "${BASE_PATH}/var/lib/dpkg/"*-old 2>/dev/null
+
+    # Remove all files in /var/log/, except for xrdp.log
+    find "${BASE_PATH}/var/log/" -type f ! -name "xrdp.log" -exec rm -f {} \; 2>/dev/null
+
+    if [ "${REMOVE_DPKG_DB}" = "true" ]; then
+        rm -rf "${BASE_PATH}/var/lib/dpkg" 2>/dev/null
+    fi
+
+    if [ "${REMOVE_LARGE_ICONS}" = "true" ]; then
+        if [ -d "${BASE_PATH}/usr/share/icons" ]; then
+            find "${BASE_PATH}/usr/share/icons/" -name 256x256 -o -name 512x512 -o -name 1024x1024 2>/dev/null | xargs rm -rf
+        fi
+    fi
+
+    KEEP_LOCALES="${KEEP_LOCALES:-false}" # By default, delete locales
+
+    if [ "${MULTILINGUAL}" = "true" ]; then
+        LOCALES_TO_KEEP=("${!LOCALES[@]}")
+    else
+        LOCALES_TO_KEEP=("$LOCALE")
+    fi
+    if [ "${KEEP_LOCALES}" != "true" ]; then
+        if ([ "$LOCALE" = "C" ] || [ "$LOCALE" = "en_US" ]) && [ "$MULTILINGUAL" != "true" ]; then
+            rm -rf "${BASE_PATH}"/usr/share/fluxbox/nls/??* 2>/dev/null
+            rm -rf "${BASE_PATH}"/usr/share/locale/?? 2>/dev/null
+            rm -rf "${BASE_PATH}"/usr/share/locale/??_* 2>/dev/null
+            rm -rf "${BASE_PATH}"/usr/share/locale/??@* 2>/dev/null
+            rm -rf "${BASE_PATH}"/usr/share/locale/??? 2>/dev/null
+            rm -rf "${BASE_PATH}"/usr/share/i18n/locales/*_* 2>/dev/null
+        else
+            # Paths and patterns where excess locales will be deleted
+            PATHS_AND_PATTERNS=(
+                "${BASE_PATH}"/usr/share/fluxbox/nls/??*
+                "${BASE_PATH}"/usr/share/locale/??
+                "${BASE_PATH}"/usr/share/locale/??_*
+                "${BASE_PATH}"/usr/share/locale/??@*
+                "${BASE_PATH}"/usr/share/locale/???
+                "${BASE_PATH}"/usr/share/i18n/locales/*_*
+            )
+
+            for PATH_AND_PATTERN in "${PATHS_AND_PATTERNS[@]}"; do
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Checking files in ${PATH_AND_PATTERN}..."
+                for FILE in ${PATH_AND_PATTERN}; do
+                    FILENAME=$(basename "$FILE")
+                    KEEP=false
+                    for ITEM in "${LOCALES_TO_KEEP[@]}"; do
+                        ITEM_CODE=$(echo $ITEM | cut -d_ -f1)
+                        if [[ "${FILENAME}" == "${ITEM}"* ]] || [[ "${FILENAME}" == "${ITEM_CODE}" ]]; then
+                            KEEP=true
+                            break
+                        fi
+                    done
+                    if ! ${KEEP}; then
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Deleting ${FILE}..."
+                        rm -rf "${FILE}"
+                    else
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Keeping ${FILE}..."
+                    fi
+                done
+            done
+        fi
+    fi
+
+    # Remove broken links and uncompress files
+    if [ -z "${BASE_PATH}" ]; then
+        uncompress_files "${BASE_PATH}/etc/alternatives"
+        uncompress_files "${BASE_PATH}/usr/share/man"
+
+        remove_broken_links "${BASE_PATH}/etc/alternatives"
+        remove_broken_links "${BASE_PATH}/usr/share/man"
+    fi
+
+    toggle_shell_options eu
+}
+
+# This function checks and installs required packages on the host system.
+ensure_host_prerequisites() {
+    if [[ "$SKIP_SETUP_HOST" = "true" || "$SCRIPT_DIR" = "/usr/bin" ]]; then
+        return
+    fi
+
+    current_function
+
+    # Check distribution
+    read_config /etc/os-release ID
+    if [[ "$ID" != "debian" && "$ID" != "ubuntu" ]]; then
+        error "This minios-live supports only Debian and Ubuntu."
+        exit 1
+    fi
+    chmod +x "${BUILD_SCRIPTS_DIR}/condinapt"
+    if [[ "${CONTAINER,,}" == "true" ]]; then
+        "${BUILD_SCRIPTS_DIR}/condinapt" -l "${BUILD_SCRIPTS_DIR}/prerequisites.list" -c "${BUILD_CONF}" -m "${BUILD_SCRIPTS_DIR}/condinapt.map"
+    else
+        toggle_shell_options e
+        "${BUILD_SCRIPTS_DIR}/condinapt" -l "${BUILD_SCRIPTS_DIR}/prerequisites.list" -c "${BUILD_CONF}" -m "${BUILD_SCRIPTS_DIR}/condinapt.map" --check-only
+        if [ $? -ne 0 ]; then
+            echo
+            error "Some prerequisites are not installed on the host system. Please install them and try again."
+            exit 1
+        fi
+        toggle_shell_options e
+    fi
+    chmod -x "${BUILD_SCRIPTS_DIR}/condinapt"
+}
+
+# This function installs the core packages within the chroot system.
+install_core_packages() {
+    current_function
+
+    # Set the hostname inside the chroot.
+    echo "${LIVEKITNAME}" >/etc/hostname
+
+    # Workaround to prevent initctl from running within the chroot.
+    dpkg-divert --local --rename --add /sbin/initctl >/dev/null
+    ln -s /bin/true /sbin/initctl
+
+    # Export any necessary variables for chroot operations.
+    export_chroot_variables
+
+    CORE_SCRIPT_DIR="${BUILD_SCRIPTS}/scripts/00-core"
+
+    # -------------------------
+    # rootcopy-install stage
+    # -------------------------
+    if [ -d "${CORE_SCRIPT_DIR}/rootcopy-install" ]; then
+        cp -af "${CORE_SCRIPT_DIR}/rootcopy-install/." / &
+        COPY_PID=$!
+        spinner "${COPY_PID}" "Copying rootcopy-install files into chroot"
+        wait "${COPY_PID}"
+    fi
+
+    # ----------------
+    # Install hook
+    # ----------------
+    if [ -f "${CORE_SCRIPT_DIR}/install" ]; then
+        chmod +x "${CORE_SCRIPT_DIR}/install"
+        "${CORE_SCRIPT_DIR}/install"
+    fi
+
+    # --------------------------
+    # rootcopy-postinstall stage
+    # --------------------------
+    if [ -d "${CORE_SCRIPT_DIR}/rootcopy-postinstall" ]; then
+        cp -af "${CORE_SCRIPT_DIR}/rootcopy-postinstall/." / &
+        COPY_PID=$!
+        spinner "${COPY_PID}" "Copying rootcopy-postinstall files into chroot"
+        wait "${COPY_PID}"
+    fi
+
+    # ------------------
+    # Post-install hook
+    # ------------------
+    if [ -f "${CORE_SCRIPT_DIR}/postinstall" ]; then
+        chmod +x "${CORE_SCRIPT_DIR}/postinstall"
+        "${CORE_SCRIPT_DIR}/postinstall"
+    fi
+
+    # Clean up unused packages non-interactively.
+    DEBIAN_FRONTEND=noninteractive apt-get autoremove -y -qq &
+    AUTOREMOVE_PID="$!"
+    spinner "${AUTOREMOVE_PID}" "Autoremoving packages"
+    wait "${AUTOREMOVE_PID}"
+
+    # Final cleanup of the chroot environment.
+    chroot_cleanup core
+
+    # Reset machine-id inside chroot.
+    truncate -s 0 /etc/machine-id
+
+    # Restore initctl functionality.
+    rm /sbin/initctl 2>/dev/null
+    dpkg-divert --rename --remove /sbin/initctl >/dev/null
+}
+
+# ===================== MODULES FUNCTIONS =========================
+
+# This function filters and lists modules based on package variant and other conditions like filter modules configuration.
+filter_modules() {
+    current_function
+    if [ "${PACKAGE_VARIANT}" = "puzzle" ]; then
+        FILTER_MODULES="true"
+        if ! [[ ${MODULE} =~ ^0[0-9]-* ]]; then
+            FILTER_LEVEL="3"
+        elif [[ ${MODULE} == "00-"* ]] || [[ ${MODULE} == "01-"* ]]; then
+            FILTER_LEVEL="0"
+        else
+            FILTER_LEVEL=$((${MODULE:1:1} - 1))
+        fi
+    else
+        read_config "$BUILD_CONF" FILTER_MODULES FILTER_LEVEL
+    fi
+
+    if [ "${FILTER_MODULES}" = "true" ]; then
+        MODULES_LIST=$(ls -1dr $1[0]* | egrep "0[0-${FILTER_LEVEL}]" | tr '\n' ':')
+    else
+        MODULES_LIST=$(ls -1dr $1[0-9]* | tr '\n' ':')
+    fi
+}
+
+# This function mounts file systems for modules within a chroot environment.
+overlay_chroot_mount_fs() {
+    current_function
+
+    local MODULES BUNDLE FILTER DIR
+
+    unmount_dirs "${WORK_DIR}"
+
+    MODULES_LIST=""
+    MODULES=("${WORK_DIR}/image/${LIVEKITNAME}"/*."${BEXT}")
+    for ((i = ${#MODULES[@]} - 1; i >= 0; i--)); do
+        BUNDLE=$(basename "${MODULES[$i]}" ."${BEXT}")
+        mkdir -p "${OVERLAYS}/bundles/${BUNDLE}"
+        mount "${MODULES[$i]}" "${OVERLAYS}/bundles/${BUNDLE}"
+    done
+    toggle_shell_options e
+    filter_modules "${OVERLAYS}/bundles/"
+    MODULES_LIST=${MODULES_LIST/%:/}
+    toggle_shell_options e
+    mkdir -p "${OVERLAY[upper]}" "${OVERLAY[work]}" "${OVERLAY[merged]}"
+    mount -t overlay overlay -o lowerdir="${MODULES_LIST}",upperdir="${OVERLAY[upper]}",workdir="${OVERLAY[work]}" "${OVERLAY[merged]}"
+
+    setup_chroot_environment "${OVERLAY[merged]}"
+
+    setup_apt_cache "${OVERLAY[merged]}"
+
+    update_resolv_conf "${OVERLAY[merged]}"
+
+    if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+        if [ -f "${OVERLAY[merged]}/etc/apt/sources.list" ]; then
+            mv "${OVERLAY[merged]}/etc/apt/sources.list" "${OVERLAY[merged]}/etc/apt/sources.list.bak"
+        fi
+        if [ -f "${OVERLAY[merged]}/etc/apt/sources.list.d/minios-linux.list" ]; then
+            mv "${OVERLAY[merged]}/etc/apt/sources.list.d/minios-linux.list" "${OVERLAY[merged]}/etc/apt/sources.list.d/minios-linux.list.bak"
+        fi
+    fi
+}
+
+# This function unmounts directories within a chroot environment.
+overlay_unmount_dirs() {
+    current_function
+    unmount_dirs "${WORK_DIR}"
+    if [ -e "${OVERLAY[upper]}/etc/resolv.conf" ]; then
+        rm -f "${OVERLAY[upper]}/etc/resolv.conf"
+    elif [ -e "${OVERLAY[upper]}/etc/resolv.conf.bak" ]; then
+        rm -f "${OVERLAY[upper]}/etc/resolv.conf.bak"
+    fi
+    if [ "${USE_APT_CACHE_REPO}" = "true" ]; then
+        if [ -f "${OVERLAY[upper]}/etc/apt/sources.list.bak" ]; then
+            rm -f "${OVERLAY[upper]}/etc/apt/sources.list.bak" 2>/dev/null
+            rm -f "${OVERLAY[upper]}/etc/apt/sources.list" 2>/dev/null
+        fi
+        if [ -f "${OVERLAY[upper]}/etc/apt/sources.list.d/minios-linux.list.bak" ]; then
+            rm -f "${OVERLAY[upper]}/etc/apt/sources.list.d/minios-linux.list.bak" 2>/dev/null
+            rm -f "${OVERLAY[upper]}/etc/apt/sources.list.d/minios-linux.list" 2>/dev/null
+        fi
+        rm -f "${OVERLAY[upper]}/etc/apt/sources.list.d/aptcache.list" 2>/dev/null
+    fi
+}
+
+# Function to clean up the module
+overlay_cleanup() {
+    current_function
+    unmount_dirs "${WORK_DIR}"
+    if [ -d "${OVERLAY[upper]}" ]; then
+        rm -rf "${OVERLAY[upper]}"
+    fi
+}
+
+# Function to finalize chroot environment
+overlay_chroot_finish_up() {
+    current_function
+
+    # Truncate machine id
+    chroot "${OVERLAY[merged]}" /bin/bash -c "truncate -s 0 /etc/machine-id > /dev/null 2>&1 || true"
+
+    # Remove diversion
+    chroot "${OVERLAY[merged]}" /bin/bash -c "rm -f /sbin/initctl > /dev/null 2>&1 || true; \
+                                                 dpkg-divert --rename --remove /sbin/initctl > /dev/null 2>&1 || true"
+}
+
+should_skip_module() {
+    local SKIP_CONDITIONS_FILE="${1}"
+
+    # If skip_conditions.conf doesn't exist, there are no conditions to skip on.
+    if [ ! -f "${SKIP_CONDITIONS_FILE}" ]; then
+        return 1 # Do not skip
+    fi
+
+    # Read each non-empty, non-comment line as VAR=VALUE
+    while IFS= read -r LINE || [ -n "$LINE" ]; do
+        # Strip comments and whitespace
+        LINE="${LINE%%#*}"
+        LINE="$(echo "$LINE" | xargs)"
+
+        [ -z "$LINE" ] && continue
+
+        local VAR_NAME="${LINE%%=*}"
+        local VALUE_TO_MATCH="${LINE#*=}"
+
+        # Check if the variable is set in the environment
+        if ! declare -p "${VAR_NAME}" &>/dev/null; then
+            if [ "${VERBOSITY_LEVEL:-0}" -ge 1 ]; then
+                information "Variable '$VAR_NAME' is not defined; skipping check '$LINE'."
+            fi
+            continue
+        fi
+
+        # Is it an array?
+        local VAR_DECL
+        VAR_DECL="$(declare -p "$VAR_NAME" 2>/dev/null)"
+        if [[ "$VAR_DECL" =~ "declare -a" ]]; then
+            # Iterate over array elements
+            local FOUND=false
+            eval "for __i in \"\${${VAR_NAME}[@]}\"; do
+                      [ \"\$__i\" = \"${VALUE_TO_MATCH}\" ] && FOUND=true && break
+                  done"
+            if $FOUND; then
+                [ "${VERBOSITY_LEVEL:-0}" -ge 1 ] && information "Skip condition met: '$LINE' (array ${VAR_NAME} contains '${VALUE_TO_MATCH}')."
+                return 0
+            fi
+        else
+            # Scalar: indirect expansion
+            eval "local ACTUAL_VALUE=\${${VAR_NAME}}"
+            if [ "$ACTUAL_VALUE" = "$VALUE_TO_MATCH" ]; then
+                [ "${VERBOSITY_LEVEL:-0}" -ge 1 ] && information "Skip condition met: '$LINE' (${VAR_NAME}=='${VALUE_TO_MATCH}')."
+                return 0
+            fi
+        fi
+    done <"${SKIP_CONDITIONS_FILE}"
+
+    return 1 # No skip conditions matched
+}
+
+# Orchestrates module packaging and installation into overlays and images
+build_modules() {
+    current_process
+
+    # Initialize local variables for names, versions, and paths
+    local VMLINUZNAME INITRFSNAME PACKAGE VERSION BUNDLE FILENAME KEEP_DIRS OVERLAY DIR
+
+    # If running inside a container, install host prerequisites first
+    [[ "${CONTAINER,,}" == "true" ]] && export SKIP_SETUP_HOST="false" && ensure_host_prerequisites
+
+    # Define environment and overlay directories
+    ENVIRONMENTS="${BUILD_SCRIPTS_DIR}/environments/${DESKTOP_ENVIRONMENT}"
+    OVERLAYS="${WORK_DIR}/overlays"
+
+    # Change into the environment directory or exit if it fails
+    cd "${ENVIRONMENTS}" || {
+        error "Failed to enter environments directory" >&2
+        exit 1
+    }
+
+    # Iterate over each module in the environments directory
+    for MODULE in *; do
+        # Skip module if already present in the image folder
+        if [ "${MODULE#*-}" != "debug" ] &&
+            basename -a "${WORK_DIR}/image/${LIVEKITNAME}"/*."${BEXT}" 2>/dev/null | grep -q "${MODULE#*-}"; then
+            information "${YELLOW}${MODULE}${ENDCOLOR} module building is skipped, because it is already present in the image folder."
+        elif should_skip_module "${ENVIRONMENTS}/${MODULE}/skip_conditions.conf"; then
+            information "Skipping module ${YELLOW}${MODULE}${ENDCOLOR} due to matching skip condition."
+            continue
+        else
+            # Prepare overlay mount points
+            declare -A OVERLAY=(
+                [upper]="${OVERLAYS}/${MODULE}/upper"
+                [work]="${OVERLAYS}/${MODULE}/work"
+                [merged]="${OVERLAYS}/${MODULE}/merged"
+            )
+            EXCLUDE_MODULE_FILE="${WORK_DIR}/squashfs-${MODULE}-exclude"
+
+            overlay_cleanup
+            overlay_chroot_mount_fs
+
+            information "Start building ${YELLOW}${MODULE}${ENDCOLOR} module ..."
+
+            # Activate Ubuntu Pro if token is provided (before module package installation)
+            if [ "${USE_UBUNTU_PRO:-false}" = "true" ] && [ -n "${UBUNTU_PRO_TOKEN:-}" ]; then
+                ubuntu_pro_attach "${OVERLAY[merged]}"
+            fi
+
+            ###############################################################################
+            # Stage 1: install
+            ###############################################################################
+            # Copy root files into the merged overlay if rootcopy-install exists
+            if [ -d "${ENVIRONMENTS}/${MODULE}/rootcopy-install" ]; then
+                if [ -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                    mkdir -p "${OVERLAY[merged]}/rootcopy-install"
+                    cp -af "${ENVIRONMENTS}/${MODULE}/rootcopy-install/." "${OVERLAY[merged]}/rootcopy-install/" &
+                    COPY_PID=$!
+                else
+                    cp -af "${ENVIRONMENTS}/${MODULE}/rootcopy-install/." "${OVERLAY[merged]}/" &
+                    COPY_PID=$!
+                fi
+                spinner "${COPY_PID}" "Copying rootcopy-install files into chroot"
+                wait "${COPY_PID}"
+            fi
+
+            # Copy and execute the install script inside chroot
+            if [ -f "${ENVIRONMENTS}/${MODULE}/install" ]; then
+                cp "${ENVIRONMENTS}/${MODULE}/install" "${OVERLAY[merged]}/install"
+                chmod +x "${OVERLAY[merged]}/install"
+
+                cp "${BUILD_SCRIPTS_DIR}/condinapt" "${OVERLAY[merged]}/condinapt"
+                chmod +x "${OVERLAY[merged]}/condinapt"
+                cp "${BUILD_SCRIPTS_DIR}/condinapt.map" "${OVERLAY[merged]}/condinapt.map"
+
+                [ -f "${ENVIRONMENTS}/${MODULE}/packages.list" ] &&
+                    cp "${ENVIRONMENTS}/${MODULE}/packages.list" "${OVERLAY[merged]}/packages.list"
+
+                information "Executing ${GREEN}install${ENDCOLOR} script ..."
+                chroot_run "${OVERLAY[merged]}" /install
+            fi
+
+            # If building a kernel module, save vmlinuz and update build config
+            if [[ "${MODULE}" == *"kernel"* ]]; then
+                if [ -f "${OVERLAY[upper]}/minios_build.conf" ]; then
+                    read_config "${OVERLAY[upper]}/minios_build.conf" KERNEL KERNEL_ARCH KERNEL_VERSION KERNEL_BUILD_ARCH
+                    update_config "${WORK_DIR}/minios_build.conf" KERNEL KERNEL_ARCH KERNEL_VERSION KERNEL_BUILD_ARCH
+                    mkdir -p "${WORK_DIR}/kernel/"
+                    # Clear existing kernel files before copying new ones
+                    rm -f "${WORK_DIR}/kernel/vmlinuz"-* "${WORK_DIR}/kernel/config"-*
+                    cp "${OVERLAY[merged]}/boot/vmlinuz"-* "${WORK_DIR}/kernel/"
+                    cp "${OVERLAY[merged]}/boot/config"-* "${WORK_DIR}/kernel/"
+                fi
+            fi
+
+            ###############################################################################
+            # Stage 2: build
+            ###############################################################################
+            if [ -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                overlay_unmount_dirs
+                chroot_cleanup module
+
+                # Compress and decompress temporary module data if any changes in upper layer
+                if [ "$(ls -A "${OVERLAY[upper]}" 2>/dev/null)" != "" ]; then
+                    mkdir -p "${OVERLAYS}/tmp"
+                    mkmod_corefs "${OVERLAY[upper]}"
+                    information "Compression of temporary ${YELLOW}${MODULE}${ENDCOLOR} module data is in progress ..."
+                    mksquashfs "${OVERLAY[upper]}" "${OVERLAYS}/tmp/${MODULE}-stock.${BEXT}" \
+                        -comp lz4 -b 1024K -always-use-fragments -noappend -quiet -progress || {
+                        error "Failed to compress ${YELLOW}${MODULE}${ENDCOLOR} module data."
+                        exit 1
+                    }
+                    mv "${OVERLAYS}/tmp/${MODULE}-stock.${BEXT}" "${OVERLAY[upper]}/${MODULE}-stock.${BEXT}"
+                    cd "${OVERLAY[upper]}" || exit 1
+                    information "Decompression of temporary ${YELLOW}${MODULE}${ENDCOLOR} module data is in progress ..."
+                    unsquashfs -quiet "${MODULE}-stock.${BEXT}"
+                else
+                    information "${MAGENTA}${OVERLAY[upper]}${ENDCOLOR} is empty. Nothing to do."
+                fi
+
+                overlay_chroot_mount_fs
+
+                # Copy build script and patches, then run inside chroot
+                if [ -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                    [ -f "${ENVIRONMENTS}/${MODULE}/packages.list" ] &&
+                        cp "${ENVIRONMENTS}/${MODULE}/packages.list" "${OVERLAY[merged]}/packages.list"
+                    cp "${ENVIRONMENTS}/${MODULE}/build" "${OVERLAY[merged]}/build"
+                    chmod +x "${OVERLAY[merged]}/build"
+                    if [ "$(ls -A "${ENVIRONMENTS}/${MODULE}/patches" 2>/dev/null)" != "" ]; then
+                        mkdir -p "${OVERLAY[merged]}/patches"
+                        (cd "${ENVIRONMENTS}/${MODULE}/patches" &&
+                            cp --parents -afr * "${OVERLAY[merged]}/patches/")
+                    fi
+                    information "Executing ${GREEN}build${ENDCOLOR} script ..."
+                    chroot_run "${OVERLAY[merged]}" /build
+                fi
+            fi
+
+            # If the module is a kernel module, copy the kernel modules into squashfs-root
+            if [ -f "${ENVIRONMENTS}/${MODULE}/is_dkms_build" ]; then
+                # Determine kernel version if unset
+                toggle_shell_options e
+                KERNEL="${KERNEL:-$(file "${OVERLAY[merged]}/boot/vmlinuz"-* 2>/dev/null |
+                    grep -oP 'version \K[^\s]+')}"
+                if [ -z "${KERNEL}" ]; then
+                    KERNEL="$(file "${WORK_DIR}/kernel/vmlinuz"-* 2>/dev/null |
+                        grep -oP 'version \K[^\s]+')"
+                fi
+                toggle_shell_options e
+
+                # Remove stale symlinks
+                [ -L "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}/build" ] &&
+                    rm -f "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}/build"
+                [ -L "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}/source" ] &&
+                    rm -f "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}/source"
+                [ -L "${OVERLAY[upper]}/lib/modules/${KERNEL}/build" ] &&
+                    rm -f "${OVERLAY[upper]}/lib/modules/${KERNEL}/build"
+                [ -L "${OVERLAY[upper]}/lib/modules/${KERNEL}/source" ] &&
+                    rm -f "${OVERLAY[upper]}/lib/modules/${KERNEL}/source"
+
+                # Copy modules into squashfs-root for packaging
+                toggle_shell_options e
+                ([ -d "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}" ] &&
+                    mkdir -p "${OVERLAY[upper]}/squashfs-root/usr/lib/modules/${KERNEL}" &&
+                    cd "${OVERLAY[upper]}/usr/lib/modules/${KERNEL}" &&
+                    cp --parents -afr * "${OVERLAY[upper]}/squashfs-root/usr/lib/modules/${KERNEL}/")
+                ([ -d "${OVERLAY[upper]}/lib/modules/${KERNEL}" ] &&
+                    mkdir -p "${OVERLAY[upper]}/squashfs-root/lib/modules/${KERNEL}" &&
+                    cd "${OVERLAY[upper]}/lib/modules/${KERNEL}" &&
+                    cp --parents -afr * "${OVERLAY[upper]}/squashfs-root/lib/modules/${KERNEL}/")
+                toggle_shell_options e
+
+                # Clean up the kernel modules
+                if [[ "${MODULE}" == *"kernel"* ]]; then
+                    cd "${OVERLAY[upper]}/squashfs-root" || exit 1
+                    ls initrd* >/dev/null 2>&1 && rm -f initrd*
+                    ls vmlinuz* >/dev/null 2>&1 && rm -f vmlinuz*
+                    if [ "${KERNEL_MODULES_ONLY}" = "true" ]; then
+                        bash -c "
+                        shopt -s extglob
+                        if [ -d "${OVERLAY[upper]}/squashfs-root/usr/lib/modules" ]; then
+                            rm -rf !(usr)
+                            cd "${OVERLAY[upper]}/squashfs-root/usr"
+                            rm -Rf !(lib)
+                            cd "${OVERLAY[upper]}/squashfs-root/usr/lib"
+                            rm -Rf !(modules)
+                        elif [ -d "${OVERLAY[upper]}/squashfs-root/lib/modules" ]; then
+                            rm -Rf !(lib)
+                            cd "${OVERLAY[upper]}/squashfs-root/lib"
+                            rm -Rf !(modules)
+                        fi
+                        cd "${OVERLAY[upper]}/squashfs-root"
+                        shopt -u extglob"
+                    else
+                        rm -Rf boot dev etc proc run sys tmp var/lib/apt
+                    fi
+                fi
+
+                information "Compression of ${YELLOW}${MODULE}${ENDCOLOR} module data is in progress ..."
+                mksquashfs "${OVERLAY[merged]}/squashfs-root" \
+                    "${OVERLAY[merged]}/${MODULE}.${BEXT}" \
+                    -comp "${COMP_TYPE}" ${ADDITIONAL_COMP_OPTS} \
+                    -b 1024K -always-use-fragments -noappend -quiet -progress || {
+                    error "Failed to compress ${YELLOW}${MODULE}${ENDCOLOR} module data."
+                    exit 1
+                }
+
+                rm -f "${OVERLAY[upper]}/minios_build.conf"
+            fi
+
+            ###############################################################################
+            # Stage 3: post-install
+            ###############################################################################
+            # Copy any post-install root files
+            if [ -d "${ENVIRONMENTS}/${MODULE}/rootcopy-postinstall" ]; then
+                if [ -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                    mkdir -p "${OVERLAY[merged]}/rootcopy-postinstall"
+                    cp -af "${ENVIRONMENTS}/${MODULE}/rootcopy-postinstall/." "${OVERLAY[merged]}/rootcopy-postinstall/" &
+                    COPY_PID=$!
+                else
+                    cp -af "${ENVIRONMENTS}/${MODULE}/rootcopy-postinstall/." "${OVERLAY[merged]}/" &
+                    COPY_PID=$!
+                fi
+                spinner "${COPY_PID}" "Copying rootcopy-postinstall files into chroot"
+                wait "${COPY_PID}"
+            fi
+
+            # Copy and execute the post-install script inside chroot
+            if [ -f "${ENVIRONMENTS}/${MODULE}/postinstall" ]; then
+                echo -e "=> ${GREEN}postinstall${ENDCOLOR} script is executing ..."
+                cp "${ENVIRONMENTS}/${MODULE}/postinstall" "${OVERLAY[merged]}/postinstall"
+                chmod +x "${OVERLAY[merged]}/postinstall"
+                information "Executing ${GREEN}postinstall${ENDCOLOR} script ..."
+                chroot_run "${OVERLAY[merged]}" /postinstall
+            fi
+
+            # If the build marker file does not exist, uncompress files and remove broken links
+            if [ ! -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                toggle_shell_options e
+                chroot_run "${OVERLAY[merged]}" uncompress_files /etc/alternatives
+                chroot_run "${OVERLAY[merged]}" uncompress_files /usr/share/man
+                chroot_run "${OVERLAY[merged]}" remove_broken_links /etc/alternatives
+                chroot_run "${OVERLAY[merged]}" remove_broken_links /usr/share/man
+                toggle_shell_options e
+            fi
+
+            ###############################################################################
+            # Stage 4: determine and assign module number/name
+            ###############################################################################
+            get_new_module_number() {
+                local MODULE=$1
+                local PACKAGE=$2
+                local VERSION=$3
+
+                # Retrieve existing module numbers
+                local EXISTING_NUMBERS=$(find "${WORK_DIR}/image/${LIVEKITNAME}/" \
+                    -name "0[0-9]-*.${BEXT}" -exec basename {} \; |
+                    awk -F- '{ print $1 }' | sort -n)
+
+                # Determine if a gap can be created
+                local NUMBER=$((10#$(echo "${MODULE}" | cut -d- -f1)))
+                local CAN_CREATE_GAP=true
+                for EXISTING_NUMBER in $EXISTING_NUMBERS; do
+                    if ((NUMBER == EXISTING_NUMBER)); then
+                        CAN_CREATE_GAP=false
+                        break
+                    elif ((NUMBER < EXISTING_NUMBER)); then
+                        CAN_CREATE_GAP=true
+                        break
+                    fi
+                done
+
+                # Assign new number if gap available, else reuse existing
+                if $CAN_CREATE_GAP; then
+                    local LAST_NUMBER=0
+                    for EXISTING_NUMBER in $EXISTING_NUMBERS; do
+                        if ((EXISTING_NUMBER > LAST_NUMBER + 1)); then
+                            break
+                        fi
+                        LAST_NUMBER=$EXISTING_NUMBER
+                    done
+                    local NEW_NUMBER=$(printf "%02d" $((LAST_NUMBER + 1)))
+                    if [[ -n "${PACKAGE}" && -n "${VERSION}" ]]; then
+                        echo "${NEW_NUMBER}-$(echo "${MODULE}" | cut -d- -f2-)-${PACKAGE}-${VERSION}"
+                    else
+                        echo "${NEW_NUMBER}-$(echo "${MODULE}" | cut -d- -f2-)"
+                    fi
+                else
+                    if [[ -n "${PACKAGE}" && -n "${VERSION}" ]]; then
+                        echo "${MODULE}-${PACKAGE}-${VERSION}"
+                    else
+                        echo "${MODULE}"
+                    fi
+                fi
+            }
+
+            # Determine module name and number
+            if [[ -f "${OVERLAY[upper]}/.package" && ${MODULE} =~ ^([1-9][0-9]+)(-.+)?$ ]]; then
+                read_config "${OVERLAY[upper]}/.package" PACKAGE VERSION
+                MODULE_NUM="${MODULE%%-*}"
+                MODULE_NAME="${MODULE_NUM}-${PACKAGE}-${VERSION}"
+            elif [[ ${MODULE:0:2} =~ ^0[0-9]$ ]]; then
+                MODULE_NAME=$(get_new_module_number "${MODULE}" "" "")
+            else
+                MODULE_NAME=${MODULE}
+            fi
+            [ -f "${OVERLAY[upper]}/.package" ] && rm -f "${OVERLAY[upper]}/.package"
+
+            ###############################################################################
+            # Stage 5: compression to image folder
+            ###############################################################################
+            # 5.1: Operations for the modules in which the building was applied
+            # Copy built module to the target image directory
+            if [ -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                if [[ "${MODULE}" == *"kernel"* ]]; then
+                    cp "${OVERLAY[upper]}/${MODULE}.${BEXT}" \
+                        "${WORK_DIR}/image/${LIVEKITNAME}/${MODULE}-${KERNEL}.${BEXT}"
+                else
+                    cp "${OVERLAY[upper]}/${MODULE}.${BEXT}" \
+                        "${WORK_DIR}/image/${LIVEKITNAME}/${MODULE_NAME}-${DISTRIBUTION_ARCH}.${BEXT}"
+                fi
+            fi
+
+            # Deactivate Ubuntu Pro and clean up traces before compression
+            if [ "${USE_UBUNTU_PRO:-false}" = "true" ] && [ -n "${UBUNTU_PRO_TOKEN:-}" ]; then
+                ubuntu_pro_detach "${OVERLAY[merged]}"
+                # Also clean traces from upper layer
+                ubuntu_pro_cleanup_traces "${OVERLAY[upper]}"
+            fi
+
+            overlay_chroot_finish_up
+            overlay_unmount_dirs
+
+            # Cleanup chroot for non-build modules
+            if [ ! -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                chroot_cleanup module
+            fi
+
+            mkmod_corefs "${OVERLAY[upper]}"
+
+            # Compress any remaining data if module had no build script
+            if [ ! -f "${ENVIRONMENTS}/${MODULE}/build" ]; then
+                if [ ! -f "${WORK_DIR}/image/${LIVEKITNAME}/${MODULE}.${BEXT}" ]; then
+                    if [ "$(ls -A "${OVERLAY[upper]}" 2>/dev/null)" != "" ]; then
+                        if [[ "${MODULE}" == *"kernel"* ]]; then
+                            FILENAME="${MODULE}-${KERNEL}.${BEXT}"
+                        else
+                            FILENAME="${MODULE_NAME}-${DISTRIBUTION_ARCH}.${BEXT}"
+                        fi
+                        information "Compressing ${YELLOW}${MODULE}${ENDCOLOR} module data as ${CYAN}${FILENAME}${ENDCOLOR} ..."
+                        mksquashfs ${COREFS} "${WORK_DIR}/image/${LIVEKITNAME}/${FILENAME}" \
+                            -comp "${COMP_TYPE}" ${ADDITIONAL_COMP_OPTS} \
+                            -b 1024K -always-use-fragments -noappend -quiet -progress || {
+                            error "Failed to compress ${YELLOW}${MODULE}${ENDCOLOR} module data."
+                            exit 1
+                        }
+                    else
+                        warning "${MAGENTA}${OVERLAY[upper]}${ENDCOLOR} is empty. Nothing to do."
+                    fi
+                fi
+            fi
+        fi
+    done
+}

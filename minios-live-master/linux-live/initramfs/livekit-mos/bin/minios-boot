@@ -1,0 +1,159 @@
+#!/bin/bash
+#
+# System boot configuration script.
+# Author: crims0n <https://minios.dev>
+#
+
+CONFIG="/etc/live/config.conf"
+CMDLINE="$(cat /proc/cmdline)"
+
+# ======= Functions =======
+
+set_log() {
+    mkdir -p /var/log/minios
+    mkfifo /tmp/minios-boot.pipe
+    tee </tmp/minios-boot.pipe /var/log/minios/minios-boot.log &
+    exec >/tmp/minios-boot.pipe 2>&1
+
+    case "${LIVE_CONFIG_DEBUG}" in
+    true)
+        export PS4='+ ${BASH_SOURCE}:${LINENO}: '
+        set -x
+        ;;
+    esac
+}
+
+echo_green_star() {
+    echo -ne "[0;32m""* ""[0;39m"
+}
+
+echo_red_star() {
+    echo -ne "[0;31m""* ""[0;39m"
+}
+
+echo_yellow_star() {
+    echo -ne "[0;33m""* ""[0;39m"
+}
+
+echo_white_star() {
+    echo -ne "[1;37m""* ""[0;39m"
+}
+
+read_config() {
+    shopt -s extglob
+
+    local CONFIG_FILE="$1"
+    local KEYLIST="${@:2}"
+
+    if [[ ! -f "$CONFIG_FILE" || ! -r "$CONFIG_FILE" ]]; then
+        echo_red_star
+        echo "$CONFIG_FILE is either not a file or not readable!"
+        exit 1
+    fi
+
+    KEYLIST="${KEYLIST// /|}"
+
+    while IFS='= ' read -r LHS RHS; do
+        if [[ "${LHS}" =~ ^(${KEYLIST})$ ]] && [[ -n ${RHS} ]]; then
+            RHS="${RHS%\"*}"
+            RHS="${RHS#\"*}"
+            RHS="${RHS%\'*}"
+            RHS="${RHS#\'*}"
+
+            if [[ "${RHS}" =~ ^\((.*)\)$ ]]; then
+                eval ${LHS}=\("${BASH_REMATCH[1]}"\)
+            else
+                eval ${LHS}=\"${RHS}\"
+            fi
+        fi
+    done <<<"$(tr -d '\r' <$CONFIG_FILE)"
+
+    shopt -u extglob
+}
+
+read_cmdline() {
+    for i in "$@"; do
+        case $i in
+        live-config.username=* | username=*)
+            LIVE_USERNAME="${i#*=}"
+            ;;
+        live-config.debug | debug)
+            LIVE_CONFIG_DEBUG="true"
+            ;;
+        default_target=* | default-target=*)
+            DEFAULT_TARGET="${i#*=}"
+            ;;
+        enable_services=* | enable-services=*)
+            ENABLE_SERVICES="${i#*=}"
+            ;;
+        disable_services=* | disable-services=*)
+            DISABLE_SERVICES="${i#*=}"
+            ;;
+        esac
+    done
+}
+
+set_default_target() {
+    [ ! "$DEFAULT_TARGET" ] && read_config "$CONFIG" DEFAULT_TARGET
+    [ ! "$DEFAULT_TARGET" ] && DEFAULT_TARGET=graphical.target
+
+    [ "$TEXT_MODE" ] && DEFAULT_TARGET=multi-user
+
+    if ! systemctl set-default "$DEFAULT_TARGET" >/dev/null 2>&1; then
+        echo_red_star
+        echo -e "Failed to set default target: \e[31m$DEFAULT_TARGET\e[0m"
+        return 1
+    fi
+}
+
+manage_services() {
+    local SERVICES_VAR ACTION
+    ACTION="$1"
+    SERVICES_VAR=""
+
+    if [ "$ACTION" == "enable" ]; then
+        SERVICES_VAR="ENABLE_SERVICES"
+    elif [ "$ACTION" == "disable" ]; then
+        SERVICES_VAR="DISABLE_SERVICES"
+    else
+        echo_red_star
+        echo -e "Invalid ACTION: \e[31m$ACTION\e[0m"
+        return 1
+    fi
+
+    if [ -z "${!SERVICES_VAR}" ]; then
+        if [ -f "$CONFIG" ]; then
+            read_config "$CONFIG" "$SERVICES_VAR"
+        fi
+    fi
+
+    if [ -n "${!SERVICES_VAR}" ]; then
+        IFS=',' read -ra SERVICES <<<"${!SERVICES_VAR}"
+        for SERVICE in "${SERVICES[@]}"; do
+            if systemctl "$ACTION" "$SERVICE" >/dev/null 2>&1; then
+                echo_green_star
+                echo -e "Successfully ${ACTION}d service: \e[32m$SERVICE\e[0m"
+            else
+                echo_red_star
+                echo -e "Failed to ${ACTION} service: \e[31m$SERVICE\e[0m"
+            fi
+        done
+    fi
+}
+
+set_autologin() {
+    [ -z "$LIVE_USERNAME" ] && [ -f "$CONFIG" ] && read_config "$CONFIG" LIVE_USERNAME
+
+    command -v x11vnc >/dev/null && [ -f "/usr/lib/systemd/system/x11vnc.service" ] &&
+        sed -i "s,-auth guess,-auth /home/$LIVE_USERNAME/.Xauthority,g" "/usr/lib/systemd/system/x11vnc.service"
+}
+
+# Main script execution
+set_log
+read_cmdline "$CMDLINE"
+set_default_target
+manage_services enable
+manage_services disable
+set_autologin
+
+rm -f /tmp/minios-boot.pipe

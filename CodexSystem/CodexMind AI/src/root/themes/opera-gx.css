@@ -1,0 +1,276 @@
+html[data-theme="opera-gx"],
+html[data-theme="opera-gx-dark"] {
+  --env-opera-background-color: env(-opera-background-color);
+  --env-opera-background-color-hsl-values: env(-opera-background-color-h)
+    env(-opera-background-color-s) env(-opera-background-color-l);
+  --env-opera-background-color-h-values: env(-opera-background-color-h);
+  --env-opera-background-color-s-values: env(-opera-background-color-s);
+  --env-opera-background-color-l-values: env(-opera-background-color-l);
+  --env-opera-gx-background-color: env(-opera-gx-background-color);
+  --env-opera-gx-background-colors-hsl-values: env(-opera-gx-background-color-h)
+    env(-opera-gx-background-color-s) env(-opera-gx-background-color-l);
+  --env-opera-gx-accent-color: env(-opera-gx-accent-color);
+  --opera-gx-accent-color-rgb-values: env(-opera-gx-accent-color-r) env(-opera-gx-accent-color-g)
+    env(-opera-gx-accent-color-b);
+  --env-opera-accent-color: env(-opera-accent-color);
+  --env-opera-accent-color-rgb-values: env(-opera-accent-color-r) env(-opera-accent-color-g)
+    env(-opera-accent-color-b);
+
+  --border-image-1-header: linear-gradient(
+      90deg,
+      rgba(54, 48, 74, 0) 0%,
+      #36304a 14%,
+      #36304a 82%,
+      rgba(54, 48, 74, 0) 100%
+    )
+    1;
+}
+
+html[data-theme="opera-gx"] {
+  --theme-palette-gx-no-0-values: env(-opera-background-color-h) env(-opera-background-color-s) 8%;
+  --theme-palette-gx-no-04-values: env(-opera-background-color-h) env(-opera-background-color-s) 4%;
+  --theme-palette-gx-no-04: hsl(var(--theme-palette-gx-no-04-values));
+  --theme-palette-gx-no-20-values: env(-opera-background-color-h) env(-opera-background-color-s) 20%;
+  --theme-palette-gx-no-20: hsl(var(--theme-palette-gx-no-20-values));
+  --theme-palette-gx-no-40-values: env(-opera-background-color-h) env(-opera-background-color-s) 40%;
+  --theme-palette-gx-no-40: hsl(var(--theme-palette-gx-no-40-values));
+  --theme-palette-gx-no-59-values: env(-opera-background-color-h) env(-opera-background-color-s) 59%;
+  --theme-palette-gx-no-59: hsl(var(--theme-palette-gx-no-59-values));
+  --theme-palette-gx-no-76-values: env(-opera-background-color-h) env(-opera-background-color-s) 76%;
+  --theme-palette-gx-no-76: hsl(var(--theme-palette-gx-no-77-values));
+  --theme-palette-gx-no-77-values: env(-opera-background-color-h) env(-opera-background-color-s) 77%;
+  --theme-palette-gx-no-77: hsl(var(--theme-palette-gx-no-77-values));
+  --theme-palette-gx-no-80-values: env(-opera-background-color-h) env(-opera-background-color-s) 80%;
+  --theme-palette-gx-no-80: hsl(var(--theme-palette-gx-no-80-values));
+  --theme-palette-gx-no-88-values: env(-opera-background-color-h) env(-opera-background-color-s) 88%;
+  --theme-palette-gx-no-88: hsl(var(--theme-palette-gx-no-88-values));
+  --theme-palette-gx-no-92-values: env(-opera-background-color-h) env(-opera-background-color-s) 92%;
+  --theme-palette-gx-no-92: hsl(var(--theme-palette-gx-no-92-values));
+  --theme-palette-gx-no-98-values: env(-opera-background-color-h) env(-opera-background-color-s) 98%;
+  --theme-palette-gx-no-98: hsl(var(--theme-palette-gx-no-98-values));
+  --theme-palette-gx-no-100-values: env(-opera-background-color-h) env(-opera-background-color-s)
+    100%;
+  --theme-palette-gx-no-100: hsl(var(--theme-palette-gx-no-100-values));
+  --theme-palette-gx-accent-l-60-values-rgb: calc(env(-opera-accent-color-r) * 0.6)
+    calc(env(-opera-accent-color-g) * 0.6) calc(env(-opera-accent-color-b) * 0.6);
+  --theme-palette-gx-accent-l-60: rgb(var(--theme-palette-gx-accent-l-60-values-rgb));
+  --theme-palette-gx-accent-l-160-values-rgb: calc(
+      env(-opera-accent-color-r) + ((255 - env(-opera-accent-color-r)) * 0.6)
+    )
+    calc(env(-opera-accent-color-g) + ((255 - env(-opera-accent-color-g)) * 0.6))
+    calc(env(-opera-accent-color-b) + ((255 - env(-opera-accent-color-b)) * 0.6));
+  --theme-palette-gx-accent-l-160: rgb(var(--theme-palette-gx-accent-l-160-values-rgb));
+
+  --color-stroke-components: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --color-surface-primary: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 92%
+  );
+  --color-surface-on-hover: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 98%
+  );
+  --color-surface-on-hover-op-60: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 77%
+  );
+  --color-surface-input-field-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 96%
+  );
+  --color-buttons-secondary: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 88%
+  );
+  --color-buttons-primary-bg: env(-opera-gx-accent-color);
+  --color-buttons-primary-border-hover: rgb(
+    calc(env(-opera-gx-accent-color-r) * (0.6)) calc(env(-opera-gx-accent-color-g) * (0.6))
+      calc(env(-opera-gx-accent-color-b) * (0.6))
+  );
+  --color-buttons-primary-bg-hover: rgb(
+    calc(env(-opera-gx-accent-color-r) * (0.6)) calc(env(-opera-gx-accent-color-g) * (0.6))
+      calc(env(-opera-gx-accent-color-b) * (0.6))
+  );
+  --color-buttons-primary-border-active: rgb(
+    calc(env(-opera-gx-accent-color-r) * (1.2)) calc(env(-opera-gx-accent-color-g) * (1.2))
+      calc(env(-opera-gx-accent-color-b) * (1.2))
+  );
+  --color-buttons-primary-bg-active: rgb(
+    calc(env(-opera-gx-accent-color-r) * (1.2)) calc(env(-opera-gx-accent-color-g) * (1.2))
+      calc(env(-opera-gx-accent-color-b) * (1.2))
+  );
+  --color-buttons-primary-text: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 100%
+  );
+  --color-buttons-secondary-border: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --color-buttons-secondary-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 88%
+  );
+  --color-buttons-secondary-border-hover: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --color-buttons-secondary-bg-hover: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 77%
+  );
+  --color-buttons-secondary-border-active: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --color-buttons-secondary-bg-active: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --color-buttons-secondary-text: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 100%
+  );
+
+  --color-highlight-yellow: #ff7a00;
+  --color-highlight-green: #00aba0;
+  --color-highlight-pink: #ff2f7b;
+  --color-description: hsl(env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 24%);
+  --color-buttons-cobalt: env(-opera-gx-accent-color);
+  --color-extra-content-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 98%
+  );
+
+  --color-cobalt-blue: #5021ff;
+  --color-coral-island: #e24c5e;
+  --color-settings-gray-2: #484d65;
+  --color-solid-dolphin: #252836;
+  --color-surface-input-field: #41455a;
+  --color-opera-prompt-command-image-background: env(-opera-gx-background-color-h)
+    env(-opera-gx-background-color-s) 16%;
+
+  /* TODO: separate layout and colors */
+  --linkify-box-shadow: 0px 0px 32px 0px rgba(255, 255, 255, 0.24);
+  --opera-confirmation-popup-box-shadow: 0px 0px 40px 0px rgba(3, 6, 21, 0.53);
+  --new-chat-shadow: 0 0 10px 0 rgba(227, 227, 227, 0.3);
+
+  --new-chat-bg-color: env(-opera-gx-accent-color);
+
+  --opera-chatbot-message-active-border: rgb(
+    calc(env(-opera-gx-accent-color-r) * (0.6)) calc(env(-opera-gx-accent-color-g) * (0.6))
+      calc(env(-opera-gx-accent-color-b) * (0.6))
+  );
+  --opera-chatbot-message-title: #fff;
+  --opera-menu-checked-box: env(-opera-gx-accent-color);
+  --opera-menu-option-buttons-bg: transparent;
+
+  --tooltip-bg-color: #ffffff;
+  --opera-chatbot-first-background: url(@/assets/new-chat-gx.svg);
+
+  --opera-icon-copy: url(@/assets/icons/copy.svg);
+  --opera-icon-done: url(@/assets/icons/edit-submit-icon.svg);
+  --opera-remove-icon: url(@/assets/icons/cross_icon.svg);
+
+  --opera-chatbot-scroll-down-border-color: rgb(
+    calc(env(-opera-gx-accent-color-r)) calc(env(-opera-gx-accent-color-g))
+      calc(env(-opera-gx-accent-color-b))
+  );
+  --opera-chatbot-blockquote-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 95%
+  );
+  --logo-opera-gx-url: url(@/assets/logo-opera-gx-dark.svg);
+  --opera-gx-accent-color: env(-opera-gx-accent-color);
+  --opera-gx-accent-color-40: hsl(env(-opera-gx-accent-color-h) env(-opera-gx-accent-color-s) 40%);
+  --opera-gx-accent-color-0: hsl(env(-opera-gx-accent-color-h) env(-opera-gx-accent-color-s) 0%);
+  --opera-chatbot-background: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 96%
+  );
+  --opera-screenshot-background: var(--opera-chatbot-background);
+  --opera-screenshot-radius: 8;
+  --opera-chatbot-logo-bg: hsl(env(-opera-gx-accent-color-h) env(-opera-gx-accent-color-s) 90%);
+  --opera-chatbot-message-title: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-chatbot-to-content: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-chatbot-from-content: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-chatbot-burger-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 80%
+  );
+  --opera-chatbot-first-background-title: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-chatbot-form-input-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 96%
+  );
+  --opera-chatbot-input: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-menu-option: hsl(env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 92%);
+  --opera-chatbot-button-secondary-active-border: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 77%
+  );
+  --opera-chatbot-button-secondary-active-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 88%
+  );
+  --opera-chatbot-button-secondary-hovered: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 77%
+  );
+  --opera-chatbot-button-secondary-color: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-menu-footer-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 92%
+  );
+  --opera-menu-input: hsl(env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%);
+  --opera-menu-footer-text: rgba(0, 0, 0, 0.8);
+  --opera-icon-color: #000000;
+  --opera-menu-edit-input-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 88%
+  );
+  --opera-menu-edit-input-color: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 0%
+  );
+  --opera-confirmation-popup-background: rgba(255, 255, 255, 0.67);
+  --opera-chatbot-codebox-header-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 77%
+  );
+
+  --opera-chatbot-button-primary-active: env(-opera-gx-accent-color);
+  --opera-chatbot-button-primary-hovered: rgb(
+    calc(env(-opera-gx-accent-color-r) * (0.6)) calc(env(-opera-gx-accent-color-g) * (0.6))
+      calc(env(-opera-gx-accent-color-b) * (0.6))
+  );
+  --opera-chatbot-button-primary-color: #fff;
+  --opera-chatbot-table-bg: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 98%
+  );
+  --opera-chatbot-link-bg: var(--color-neutral-90);
+  --opera-chatbot-scrollbar-thumb: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 88%
+  );
+  --opera-input-scrollbar-track: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 59%
+  );
+  --opera-menu-scrollbar-track: hsl(
+    env(-opera-gx-background-color-h) env(-opera-gx-background-color-s) 59%
+  );
+  --opera-chatbot-message-highlight-menu-sep: #e9e6ef;
+  --opera-chatbot-message-highlight-border: #e7edf1;
+  --opera-chatbot-message-highlight-active-border: #ff1d53;
+  --opera-chatbot-message-highlight-bg-custom-1: #ffc01f;
+  --opera-chatbot-message-highlight-bg-custom-2: #02ffc2;
+  --opera-chatbot-message-highlight-bg-custom-3: #ff7ead;
+  --opera-chatbot-message-highlight-bg-default: rgba(255, 255, 255);
+  --opera-chatbot-message-highlight-bg: #c7ddff;
+  --opera-chatbot-message-highlight-color: #2a343d;
+  --opera-chatbot-message-highlight-rephrase-init-background-color-start: var(
+    --opera-chatbot-message-highlight-bg
+  );
+  --opera-chatbot-message-highlight-rephrase-init-background-color-end: transparent;
+  --opera-chatbot-message-highlight-rephrase-done-background-color-start: var(
+    --opera-chatbot-message-highlight-bg
+  );
+  --opera-chatbot-message-highlight-rephrase-done-background-color-end: transparent;
+
+  --aria-bg-shape-shadow-start-color: hsl(var(--theme-palette-gx-no-92-values) / 0.77);
+  --aria-bg-shape-shadow-stop-color: hsl(var(--theme-palette-gx-no-92-values) / 0);
+  --aria-bg-shape-shadow-color: linear-gradient(
+    102deg,
+    var(--aria-bg-shape-shadow-start-color) 60%,
+    var(--aria-bg-shape-shadow-stop-color) 76%
+  );
+  --aria-bg-shape-fill-color: var(--color-level-0);
+}

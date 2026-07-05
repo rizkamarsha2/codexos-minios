@@ -1,0 +1,265 @@
+html[data-theme="opera-air"],
+html[data-theme="opera-air-dark"] {
+  --radius-1: 9px;
+  --radius-2: 12px;
+  --border-border-low: light-dark(rgba(17, 17, 17, 0.08), rgba(255, 255, 255, 0.08));
+  --background-bg-xlow-hover: light-dark(rgba(17, 17, 17, 0.12), rgba(241, 241, 241, 0.12));
+  --surface-surface-high: light-dark(rgba(241, 241, 241, 0.88), rgba(31, 31, 31, 0.96));
+  --border-low: light-dark(rgba(17, 17, 17, 0.08), rgba(255, 255, 255, 0.08));
+  --bg-toggle-switch-on: light-dark(rgba(17, 17, 17, 0.88), rgba(241, 241, 241, 0.4));
+  --bg-toggle-switch-on-hover: light-dark(rgba(17, 17, 17, 0.96), rgba(241, 241, 241, 0.48));
+  --bg-toggle-switch-disabled: var(--background-bg-xlow-hover);
+  --bg-toggle-switch-off: light-dark(rgba(17, 17, 17, 0.08), rgba(241, 241, 241, 0.04));
+  --bg-toggle-switch-off-hover: light-dark(rgba(17, 17, 17, 0.2), rgba(241, 241, 241, 0.2));
+  --border-toggle-switch-on: light-dark(rgba(17, 17, 17, 0.12), rgba(255, 255, 255, 0.12));
+  --border-toggle-switch-off: var(--border-border-low);
+  --bg-toggle-thumb: white;
+  --bg-toggle-thumb-disabled: light-dark(rgba(17, 17, 17, 0.12), rgba(255, 255, 255, 0.32));
+  --border-toggle-switch-disabled-on: light-dark(rgba(255, 255, 255, 0.12), rgba(17, 17, 17, 0.12));
+  --surface-surface-medium: light-dark(rgba(241, 241, 241, 0.64), rgba(31, 31, 31, 0.72));
+  --effect-focus-ring: #49ab9b;
+  --background-bg-medium: light-dark(rgba(17, 17, 17, 0.08), rgba(241, 241, 241, 0.04));
+  --background-bg-medium-hover: light-dark(rgba(17, 17, 17, 0.2), rgba(241, 241, 241, 0.2));
+  --button-bg-gradient: radial-gradient(
+    101.5% 35.83% at 50.39% 100%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+
+  .toggle {
+    &:focus-within .toggle-switch,
+    .toggle-switch.focused-by-default {
+      box-shadow:
+        0 0 0 1px var(--surface-surface-medium),
+        0 0 0 3px var(--effect-focus-ring);
+    }
+
+    .toggle-switch {
+      transition: box-shadow 0.15s ease-in-out;
+      width: 36px;
+      height: 20px;
+      border-width: 1px;
+      border-style: solid;
+      border-color: var(--border-toggle-switch-off);
+      background-color: var(--bg-toggle-switch-off);
+    }
+
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      margin-left: -2px;
+      background-color: var(--bg-toggle-thumb);
+    }
+    &.checked {
+      .toggle-switch {
+        border-color: var(var(--border-toggle-switch-on));
+        background-color: var(--bg-toggle-switch-on);
+      }
+      .toggle-thumb {
+        margin-left: -4px;
+      }
+    }
+    &:hover {
+      .toggle-switch {
+        background-color: var(--bg-toggle-switch-off-hover);
+      }
+    }
+    &:hover&.checked {
+      .toggle-switch {
+        background-color: var(--bg-toggle-switch-on-hover);
+      }
+    }
+
+    &.disabled {
+      .toggle-switch {
+        background-color: var(--bg-toggle-switch-disabled) !important;
+      }
+      .toggle-thumb {
+        background-color: var(--bg-toggle-thumb-disabled) !important;
+      }
+      &.checked {
+        .toggle-switch {
+          border-color: var(--border-toggle-switch-disabled-on) !important;
+        }
+      }
+    }
+  }
+
+  --opera-chatbot-scrollbar-thumb: light-dark(rgba(17, 17, 17, 0.2), rgba(241, 241, 241, 0.24));
+  --surface-medium: light-dark(rgba(241, 241, 241, 0.64), rgba(31, 31, 31, 0.72));
+  --surface-high: light-dark(rgba(241, 241, 241, 0.88), rgba(31, 31, 31, 0.96));
+  --surface-high-nt: light-dark(rgba(241, 241, 241), rgba(31, 31, 31));
+  body {
+    background-color: var(--surface-medium);
+    backdrop-filter: blur(32px);
+  }
+  .code-box {
+    background-color: var(--surface-medium);
+    border-color: var(--color-neutral-88);
+  }
+  --opera-chatbot-blockquote-bg: var(--color-neutral-88);
+  body.tab-view {
+    background-color: var(--color-level-1-4);
+    backdrop-filter: none;
+  }
+  .tab-view .code-box {
+    background-color: var(--color-level-1-4);
+  }
+  .sidepanel-expanded {
+    background-color: light-dark(rgba(241, 241, 241, 0.99), rgba(17, 17, 17, 1));
+    backdrop-filter: blur(60px);
+  }
+  .mode-disclaimer {
+    background-color: var(--surface-high-nt);
+    border-color: transparent;
+  }
+
+  /* TODO: Sync with figma DS */
+
+  color-scheme: light dark;
+
+  --color-level-0: light-dark(rgba(241, 241, 241, 0.48), rgba(31, 31, 31, 0.48));
+  --color-level-1: light-dark(rgba(241, 241, 241, 0.64), rgba(31, 31, 31, 0.72));
+  --color-level-1-1: light-dark(rgba(241, 241, 241, 0.64), rgba(31, 31, 31, 0.72));
+  --color-level-1-4: light-dark(#f1f1f1, #1f1f1f);
+  --color-level-2: light-dark(rgba(241, 241, 241, 0.64), rgba(31, 31, 31, 0.72));
+  --color-level-2-1: light-dark(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88));
+  --color-level-3: light-dark(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88));
+  --color-level-4: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+  --color-level-5: light-dark(rgba(241, 241, 241, 0.88), rgba(31, 31, 31, 0.96));
+  --color-level-6: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+
+  --search-tooltip-background: light-dark(rgba(31, 31, 31, 0.96), rgba(31, 31, 31, 0.96));
+
+  --color-accent-0: light-dark(rgba(4, 37, 24, 1), rgba(4, 37, 24, 1));
+  --color-accent-10: light-dark(rgba(0, 61, 51, 1), rgba(0, 61, 51, 1));
+  --color-accent-20: light-dark(rgba(0, 84, 70, 1), rgba(0, 84, 70, 1));
+  /* TODO: placeholder — designer to provide proper Air-themed value for A-25 */
+  --color-accent-25: var(--color-accent-30);
+  --color-accent-30: light-dark(rgba(0, 107, 89, 1), rgba(0, 107, 89, 1));
+  --color-accent-40: light-dark(rgba(17, 17, 17, 0.96), rgba(241, 241, 241, 1));
+  --color-accent-45: light-dark(rgba(0, 128, 106, 1), rgba(0, 128, 106, 1));
+  --color-accent-50: light-dark(rgba(17, 17, 17, 0.88), rgba(241, 241, 241, 0.88));
+  --color-accent-60: light-dark(rgba(17, 17, 17, 0.96), rgba(17, 17, 17, 0.96));
+  --color-accent-80: light-dark(rgba(184, 224, 217, 1), rgba(184, 224, 217, 1));
+  --color-accent-95: light-dark(rgba(17, 17, 17, 0.12), rgba(17, 17, 17, 0.12));
+  --color-accent-100: light-dark(rgba(238, 251, 249, 1), rgba(238, 251, 249, 1));
+
+  --color-neutral-0: light-dark(rgba(17, 17, 17, 1), rgba(241, 241, 241, 1));
+  --color-neutral-0-40: light-dark(rgba(17, 17, 17, 0.8), rgba(241, 241, 241, 0.8));
+  --color-neutral-0-60: light-dark(rgba(17, 17, 17, 0.88), rgba(241, 241, 241, 0.88));
+  --color-neutral-0-80: light-dark(rgba(17, 17, 17, 0.96), rgba(241, 241, 241, 0.96));
+  --color-neutral-10: light-dark(rgba(17, 17, 17, 0.72), rgba(241, 241, 241, 0.72));
+  /* TODO: placeholder — designer to provide proper Air-themed value for N-76 */
+  --color-neutral-76: var(--color-neutral-88);
+  --color-neutral-88: light-dark(rgba(17, 17, 17, 0.12), rgba(241, 241, 241, 0.12));
+  --color-neutral-90: light-dark(rgba(17, 17, 17, 0.08), rgba(241, 241, 241, 0.08));
+  --color-neutral-92: light-dark(rgba(17, 17, 17, 0.12), rgba(241, 241, 241, 0.12));
+  --color-neutral-92-40: light-dark(rgba(17, 17, 17, 0.06), rgba(241, 241, 241, 0.06));
+  --color-neutral-92-60: light-dark(rgba(17, 17, 17, 0.06), rgba(241, 241, 241, 0.12));
+  --color-neutral-93: light-dark(rgba(17, 17, 17, 0.04), rgba(241, 241, 241, 0.04));
+  /* TODO: placeholder — designer to provide proper Air-themed value for N-95 */
+  --color-neutral-95: var(--color-neutral-93);
+  --color-neutral-98: light-dark(rgba(17, 17, 17, 0.04), rgba(241, 241, 241, 0.04));
+  --color-neutral-100: light-dark(rgba(17, 17, 17, 0), rgba(241, 241, 241, 0));
+
+  --color-text-00: light-dark(rgba(255, 255, 255, 0.88), rgba(17, 17, 17, 1));
+  --color-text-01: light-dark(rgba(17, 17, 17, 1), rgba(255, 255, 255, 1));
+  --color-text-02: light-dark(rgba(17, 17, 17, 0.88), rgba(255, 255, 255, 0.88));
+  --color-text-03: light-dark(rgba(17, 17, 17, 0.8), rgba(255, 255, 255, 0.8));
+  --color-text-04: light-dark(rgba(17, 17, 17, 0.64), rgba(255, 255, 255, 0.64));
+  --color-text-05: rgba(17, 17, 17, 1);
+  --color-text-a: env(-aria-color-text-a, light-dark(#111111, #ffffff));
+  --color-text-a-hover: light-dark(#007662, #49ab9b);
+  --color-text-b: env(-aria-color-text-b, #ffffff);
+  --color-text-c: env(-aria-color-text-c, #03c1aa);
+  --color-text-e: env(-aria-color-text-e, #f65164);
+
+  --color-state-correct: var(--color-text-00);
+  --color-state-error: light-dark(rgba(171, 33, 23, 1), #fd8f87);
+
+  --color-other-o1: light-dark(#a4c3e0, #4987c0);
+  --color-other-o2: light-dark(#a4e0dd, #48c1bb);
+  --color-other-o3: light-dark(#baa4e0, #7449c0);
+  --color-other-o4: light-dark(#f2d192, #e4a425);
+  --color-other-o5: light-dark(#e0a4d6, #c049ad);
+
+  --color-tabs-c1: light-dark(#d9e6f2, #2f5e89);
+  --color-tabs-c2: light-dark(#d9f2f1, #2f8985);
+  --color-tabs-c3: light-dark(#e2d9f2, #4f2f89);
+  --color-tabs-c4: light-dark(#f9ecd2, #a47314);
+  --color-tabs-c5: light-dark(#f2d9ee, #892f7a);
+
+  --color-screenshot-bg: light-dark(#bdbdbc, #323433);
+
+  .tooltip {
+    background-color: #111;
+    border: 1px solid var(--border-border-low);
+    .tooltip-text {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+  .nt-top-plane,
+  .notification,
+  .contextmenu {
+    background-color: var(--surface-high-nt);
+  }
+  .message-action.bg-color-level-2,
+  .message-action:hover {
+    background-color: var(--background-bg-xlow-hover);
+  }
+  .input-action,
+  .input-send,
+  .icon-button,
+  .air-rounded-full {
+    border-radius: 999px;
+  }
+  .input-action:hover {
+    border: 1px solid var(--border-border-low);
+    background-color: var(--background-bg-xlow-hover);
+  }
+  .suggestion {
+    border: 1px solid var(--border-border-low);
+    background-color: var(--surface-surface-high);
+  }
+  .external-link-section,
+  .external-link-section-image {
+    border-radius: 16px;
+  }
+  .overlay {
+    background-color: light-dark(rgba(241, 241, 241, 0.96), rgba(17, 17, 17, 0.96));
+  }
+  .menu-item {
+    border-radius: 14px;
+  }
+  .menu-item.editing {
+    border-radius: 14px 18px 18px 14px;
+  }
+
+  .button-default {
+    font-size: 14px;
+    border-radius: 999px;
+    height: 37px;
+    display: flex;
+    padding: 10px 20px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex: 1 0 0;
+  }
+
+  .button-tertiary {
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    border: 1px solid var(--border-border-low);
+    background: var(--button-bg-gradient), var(--background-bg-medium);
+
+    &:hover {
+      background: var(--button-bg-gradient), var(--background-bg-medium-hover);
+    }
+  }
+  .chat-header .icon-button:hover {
+    background-color: transparent;
+  }
+}

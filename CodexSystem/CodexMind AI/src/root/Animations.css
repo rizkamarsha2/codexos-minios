@@ -1,0 +1,83 @@
+@keyframes inputJump {
+  0% {
+    transform: scale(100%);
+  }
+  50% {
+    transform: scale(96%);
+  }
+  100% {
+    transform: scale(100%);
+  }
+}
+
+@keyframes inputDustOpacityStart {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 100%;
+  }
+}
+
+@keyframes inputDustOpacityEnd {
+  0% {
+    opacity: 100%;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes inputDustScaleUp {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes inputSidebarDustScaleUp {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform-origin: top left;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform-origin: top left;
+    transform: scale(1);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes typing {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

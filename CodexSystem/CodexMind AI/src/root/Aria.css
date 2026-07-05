@@ -1,0 +1,489 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@import "katex/dist/katex.min.css";
+
+@import "./themes/themes.css";
+@import "./components.css";
+@import "./fonts.css";
+@import "./Animations.css";
+@import "./utilities.css";
+@import "./base.css";
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background-color: var(--opera-chatbot-background-scrollbar);
+}
+
+/**
+ * ARIAX-1318 - These 2 selectors removing unwanted empty spaces in highlighted
+ * Linkify
+ */
+.opera-chatbot .message .content a:has(.outer-highlight) {
+  padding: 0;
+}
+.opera-chatbot .message .content a .outer-highlight span {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.opera-chatbot ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar {
+  height: 6px;
+  width: var(--default-scrollbar-width);
+}
+
+@media only screen and (min-width: 1024px) {
+  .scrollbar-gutter-input-adjustment {
+    margin-right: calc(50% + calc(var(--default-scrollbar-width) / 2));
+    margin-bottom: 0;
+    margin-left: calc(50% - calc(var(--default-scrollbar-width) / 2));
+  }
+
+  .portal-container-scrollbar-adjustment {
+    left: calc(-1 * var(--default-scrollbar-width));
+    right: 0;
+  }
+}
+
+#extra-content ::-webkit-scrollbar {
+  height: 3px;
+  width: 3px;
+}
+
+.thin-scrollbar ::-webkit-scrollbar {
+  height: 3px;
+  width: 3px;
+}
+
+.hover-scrollbar {
+  scrollbar-gutter: stable;
+  -webkit-mask-image:
+    linear-gradient(to top, transparent, var(--opera-chatbot-background-scrollbar)),
+    linear-gradient(to left, transparent 6px, var(--opera-chatbot-background-scrollbar) 6px);
+  -webkit-mask-size: 100% 20000px;
+  -webkit-mask-position: left bottom;
+  transition:
+    mask-position 0.45s,
+    -webkit-mask-position 0.45s;
+}
+
+.hover-scrollbar:hover {
+  -webkit-mask-position: left top;
+}
+
+.hover-scrollbar.mask-top-fade {
+  -webkit-mask-image:
+    linear-gradient(to bottom, black, transparent 60px),
+    linear-gradient(to top, transparent, var(--opera-chatbot-background-scrollbar)),
+    linear-gradient(to left, transparent 6px, var(--opera-chatbot-background-scrollbar) 6px);
+  -webkit-mask-size:
+    calc(100% - 6px) 100%,
+    100% 20000px,
+    100% 20000px;
+  -webkit-mask-position:
+    left top,
+    left bottom,
+    left bottom;
+  -webkit-mask-repeat: no-repeat, repeat, repeat;
+  -webkit-mask-composite: destination-out, source-over;
+}
+
+.hover-scrollbar.mask-top-fade:hover {
+  -webkit-mask-position:
+    left top,
+    left top,
+    left top;
+}
+
+.hover-scrollbar-horizontal {
+  -webkit-mask-image:
+    linear-gradient(to left, transparent, var(--opera-chatbot-background-scrollbar)),
+    linear-gradient(to top, transparent 6px, var(--opera-chatbot-background-scrollbar) 6px);
+  -webkit-mask-size: 20000px 100%;
+  -webkit-mask-position: top right;
+  transition:
+    mask-position 0.45s,
+    -webkit-mask-position 0.45s;
+}
+
+#extra-content .hover-scrollbar-horizontal {
+  -webkit-mask-image:
+    linear-gradient(to left, transparent, var(--opera-chatbot-background-scrollbar)),
+    linear-gradient(to top, transparent 4px, var(--opera-chatbot-background-scrollbar) 4px);
+}
+
+.hover-scrollbar-horizontal:hover {
+  -webkit-mask-position: bottom left;
+}
+
+html[data-theme="opera-air"] .hover-scrollbar,
+html[data-theme="opera-air"] .hover-scrollbar-horizontal,
+html[data-theme="opera-air-dark"] .hover-scrollbar,
+html[data-theme="opera-air-dark"] .hover-scrollbar-horizontal {
+  -webkit-mask-image: unset !important;
+  -webkit-mask-size: unset !important;
+  -webkit-mask-position: unset !important;
+}
+
+html[data-theme="opera-air"] .hover-scrollbar.mask-top-fade,
+html[data-theme="opera-air-dark"] .hover-scrollbar.mask-top-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 60px) !important;
+  -webkit-mask-size: 100% 100% !important;
+  -webkit-mask-position: left top !important;
+}
+
+::selection {
+  background-color: var(--color-accent-50);
+  color: var(--color-text-00);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--opera-chatbot-scrollbar-thumb);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.opera-chatbot .wrapper .messages {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-grow: 1;
+  gap: 8px;
+  scrollbar-gutter: stable;
+  /**
+  * padding-right = 6px cause scrollbar-gutter: stable; applies padding ~6px
+  */
+}
+
+.tab-view .opera-chatbot.new-chat,
+.tab-view .opera-chatbot.gx {
+  background-image: none;
+}
+
+.opera-chatbot.opera-one.new-chat .wrapper {
+  background-image: var(--opera-chatbot-background-img);
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: auto 40%;
+}
+
+.opera-chatbot.gx .wrapper .messages .new-chat {
+  background: none;
+  position: relative;
+}
+
+.opera-chatbot.gx .wrapper .messages .new-chat .title {
+  background: none;
+  letter-spacing: -2px;
+  line-height: 52px;
+  position: relative;
+}
+
+.opera-chatbot .message-from,
+.opera-chatbot .message-to {
+  animation-name: appear;
+  animation-duration: 0.5s;
+}
+
+.opera-chatbot .message-to .body {
+  max-width: calc(100% - 44px);
+}
+
+.menu-wrapper {
+  box-sizing: border-box;
+  color: var(--opera-menu-input);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between;
+  top: 0;
+  left: calc(var(--opera-menu-wrapper-width) * -1);
+  z-index: 4;
+  user-select: none;
+  transition:
+    width,
+    min-width,
+    left 0.3s ease-in-out;
+}
+
+/* Menu hidden state */
+.sidebar-view .menu-wrapper {
+  position: fixed;
+  width: var(--opera-menu-wrapper-width);
+}
+
+.tab-view .menu-wrapper {
+  position: relative;
+  width: 0;
+}
+.tab-view .menu-wrapper.menu-wrapper-active {
+  width: var(--opera-tab-view-menu-wrapper-width);
+  min-width: var(--opera-tab-view-menu-wrapper-width);
+}
+
+/* Relative position of menu is causing gap when menu is hidden. This gap is from padding class. */
+/* We are removing this side effect by below rule */
+.tab-view .menu-wrapper:not(.menu-wrapper-active) {
+  padding: 0;
+}
+
+/* Menu visible state */
+.tab-view .menu-wrapper-active {
+  transition-timing-function: linear;
+}
+
+.icon {
+  background-color: var(--opera-icon-color);
+  box-sizing: border-box;
+  display: block;
+  height: 16px;
+  width: 16px;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+.opera-chatbot.gx .icon.retry,
+.opera-chatbot.gx .icon.copy,
+.opera-chatbot.gx .icon.done {
+  height: 20px;
+  width: 20px;
+}
+
+.icon.copy {
+  -webkit-mask-image: url(@/assets/icons/copy.svg);
+}
+.icon.done {
+  -webkit-mask-image: url(@/assets/icons/edit-submit-icon.svg);
+}
+.icon.delete {
+  -webkit-mask-image: url(@/assets/icons/trash-icon.svg);
+}
+.icon.retry {
+  -webkit-mask-image: url(@/assets/icons/retry.svg);
+}
+.icon.edit {
+  -webkit-mask-image: url(@/assets/icons/edit-icon.svg);
+}
+.opera-chatbot.gx .icon.intro {
+  -webkit-mask-image: url(@/assets/icons/intro-bg-gx.svg);
+  -webkit-mask-position: center;
+  -webkit-mask-size: cover;
+  background-color: var(--opera-gx-accent-color);
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100vw;
+}
+
+.blink::after {
+  content: "";
+  display: inline-block;
+  margin-left: 5px;
+  width: 8px;
+  height: 16px;
+  background-color: var(--opera-chatbot-to-content);
+  animation: blink 0.75s step-end infinite;
+  transform: translateY(2px);
+}
+.message .body {
+  flex-grow: 1;
+  overflow-wrap: anywhere;
+}
+.options {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.markdown a {
+  @apply relative inline-block transition-colors duration-150 ease-linear !important;
+}
+
+@media only screen and (min-width: 749px) {
+  .sidebar-view .menu-wrapper {
+    position: unset;
+  }
+
+  .notifications-wrapper {
+    width: calc(100% - var(--opera-menu-wrapper-width));
+  }
+}
+
+.menu-wrapper-active {
+  left: 0;
+}
+
+/* TODO(aswitalski: Use custom <hr> renderer, somehow it didn't want to work */
+.message hr {
+  border: 0;
+  border-top: 1px solid var(--color-neutral-93);
+  height: 0;
+  margin-top: 16px;
+}
+
+.chat-input:placeholder-shown,
+.chat-input:placeholder-shown::placeholder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#voice-overlay {
+  backdrop-filter: blur(25px);
+}
+
+/* Voice overlay CSS - start */
+.blob {
+  display: block;
+  height: 500px;
+  width: 500px;
+}
+
+:root {
+  /* Default size values for voice elements, pre-equalizer like scaling */
+  --voice-scale-microphone: 100%;
+  --voice-scale-blob: 100%;
+}
+
+@keyframes inputDustUp {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 100%;
+    scale: var(--voice-scale-microphone);
+  }
+  0% {
+    opacity: 0;
+  }
+}
+
+.dustUp {
+  animation: infinite;
+  animation-duration: 1.25s;
+  animation-name: inputDustUp;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes turn {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounced-turn {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(270px);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+#gradient_7257_25_1-turn {
+  animation: turn 5s linear infinite;
+  transform-origin: 60% 40%;
+}
+
+#gradient_7257_25_2-turn {
+  animation: bounced-turn 4s linear infinite;
+  transform-origin: 30% 50%;
+}
+
+#gradient_7257_25_3-turn {
+  animation: turn 4s linear infinite;
+  animation-direction: reverse;
+  transform-origin: 50% 50%;
+}
+
+#flare_7257_25 {
+  animation: shine 0.8s linear infinite;
+}
+
+@keyframes inner-shine {
+  0% {
+    transform: rotate(0deg);
+    transform: translate(-24px, -24px);
+  }
+  100% {
+    transform: rotate(360deg);
+    transform: translate(-12px, -24px);
+  }
+}
+
+@keyframes blobScaling {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+#main_7257_25 {
+  animation: none;
+}
+
+#circle_7257_25 {
+  animation: inner-shine 2s linear infinite;
+  animation-direction: reverse;
+  transform-origin: 50% 50%;
+}
+
+#shine_7257_25 {
+  opacity: 1;
+}
+
+#mask0_7257_25 {
+  mask-type: alpha;
+}
+
+/* Voice overlay CSS - end */

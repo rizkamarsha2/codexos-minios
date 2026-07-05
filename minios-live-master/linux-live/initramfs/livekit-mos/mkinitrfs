@@ -1,0 +1,493 @@
+#!/bin/bash
+# Create initramfs image
+# Author: Tomas M <http://www.linux-live.org/>
+# Author: crims0n <https://minios.dev>
+set -euo pipefail
+
+# Use TMPDIR environment variable or default to /tmp
+TMPDIR="${TMPDIR:-/tmp}"
+
+# Validate temporary directory
+if [ ! -d "$TMPDIR" ]; then
+    echo "E: Temporary directory does not exist: $TMPDIR" >&2
+    exit 1
+fi
+if [ ! -w "$TMPDIR" ]; then
+    echo "E: Temporary directory is not writable: $TMPDIR" >&2
+    exit 1
+fi
+
+if [ "$TMPDIR" != "/tmp" ]; then
+    echo "I: Using custom temporary directory: $TMPDIR" >&2
+fi
+
+# Prepare log file descriptor for xtrace
+LOG_FILE="$TMPDIR/initramfs-$$.log"
+
+# FD 19 writes only to log file; suppress stderr fallback
+exec 19>>"$LOG_FILE"
+
+export BASH_XTRACEFD=19
+export PS4='+ ${BASH_SOURCE}:${LINENO}: '
+
+set -x
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  -k,  --kernel <KERNEL VERSION>         Specify the kernel version (required)
+  --config-file <PATH>                   Path to kernel config file
+  -n,  --network                         Enable network support
+  -c,  --cloud                           Enable cloud support
+  -cm, --compress-modules                Compress kernel modules
+  -dm, --decompress-modules              Decompress kernel modules
+  -d,  --debug                           Keep debug files
+  -h,  --help                            Display this help message and exit
+
+Environment variables:
+  TMPDIR                                 Custom temporary directory for initramfs creation
+
+Examples:
+  $(basename "$0") --kernel 5.10.0-8-amd64 --cloud --network --decompress-modules
+  $(basename "$0") -k 5.10.0-8-amd64 -c -n -dm
+  TMPDIR=/run/initramfs/memory/changes/tmp $(basename "$0") --kernel 5.10.0-8-amd64
+EOF
+    exit 1
+}
+
+# Default parameters
+KERNEL=""
+CONFIG_FILE=""
+NETWORK="false"
+CLOUD="false"
+INITRD_COMPRESS="auto"
+MODULE_COMPRESS="auto"
+DECOMPRESS_MODULES="false"
+COMPRESS_MODULES="false"
+DEBUG="false"
+
+# Parse options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -k | --kernel)
+        KERNEL="$2"
+        shift 2
+        ;;
+    --config-file)
+        CONFIG_FILE="$2"
+        shift 2
+        ;;
+    -n | --network)
+        NETWORK="true"
+        shift
+        ;;
+    -c | --cloud)
+        CLOUD="true"
+        shift
+        ;;
+    -dm | --decompress-modules)
+        DECOMPRESS_MODULES="true"
+        shift
+        ;;
+    -cm | --compress-modules)
+        COMPRESS_MODULES="true"
+        shift
+        ;;
+    -d | --debug)
+        DEBUG="true"
+        shift
+        ;;
+    -h | --help)
+        usage
+        ;;
+    -*)
+        echo "E: Unknown option: $1" >&2
+        usage
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+[ -z "$KERNEL" ] && usage
+
+echo "I: Using kernel version: $KERNEL" >&2
+
+# Check for root privileges
+if [[ "$EUID" -ne 0 ]]; then
+    echo "E: This script must be run as root."
+    exit 1
+fi
+
+# Cleanup function for trap - handles both error and normal exit
+cleanup_on_error() {
+    local exit_code=$?
+
+    if [ $exit_code -ne 0 ]; then
+        # Error exit - move files to permanent location for debugging
+        echo "" >&2
+        echo "E: Build failed with exit code $exit_code" >&2
+        if [ -n "${INITRAMFS:-}" ] && [ -d "$INITRAMFS" ]; then
+            local INITRAMFS_BASE="$(basename "$INITRAMFS")"
+            local LOG_BASE="$(basename "$LOG_FILE")"
+
+            # Move to root for persistence
+            cd "$INITRAMFS/.."
+            mv "$INITRAMFS" / 2>/dev/null || true
+            mv "$LOG_FILE" / 2>/dev/null || true
+
+            echo "E: Preserved temporary files for debugging:" >&2
+            echo "   Initramfs tree: /$INITRAMFS_BASE" >&2
+            echo "   Build log: /$LOG_BASE" >&2
+            [ -f "/$LOG_BASE" ] && echo "" >&2 && echo "Last 20 lines of build log:" >&2 && tail -20 "/$LOG_BASE" >&2
+            echo "" >&2
+            echo "   To clean up manually: rm -rf /$INITRAMFS_BASE /$LOG_BASE" >&2
+        fi
+    else
+        # Normal exit - clean up or preserve based on DEBUG flag
+        if [ -n "${INITRAMFS:-}" ] && [ -d "$INITRAMFS" ]; then
+            if [ "${DEBUG:-false}" = "true" ]; then
+                # DEBUG mode - move files to root for inspection
+                local INITRAMFS_BASE="$(basename "$INITRAMFS")"
+                local LOG_BASE="$(basename "$LOG_FILE")"
+
+                cd "$INITRAMFS/.."
+                mv "$INITRAMFS" /
+                mv "$LOG_FILE" /
+                echo "Debug files preserved: /$INITRAMFS_BASE and /$LOG_BASE" >&2
+            else
+                # Normal mode - clean up temporary files
+                cd "$INITRAMFS/.."
+                rm -rf "$INITRAMFS"
+                rm -f "$LOG_FILE"
+            fi
+        fi
+    fi
+}
+
+# Set trap to preserve debug files on error
+trap cleanup_on_error EXIT
+
+# copy file to initramfs tree, including
+# all library dependencies (as shown by ldd)
+# $1 = file to copy (full path)
+copy_including_deps() {
+    # if source doesn't exist or target exists, do nothing
+    if [ ! -e "$1" -o -e "$INITRAMFS/$1" ]; then
+        return
+    fi
+
+    cp -R --parents "$1" "$INITRAMFS"
+    if [ -L "$1" ]; then
+        DIR="$(dirname "$1")"
+        LNK="$(readlink "$1")"
+        copy_including_deps "$(
+            cd "$DIR"
+            realpath -s "$LNK"
+        )"
+    fi
+
+    # Use `ldd` only if $1 is a file and is not a kernel module
+    if [ -f "$1" ] && [[ "$1" != "/lib/modules/"* ]]; then
+        ldd "$1" 2>/dev/null | sed -r "s/.*=>|[(].*//g" | sed -r "s:^\\s+|\\s+$::g" |
+            while read LIB; do
+                copy_including_deps "$LIB"
+            done
+    fi
+
+    for MOD in $(find "$1" -type f | grep .ko); do
+        for DEP in $(cat "/$LMK/modules.dep" | fgrep "/$(basename $MOD):"); do
+            copy_including_deps "/$LMK/$DEP"
+        done
+    done
+
+    shift
+    if [ "${1-}" != "" ]; then
+        copy_including_deps "$@"
+    fi
+}
+
+copy_files() {
+    local DEST_DIR FILES DIR FILE
+    DEST_DIR=$1
+    shift 1
+    FILES=$@
+
+    for FILE in ${FILES[@]}; do
+        DIR="$(dirname ${FILE})"
+        FILE="$(basename ${FILE})"
+
+        mkdir -p "$DEST_DIR/$DIR"
+        if [ ! -f "$ORIGIN_DIR/$DIR/$FILE" ]; then
+            echo "E: File \"$ORIGIN_DIR/$DIR/$FILE\" not found." >&2
+            exit 1
+        fi
+        cp "$ORIGIN_DIR/$DIR/$FILE" "$DEST_DIR/$DIR/$FILE"
+    done
+}
+
+has_config() {
+    grep -q -E "^CONFIG_${1}=(y|1)" <<<"$KCONFIG"
+}
+
+pick() {
+    local PREFIX=$1 DEFAULT=$2
+    for ALG in ZSTD XZ GZIP; do
+        local OPT="${PREFIX}_${ALG}"
+        local CMD="${ALG,,}"
+        if has_config "$OPT" && command -v "$CMD" &>/dev/null; then
+            echo "$CMD"
+            return
+        fi
+    done
+    echo "$DEFAULT"
+}
+
+# Load kernel config into KCONFIG
+if [[ -f "$CONFIG_FILE" ]]; then
+    KCONFIG=$(<"$CONFIG_FILE")
+    echo "I: Loaded kernel config from $CONFIG_FILE" >&2
+elif [[ -f /boot/config-$KERNEL ]]; then
+    KCONFIG=$(</boot/config-$KERNEL)
+    echo "I: Loaded kernel config from /boot/config-$KERNEL" >&2
+elif [[ -f /proc/config.gz ]]; then
+    KCONFIG=$(zcat /proc/config.gz)
+    echo "I: Loaded kernel config from /proc/config.gz" >&2
+else
+    KCONFIG=""
+    echo "W: Kernel config not found. Continuing without it." >&2
+fi
+
+# Set MODULE_COMPRESS (kernel modules) if auto and compression is needed
+# Skip if we're decompressing modules (no need to determine compression type)
+if [[ "${MODULE_COMPRESS:-auto}" == auto ]] && [[ "$COMPRESS_MODULES" == "true" ]] && [[ "$DECOMPRESS_MODULES" != "true" ]]; then
+    MODULE_COMPRESS=$(pick MODULE_COMPRESS gzip)
+    echo "I: Auto-detected module compression: $MODULE_COMPRESS" >&2
+fi
+
+# Set INITRD_COMPRESS (initrd) if auto
+if [[ "${INITRD_COMPRESS:-auto}" == auto ]]; then
+    INITRD_COMPRESS=$(pick RD gzip)
+    echo "I: Auto-detected initrd compression: $INITRD_COMPRESS" >&2
+fi
+
+# Compression parameters for initrd
+case $INITRD_COMPRESS in
+xz) INITRD_COMPRESS_PARAMS="-T0 -f --extreme --check=crc32" ;;
+zstd) INITRD_COMPRESS_PARAMS="-T0 -19 --check --force" ;;
+*) INITRD_COMPRESS_PARAMS="" ;;
+esac
+
+# Assign config values
+LIVEKITNAME="minios"
+BEXT="sb"
+
+# Set paths and filenames
+LMK="lib/modules/$KERNEL"
+INITRAMFS="$TMPDIR/initrfs-$KERNEL-$$"
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+if [ -d "$INITRAMFS" ]; then
+    rm -Rf "$INITRAMFS"
+fi
+mkdir -p "$INITRAMFS"/{bin,dev,etc,lib,lib64,mnt,proc,root,run,sys,tmp,usr,var/log}
+ln -s bin "$INITRAMFS/sbin"
+
+if [ -f "$SCRIPT_DIR/lib/livekitlib" ]; then
+    ORIGIN_DIR="$SCRIPT_DIR"
+elif [ -f "/run/initramfs/lib/livekitlib" ]; then
+    ORIGIN_DIR="/run/initramfs"
+else
+    echo "E: livekitlib path not found." >&2
+    exit 1
+fi
+
+FILES=(
+    mkinitrfs
+    bin/busybox
+    bin/eject
+    bin/mke2fs
+    bin/resize2fs
+    bin/e2fsck
+    bin/mc
+    bin/@mount.dynfilefs
+    bin/@mount.httpfs2
+    bin/@mount.ntfs-3g
+    bin/ncurses-menu
+    bin/blkid
+    bin/lsblk
+    bin/parted
+    bin/partprobe
+    bin/minios-boot
+    usr/share/terminfo/l/linux
+)
+copy_files "$INITRAMFS" "${FILES[@]}"
+
+chmod a+x "$INITRAMFS/bin/"*
+chmod a+x "$INITRAMFS/mkinitrfs"
+mkdir -p "$INITRAMFS/etc/modprobe.d"
+echo "options loop max_loop=64" >"$INITRAMFS/etc/modprobe.d/local-loop.conf"
+
+"$INITRAMFS/bin/busybox" | grep , | grep -v Copyright | tr "," " " | while read LINE; do
+    for TOOL in $LINE; do
+        if [ ! -e "$INITRAMFS/bin/$TOOL" ]; then
+            ln -s busybox "$INITRAMFS/bin/$TOOL"
+        fi
+    done
+done
+rm -f "$INITRAMFS/"{s,}bin/init
+
+mknod "$INITRAMFS/dev/console" c 5 1
+mknod "$INITRAMFS/dev/null" c 1 3
+mknod "$INITRAMFS/dev/ram0" b 1 0
+mknod "$INITRAMFS/dev/tty1" c 4 1
+mknod "$INITRAMFS/dev/tty2" c 4 2
+mknod "$INITRAMFS/dev/tty3" c 4 3
+mknod "$INITRAMFS/dev/tty4" c 4 4
+
+copy_including_deps "/$LMK/kernel/fs/aufs"
+copy_including_deps "/$LMK/kernel/fs/overlayfs"
+copy_including_deps "/$LMK/kernel/fs/ext2"
+copy_including_deps "/$LMK/kernel/fs/ext3"
+copy_including_deps "/$LMK/kernel/fs/ext4"
+copy_including_deps "/$LMK/kernel/fs/exfat"
+copy_including_deps "/$LMK/kernel/fs/fat"
+copy_including_deps "/$LMK/kernel/fs/nls"
+copy_including_deps "/$LMK/kernel/fs/fuse"
+copy_including_deps "/$LMK/kernel/fs/isofs"
+copy_including_deps "/$LMK/kernel/fs/ntfs"
+copy_including_deps "/$LMK/kernel/fs/ntfs3"
+copy_including_deps "/$LMK/kernel/fs/squashfs"
+copy_including_deps "/$LMK/kernel/fs/btrfs"
+copy_including_deps "/$LMK/kernel/fs/xfs"
+copy_including_deps "/$LMK/kernel/fs/efivarfs" # for Clonezilla
+
+copy_including_deps "/$LMK/kernel/crypto/lz4"*.*
+copy_including_deps "/$LMK/kernel/crypto/zstd."*
+
+# crc32/crc32c modules are needed for ext4
+find "/$LMK/kernel/" -name '*crc32*' | while read -r LINE; do
+    copy_including_deps "$LINE"
+done
+
+copy_including_deps "/$LMK/kernel/drivers/staging/zsmalloc" # needed by zram
+copy_including_deps "/$LMK/kernel/drivers/block/zram"
+copy_including_deps "/$LMK/kernel/drivers/block/loop."*
+copy_including_deps "/$LMK/kernel/drivers/block/nbd."* # for Rescuezilla
+copy_including_deps "/$LMK/kernel/drivers/md/dm-mod."* # for Ventoy
+
+# usb drivers
+copy_including_deps "/$LMK/kernel/drivers/usb/storage"
+copy_including_deps "/$LMK/kernel/drivers/usb/host"
+copy_including_deps "/$LMK/kernel/drivers/usb/common"
+copy_including_deps "/$LMK/kernel/drivers/usb/core"
+copy_including_deps "/$LMK/kernel/drivers/hid/usbhid"
+copy_including_deps "/$LMK/kernel/drivers/hid/hid."*
+copy_including_deps "/$LMK/kernel/drivers/hid/uhid."*
+copy_including_deps "/$LMK/kernel/drivers/hid/hid-generic."*
+
+# disk and cdrom drivers
+copy_including_deps "/$LMK/kernel/drivers/cdrom"
+copy_including_deps "/$LMK/kernel/drivers/scsi/sr_mod."*
+copy_including_deps "/$LMK/kernel/drivers/scsi/sd_mod."*
+copy_including_deps "/$LMK/kernel/drivers/scsi/scsi_mod."*
+copy_including_deps "/$LMK/kernel/drivers/scsi/sg."*
+
+# virtual disk drivers
+copy_including_deps "/$LMK/kernel/drivers/scsi/hv_storvsc."*
+
+if [ "$CLOUD" = "true" ]; then
+    copy_including_deps "/$LMK/kernel/drivers/virtio/virtio."*
+    copy_including_deps "/$LMK/kernel/drivers/virtio/virtio_mmio."*
+    copy_including_deps "/$LMK/kernel/drivers/virtio/virtio_pci."*
+    copy_including_deps "/$LMK/kernel/drivers/virtio/virtio_ring."*
+    copy_including_deps "/$LMK/kernel/drivers/scsi/vmw_pvscsi."*
+    copy_including_deps "/$LMK/kernel/drivers/scsi/virtio_scsi."*
+    copy_including_deps "/$LMK/kernel/drivers/block/virtio_blk."*
+    copy_including_deps "/$LMK/kernel/drivers/scsi/hv_storvsc."*
+fi
+
+copy_including_deps "/$LMK/kernel/drivers/ata"
+copy_including_deps "/$LMK/kernel/drivers/nvme"
+copy_including_deps "/$LMK/kernel/drivers/mmc"
+
+# network support drivers
+if [ "$NETWORK" = "true" ]; then
+    copy_including_deps "/$LMK/kernel/drivers/net/ethernet"
+    copy_including_deps "/$LMK/kernel/drivers/net/phy"
+    if [ "$CLOUD" = "true" ]; then
+        copy_including_deps "/$LMK/kernel/drivers/net/vmxnet3"
+        copy_including_deps "/$LMK/kernel/drivers/net/virtio_net."*
+    fi
+fi
+
+# copy all custom-built modules
+#copy_including_deps "/$LMK/updates"
+copy_including_deps "/$LMK/updates/dkms/ntfs3."*
+
+copy_including_deps "/$LMK/modules."*
+
+copy_including_deps "/usr/share/terminfo/l/linux"
+
+# Before module unpacking
+if [ "$DECOMPRESS_MODULES" = "true" ] || [ "$COMPRESS_MODULES" = "true" ]; then
+    find "$INITRAMFS" -name "*.ko.gz" -exec gunzip {} \;
+    find "$INITRAMFS" -name "*.ko.xz" -exec unxz {} \;
+    find "$INITRAMFS" -name "*.ko.zst" -exec unzstd {} \;
+fi
+
+# Compress kernel modules if the corresponding flag is set.
+if [ "$COMPRESS_MODULES" = "true" ]; then
+    if [ "$MODULE_COMPRESS" = "xz" ]; then
+        find "$INITRAMFS" -type f -name "*.ko" -exec xz -z {} \;
+        MODULE_EXT=".ko.xz"
+    elif [ "$MODULE_COMPRESS" = "zstd" ]; then
+        find "$INITRAMFS" -type f -name "*.ko" -exec zstd -z --rm {} \;
+        MODULE_EXT=".ko.zst"
+    else
+        find "$INITRAMFS" -type f -name "*.ko" -exec gzip -9 {} \;
+        MODULE_EXT=".ko.gz"
+    fi
+fi
+
+# Detect module compression if not set by earlier step.
+cd "$INITRAMFS/$LMK/"
+if [ -z "${MODULE_EXT:-}" ]; then
+    if find . -maxdepth 3 -type f -name "*.ko.gz" | grep -q .; then
+        MODULE_EXT=".ko.gz"
+    elif find . -maxdepth 3 -type f -name "*.ko.xz" | grep -q .; then
+        MODULE_EXT=".ko.xz"
+    elif find . -maxdepth 3 -type f -name "*.ko.zst" | grep -q .; then
+        MODULE_EXT=".ko.zst"
+    else
+        MODULE_EXT=".ko"
+    fi
+fi
+
+# Trim and update modules.order file
+MODULEORDER="$(
+    cd "$INITRAMFS/$LMK/"
+    find -name "*$MODULE_EXT" | sed -r "s:^./::g" | tr "\n" "|" | sed -r "s:[.]:.:g" | sed -r -e "s/.ko.gz/.ko/" -e "s/.ko.xz/.ko/" -e "s/.ko.zst/.ko/"
+)"
+cat $INITRAMFS/$LMK/modules.order | sed -r -e "s/.ko.gz\$/.ko/" -e "s/.ko.xz\$/.ko/" -e "s/.ko.zst\$/.ko/" | grep -E "$MODULEORDER"/foo/bar >$INITRAMFS/$LMK/_
+mv $INITRAMFS/$LMK/_ $INITRAMFS/$LMK/modules.order
+
+depmod -b "$INITRAMFS" "$KERNEL"
+
+echo "root::0:0::/root:/bin/bash" >"$INITRAMFS/etc/passwd"
+touch "$INITRAMFS/etc/"{m,fs}tab
+cp /etc/minios-release "$INITRAMFS/etc/"
+
+FILES=(init shutdown lib/livekitlib)
+copy_files "$INITRAMFS" "${FILES[@]}"
+chmod a+x "$INITRAMFS/init"
+chmod a+x "$INITRAMFS/shutdown"
+ln -s ../init "$INITRAMFS/bin/init"
+
+# Remove the initrd auto-detection block and revert to using module settings for final image compression:
+cd "$INITRAMFS"
+find . -print | cpio -o -H newc | $INITRD_COMPRESS $INITRD_COMPRESS_PARAMS >"$INITRAMFS.img"
+echo "$INITRAMFS.img"

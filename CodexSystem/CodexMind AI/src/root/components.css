@@ -1,0 +1,25 @@
+@layer components {
+  .custom-bullet {
+    @apply relative before:block before:h-1.25 before:w-1.25 before:rounded-full;
+    @apply before:absolute before:-left-3.25 before:top-2.5 before:bg-current;
+    @apply before:content-[''] rtl:before:-right-3.25;
+  }
+
+  .tab-view.opera-one .bg-right-gradient::after {
+    content: "";
+
+    @apply pointer-events-none
+      absolute
+      right-0
+      top-0
+      block
+      h-full
+      w-[35%]
+      bg-[url('@/assets/right-gradient.svg')]
+      bg-no-repeat
+      blur-[90px]
+      filter
+      [background-position:100%_50%]
+      [background-size:90%_100%];
+  }
+}

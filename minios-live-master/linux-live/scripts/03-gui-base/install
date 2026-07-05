@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -e          # exit on error
+set -o pipefail # exit on pipeline error
+set -u          # treat unset variable as error
+
+. /minioslib
+. /minios_build.conf
+
+console_colors
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+/condinapt -l "${SCRIPT_DIR}/packages.list" -c "${SCRIPT_DIR}/minios_build.conf" -m "${SCRIPT_DIR}/condinapt.map"
+if [ $? -ne 0 ]; then
+    echo "Failed to install packages."
+    exit 1
+fi
+
+if pkg_is_installed "xrdp" >/dev/null 2>&1; then
+    adduser xrdp ssl-cert
+    rm /etc/ssl/private/ssl-cert-snakeoil.key /etc/ssl/certs/ssl-cert-snakeoil.pem
+
+    systemctl disable xrdp xrdp-sesman >/dev/null 2>&1
+fi
+
+if pkg_is_installed "openbox"; then
+    sed -i "s,blackbox,openbox-session,g" /etc/skel/.xinitrc
+fi
+
+if [ -d /etc/systemd/system ]; then
+    mkdir -p /etc/systemd/system
+fi
+if [ -f /usr/lib/systemd/system/xorg.service ]; then
+    ln -s /usr/lib/systemd/system/xorg.service /etc/systemd/system/display-manager.service
+fi
+
+# Only perform operations if directories exist
+if [ -d /usr/share/icons/breeze_cursors ]; then
+    rm -Rf /usr/share/icons/breeze_cursors
+fi
+
+if [ -d /usr/share/icons/Breeze_Snow ]; then
+    mv /usr/share/icons/Breeze_Snow /usr/share/icons/breeze_cursors
+fi
+
+cd /tmp
+
+apt-get download x11-xserver-utils >/dev/null 2>&1
+
+if [ -f x11-xserver-utils*.deb ]; then
+    dpkg -x x11-xserver-utils*.deb /tmp/x11utils >/dev/null 2>&1
+    cd /tmp/x11utils
+    cp -aR * /
+    cd - >/dev/null
+    rm -f x11-xserver-utils*.deb
+else
+    error "x11-xserver-utils deb file does not exist."
+    exit 1
+fi
+
+if [ -d /usr/share/icons/hicolor/256x256 ]; then
+    rm -Rf /usr/share/icons/hicolor/256x256
+fi
+
+update-alternatives --set x-terminal-emulator /usr/bin/xterm >/dev/null 2>&1
+
+for APP in debian-uxterm debian-xterm; do
+    rm -f /usr/share/applications/$APP.desktop
+done

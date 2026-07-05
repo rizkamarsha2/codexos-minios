@@ -1,0 +1,76 @@
+[
+  {
+      "url": "https://bestbuy.com",
+      "audit_id": "T57wbw2aOJR9jxXRgj+sZKk8FsoXHqe4TZddvID+93o=",
+      "title": "Bestbuy",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAADaklEQVR4nGL5//8/A7UBE9VNHDV0WBr6////f//+EaOSBUL9/Plz7YbNL169YmRgFBERdrSzuXr9xpVr1yGyUhISRob6W7btfPHqla62FjcX14NHjyBS3FxcoUEBwkKCWAz98fPn0lVrbt++qyAvd//hw2MnTjEzM23ZtlNZWZGLk0teTnb77r2Hjx5XkJf79OmzhLjYkWMn7ty7LyggoKej5e3hhmYowvuMDAxc3FxGhvpsrGzMzMyMjIwsrCxG+voOdtZRYcE/fvxgYmLU19WOCgsuLchtqq3k4uR0tLed0t8lLSWJL0y/f/t++85dFhbmr9++ffny9c+fv5evXjt1+uzff3/zszOsLS327DtYXFl35vwFLi4uBkYGNlZWHm4eJib0iEHh8/Hx+nq6S4iLHztx6vHTp2xsrK7ODiGB/r9//3n58pWxob66msqr16/v3rtPVEQxMTGJCAu/fvNuzoIljEyM3h6uDAwMnz59WbthMyMjo6KCvLCg4JHjJ3/9/mVhZmJvY/Xz5y8JcXF+fj5GRiyGMkJKqX///r189frSlaunz5xjYWWVkpSQl5X99//fkWMn9HS0FeRlT54++/nLlzdv3lqam/p4ul+/cWvj1m3Wlhb2Nlb4XCopIb573/7ZCxaLi4n++PGTn58vwNdr/uJl+VnpUlISE6bOcHGwf/P27dETp6QkJWfMmX/56nUfT3es3kcJU0jRamVhrqyk+Pnzlx8/fv4HeQQM//3n5+dPSYh7/+FDaXX94WMnwoL9tTU18IUpkrn/T5899/fvPy5Ozj9//kBC5t+/f/8Z/jMyMlhZmHq4Oq9YvU5bUyMixJ/5/zmGn49hAcnNwGbLwMCFxVBGRkZPNxdGRsbZ8xeePneeh5trz76Dt27f/QWOGQ4ODlcnh7UbNltZmEkIP/zzsZGF6R3Mz1IMLHoMTBiGsrOx8fHxbtyynYHhv6K8fFJs1J1791esXv/o8RMHe1s/bw8GBgZOTk5BAX5+Pt4f3x98fPtWShQUOGDwDz32IeDtu/fPnj8H2crIJCgoICEu9vv3n3sPHvz8+VNRQZ6fj4+BgeHLly8PHz8RERYSF/7A8LWN4d8TmEslGHh6GZjE0Q0lGfx/zfD/M4zDysAkCfE6ZYbiAANdSI8aSiQABAAA//9u1Vzd6h0niwAAAABJRU5ErkJggg==",
+      "domains": [
+          "bestbuy.com"
+      ]
+  },
+  {
+      "url": "https://macys.com",
+      "audit_id": "/ZCrvEke9qcQZdCyS67M/c86+BU7p15AiSXCRHf2zVQ=",
+      "title": "Macys",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAC/klEQVR4nLyWy08zZRTGn+ftZRCRcqtQwq2Uqm3xkog7jDFCIv4BQoyXhUZXmrjQxIWSaEJiNLpm4cIFS2Ni3LgwxsQFbkxMtBQF1Nq0FYhEiFLamfeYGQgpoTPfTPng7Np5zvzO+5zT91ThhqMtoAAsDmZyAoRvBFiM3d8D8vXy8HTiRoDstHJCPKW1+ci1A207RcscgCELaiGorYGBxdhYD6jmAJLEbHk4FcjWwEB2duVAZM8+TmiJzlwb0LYTkHlAes7wHSJq4ZsAtgYC2tOpQcfO8y+J2dFe/7YGAtrTqXBupxMakjSMiO9pDS8D6vmBTCpMdTci7kJThACXBBK7UATYoakWi4nMnlBpL1jIbBzR7svv8eyDDONtCh4D3bH2ywWIXn4iJoH/xCVPQEtB1pXmB+e9+C2eHVIhvAbgZZD9XpUGCzmk4NMG8WGqki+y+dGvmDI6EpEFLVwG8QDAK1zudg9YEOgVFTr6bLRUOobj0uVgaSAzpSN8C+DTAtzpqORM7ebbRViNkC9p6XdHdjd/YlNWK6ATu/FsVy0kz4J8U4NJNqs9oVJWIh/r438/Gf+neHDpNJ6pgCoNZmc0sQryIR9H24Ylr+zs5r99HDBbCTx7REDX67VNEIc+YHaJJyGzvukGuyXQEUSMDAQ5fzwktRF92PN93vkgFZ4Qos8XkLxDAHtlhdoC7vROdpOcZ/PdeVrJn4CsAthqMT+zpb70UFtA49TO6SaSKZCvSXlmrJJ/FbAWSf0FgHpTMZNiRFxXlheQ+qKdByL4iA393Fgl/x2Bxnil8ENNrBch+j0Cf51mObY+6bayXIHbvZPdcOx0qv5RxHqpUa2/M75fqDTr7q38sr9X3XjfAl4AZB0QC8CjI31TLW11BdrTKUCKwJpW5uJEtfB5GlsnrbQzQCNZ+fmrqMgSAbu3ccNlWt02NZVCmiIrJ/XGWvrvLV+/w0R1449yIvGGKbHvNVTKnlYClp9cbNx1X79c4Y9yOXHPQLv5tzX+DwAA//++aw0o/osBVAAAAABJRU5ErkJggg==",
+      "domains": [
+          "macys.com"
+      ]
+  },
+  {
+      "url": "https://expedia.com",
+      "audit_id": "PIGfH7hwFOFHafbpHcbaVYN+tTqzGQlqxsm6bUt8CJE=",
+      "title": "Expedia",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAAEJUlEQVR4nLSWXWzbVBiGzzl27Pw0rp2mSZo2S0rSrbRpN9LSog2EEALBQEIVGnDBxC3iFqHdMSSkIaQhLpAqIcRuuIBxNdDQUEWpNMRfB2vVpmQwtVuSJm2SJk7j/Di244PSbknqutmQxqdcHDn2k/e8b77vmMTLJHjQhR448T9AMa5/AMD3c3O7vUsKivOW8Dob2eAyBQoh0MuVh918sDfvYEQCHfgD+lBFhUtx7vOrgZlwT5I3iQpSAazvC2IzVQs4ilOh+OvH13z2IoI6j8P9QRWr5IWfAh9/PxjLmVUATwSyrFmaCTtltekVCfGoJ3/2paXnRxMGQiuZeO+tPbYKouGDyyPnLgczRRrvqgP4zIuRLoscXu9U7nJVADe2TXM3XA6mOtKbR3UroD5UrqHpHwc//G6oJBONi4UKlcob350Kd3dUF6OcqDS/KlXJ+dWu4b5CwCFAeIDS39fsb38VypYpzXYSvElV0TsnI56u8vXbNkE0tHhlWEtbnxtNMia5aU5jVZGJT+cGknnjfuMVFX3xi+/oIf6NE2tORjxz8diNTYZAqr1DGuwpDLkLfyVZN1tuhNaE3kwxsxEXBnpx7qR3/srgk0dSL4yud1urX/7mDfZtP9qf9dhKgkhdWXKP+7ZsFkkL/WOtK1XQkVm/aUeUt6tcqBgQxJP96ZE+Ppq1LERt07MDv67aswI95s1MPJTdA1UxWE6wigo1LDcrTvq3nhne3BFVJhBWVQgh/nred/ZSMLVtlGr1SAxIXU0z+6AqTN+VSUDsZMRxX+7ksY3HD6e7rWJWMC5EuenZw/kS9cnpa1ajfOnP3njO3GI6zAi0TlAI4m5r9ZFD/LPBzZAvR5PqrYzlszn/YoxbTXekhbooN1vhS1S2RC/EuNY9aXK4AyUQfGVyY8LPVxW0kmQuznuiWxa+TMm1Pa1BkzUjVZuLuDa397hPINxtFbVQCFVZwe9/M5QrUTWs/wcAAFiNCoHwDyuu1pYFADAmxe8QmpturAKOvIFQ2xB3HpZzJfraLZvm+qCrEHAWdaADrsLTD6faIQFgzXI4wbVGtBv9y+Mx1izpQE2G2ptP/ePurLSBmqna7Iqztf0BACEvf2oiimBzVu3pfRcrQgB/vmnXWNaoLcG4nOistkB7mMpHr10PeXMHDhQC4RFPXlKIhRinyX23ShLZSnRZxXOnlqbG4ppTQDtPaVJ9LLDFmZVIkhEq1EEnBgnxUU/+/KsLTxxJFyWyg5ZblepM/t0OWYzZLlz1z6z0JHhTVUGNgW2man5HcWps/fTx1T6u/O2ityITU6HbHbRyD+huSQqK5SzLcfbvzc6MQBMQ97CV4d7tYF/eyVQIhDEGcd4iKUS/XWh1oB20WfjO0Qwh3teTeubcm7jT27Cxuo/6X95Q/g0AAP//g0vQgDPuHa0AAAAASUVORK5CYII=",
+      "domains": [
+          "expedia.com"
+      ]
+  },
+  {
+      "url": "https://t-mobile.com",
+      "audit_id": "3TbExo+ukIL0lzJyqdbCgRugEtU4O0xbRCnlRdcrJZg=",
+      "title": "T-mobile",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAADHUlEQVR4nLRWS08USxQ+p6q7p+nLwHDhvrj3JigQNSQSJS7UhRs3PjaYaPwHrly4Ma50aYwrxRWuXbgRNZEYoyt8xEiMieIojyAGeYSRYRiYV1fVMdXdAzPNzCgJnEwmPVWd73zfd86pGuNr40XY6mBbjggARs1d9D4AQCXfP4/aTHHDwy9FmCkV8yAg6V9UvrkxLaraoD4fyUHZBlKwoDDY0kkQCNcNYVKxvDQkSKzBlAARCp1NsSvH+W+mRiGUUsNykxGRkqTRGXrp0M0UVi8PstElAPJTVgD1WCiIWvUH27kTyY3NpR+/z47MRU50/dvbIwnm7w+7j+JW1z/Osa76zr/FSi4TtbUDSEjVmRZLQssvxxOX7tmjSUsy3N2qABgiTCRp4LMYiCfuvpXXep3u/zzXw16Hq0+gbXOX88s3nzmfUlwxAORBQp2Tk+IE5lgyfeOpm84BkGS+dqwMSloFl6jy00n8sFCxj3ydnBiMLIiZVKY1mtv3P3FWXb5WT+b06mr/C77k+u3loSCWm6QjLVK3n7OJRSkByStGRVDPcjBms+LBR8GQc+9NKqUZdK/gAAUJAyMOMFMJhWbpfISYEgG4O6LO+SOGbam8yvYPsXgixFLt+bP+3CG0DJHNZ/qGjC9JJKJqoJ6nQC1206n9kYY6mS3MPHwH8e9rbP05MP5qaD7Tw+usXCqTu/MGJssbKlQoJGDkC/QYFfWWzj757wVrxIAUhluo3FNCDfptJXH9iWEaQkgaX1zvpuKDmkjMXx0Eg6m8kDNpq1z7Rvl60q3ZDNx67Wo6ZBJTxQoF5BDYVNrte+WT5hhqjQqFWpspYh5xQhKMuBnMtTKYB694UIGgGUJR4TwlgFI5ymbGzj+0zQR2W4uyUTCimuc2v2AfrrTuNWNHDI52RM4eiJ3cy20LEbE1JlscaKxzsy5fylU7uqteJ0gEu353TncD45nhKf9mISK7vVm2NbsrWTWZrHZtYI3bVBkoLETPXn8u/FoCMO4SdxVVoVrr4mOCLBEyzTdTQrnvmwAtAdpcbAvotvyZ2BbQHwEAAP//DbJzFNZQzBQAAAAASUVORK5CYII=",
+      "domains": [
+          "t-mobile.com",
+          "tmobile.com"
+      ]
+  },
+  {
+      "url": "https://amazon.com",
+      "ping_url": "https://operainstantsuggest.ampxdirect.com/amazon?partner=operainstantsuggest&sub1=amazon&sub2=operabrowser&sub3=us",
+      "audit_id": "28ZFSHjNaJDfXvZImc2hre1Tmdfzi9G9vTjGvOP2tEc=",
+      "title": "Amazon",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAADV0lEQVR4nOSVS0grVxjHz2MmYxKnMSMRotb0YWxKKIWQ3mrtFcGFkNuCcCnowu5deCtupQguXAQXbruVbroRhPYKBTcVkSQoNO290Gqo2om1wVeb0UnmzDlfyQz1gl4fqXRR+l+FnHN+53v8zzcE/Qv6n0PpXTZhjGVHCCEAuHW/dPOy1+tNJpMDAwOxWMzn8x0eHuZyueXl5d3d3bvQX6KmpqZ0Ol0qlTjnQghwZFlWNpvt7u7+J0SM8fj4uGmaAGAYxvr6+trammEYLnpxcdHn89UNVVV1ZWVFCGFZ1szMTHNzs6Zp8/PzbsiFQiESiVx39tqaViqVubm5paWlxsbGhYWFo6MjQkg2m7VtW5ZlRVHcvr08yxuCxRhTStvb2+PxeCwWa21tTSQSfX19hJD9/f3+/v6tra36InUbNTY2Njo62tHRoSgKY8y96YYjt0iW5dnZ2UqlAgAHBwfpdHpoaGh6epoxBgDFYjEajdYNjcfje3t7rocmJyfdCo6MjFiWBQC6rt8AvfaZdnZ2trS0uB3b2NhgjBFCurq6JKlWMY/H4/f764YyxoQQ7qPq6enRNK23t3d4eNitaTAYTKVS7gV1KBqNbm9vu1Y/PT3NZDK6rp+fn5fLZffPTCYTDofvxLporSRJT558ViqVXLdzzovF4tTU1MTExMnJybMfnz1KPZIkSSKoyUs1P/VQcgFwIbWc3o74weaF36qMAyDACHmUhmQy+fDhh6FQSNf11dXVfD5PKR0cHNzZ2cnnf2hW5U/6Xol3oHAAreSrXzwt207FXpju1ZDy6UBAxuzbzfPnv9p/VgQI5Ayiq9OoFgRGSPPLiTcV1Yu6wkJVyedfngkByAnoReIBn/T4A+/jXsW27cxP1uY2FH63TwxuWohzcGBIkbHqI61B+s5r+P2Yt0EhX31XTbyh5H42n26aDgkuPQ9MMYqE6EcPGj5+j0RasBD2qUGODWJaIADJEg54UVDlGEv6ofgmJ77OVc+qOPUgsLh2fFbllxpzGR3002gbefd1+a022hZk/oaa+8om0o/l5zr7/hdR2Od/mFwgRAmmFFsWhyvdvuoCcNJFBINEsURrv5kA20YCEDirF/v+PiJudRe65uJ7DJT76L/z3f8rAAD//yCfhoztIWf3AAAAAElFTkSuQmCC",
+      "domains": [
+          "amazon.com"
+      ]
+  },
+  {
+      "url": "https://verizon.com",
+      "audit_id": "1msoL5MMVg4895Am7xTwHfcDtxmoplQEvAbfqMa3bFQ=",
+      "title": "Verizon",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAACvklEQVR4nKSWXWs7RRTGnzP7lpdNsklboQoVpGJBxXojiiIUFdqit/U7+QX0WvAbFFNQLGgRcmErgiIqtEoptaSbfUs22Zc5skmg/ptNmm1PboYw85vnnPPMYQUeH/SEs8VDfcQZjcggEowUGLDkp0MVYL9l7TUtAf4jSj6/vOpL+UQorWrKwUrrjZIeMzp+N5whFoWSAN6r17YMlSEvkvQ7x8tBFlVqqWKvZelEEjh2gssoyt1WwFKC8JZZe62kE3CVyKOek8z2qCjUFGJ/pWESJPC971+MRox8agHodrX8ZsUA0E25bbsx8zz/LwutCPFxq1UXxBAnQfB7GI5FPl4pCdCrlfLb1bLC7Ej+2naHOZYvqFQj2ms1GgqBlc4g+KU/WLx/aikCmqpaoqxGfSndNL3TCbxcNt43TQEEkO1bN9fwz0DHpSZN4OC5tU8sE+DTwfCzf64CyUxMDI2w22ysqllOZ+Hop2CwKPNJ+gxicCL51PdNBRuKumNWX69WMG4DAxuG/kHdVCBDxqHteukDMic1zS6WwG/9sBOEAGpKNjJKggBSQR81rXVNY9Cvo1HH8+d58x50GgOZHtqunymnd2rlrXIJwLquf2iZKnPMaNuukyzs+ixUAj8Hg7MwJMaaUHZbVplox6q9pKmS8FeUnHi+xMO5T8bjXUTZ3OV366ZO1NTFxTD+dG3leUUkhK+6zo9ef5nc70MB9JJ0u2a+oGmmUDZLxqahKcTnMX9xfdNLk4lVCqQ/3k69JG3b7ohZAV4pqQYhgfjW8SZTbsHTnAvlcWV/8II/o3iqicV1nH7jOOlSeedBJ+RuHB3ZzihbUiL42A/Oh1ER5kxNkb0FstP0xYoRSvl3JL+8uf03TpZs0RSRr5+oLlSFspHppZz9xrUoIjfnqullIlsU/hKZd+D//xcW+F8AAAD//5rANVePXOHqAAAAAElFTkSuQmCC",
+      "domains": [
+          "verizon.com"
+      ]
+  },
+  {
+      "url": "https://bloomingdales.com",
+      "audit_id": "zL7+1VWtG4sw3Os2/z/buAs27qiKVQuDmlQsEgcOSGA=",
+      "title": "Bloomingdales",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAAC4UlEQVR4nMSVTU8TWxjHz2mgQ2AKixtKbyCd3ovQmTNT1+pOElyrJMZSCmtJDCs1gAt1AfgBMODCGvpiTCAmGCj4whfAiobOFGvSUF5ctBFE2s5pF3MMbawwMy0lkPhbNGme5/zOP3menlYRQsBZY1B9J4QoinLKm9TSubm5+0PDbxYXz0xKCFkJhV4GXnwMhU4TVp0UAAhg/vMUaKVnwF+VkjwVNleVL+/s7EiiGIlEEokEhNBisSDEIx7V19efWEoIyWQyC8Gg3+v7Go1mZBnkY0IIa+vqEEIut7vzSmdNTc0JpLs/dh+Pjs1MT2cxNjc1Xbh00WplAAQb8bgUFj8sL4vh8OdPK7cHBhoaGiqVLr19l06nKYq60dfr7HYxNsZoNAIAcrlcfH094A+8mpnxTnkJAXfu3dXJSw6hKMqjBw//tzKtjM3BoeceTzabJRqyGHueeRwcElju9eystkF/+hDCa11dN53OQkAVRopydjuvdl2XMfZ5fT/39lQN+tJGs7m7x0VRlG4VAEBRlMvVYzabI/ndqEiKELLZbKWMBWz/2RBC6XRaDIsVSYuTKYPRaLQyjKIom5sbqt/FESmEsLq6iuSnV9545Izm9VEntVj+NUAYj8dzuVx5W2G9DBBaGebAXEaKBL6OpiVRisVi5aWxWEwSRZqmeYdwTFKWZQVBSCYSfq8PY1zKiDH2e73JZJJ3CKzdri5rVzc4P+9AvMByTycmZVnWNsiyPDkxwdu584hfCAa1DTpSjPHoyAjb2iaw3PDgkCSKGONiSRLFocFBgeXYc21jI6PF0mGg7qD39/efjI8HfL5MKv1PYyPLcS0tzQCAra2ttcja92SylqZd7p5b/f0mk0l7XF9aGO7S+yXf1FR4dTWVSimKcjABg4E20YLgcPf1Xu7oKLXLJaXFyNEvUUkSv21vEwKaW5oR4tvt7boBK5UWIb8f6Uqaj/k7+XN5ZboCvwIAAP//ki7Shm58sWsAAAAASUVORK5CYII=",
+      "domains": [
+          "bloomingdales.com"
+      ]
+  },
+  {
+      "url": "https://forever21.com",
+      "audit_id": "1BQ064IiGAx9FlEUUsoWQoMrMxMrl72JL/1Btr6Ufbo=",
+      "title": "Forever21",
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAADrUlEQVR4nKyWTWwbVRCAZ957u47j3ySu4/xjiGmhlSpRodCoqpQKFHHlgKASgvbAAU6cuCDBARCXih6oxIEeSjm0PYGooOYnvSAhDgSSphU0uPnDsZ1WBBzHjr37ZtDaiNqON3WrPO1ldma/N3/vzapyNgK7vcSuE92gjM4D1Ycb30NN1WQPDWag6gUE1hqJWSokzYiMCJpASSRiIhCC/6drR0Su4pRooKqmTb/8hv9Y4Mlj4sr3EI1g4hH99RRPHJZ3/tIraTw6LjI5Lm3xyCAmr+rJCfPXOWujIF56XvbucQmfAVaztHdUWBaXy3ZqwVpaZmT85ZpeWqHROPfugZ+mdWqRNjbJ1ymGB2A1wxt5Tmd4p5xaFs+ndGmLTJOEJGKeuW6PDCERLKfB18mFAnhM9picyXG+oPMFWE5jfwxccwoAwQCMjwmPgdk14fex10tHxvifPCuFQhBpER+W8RFW0uGWK9gXxVgU1tc5Fr1bP2zoU+TVDIZD7PHAjd8h4Ge/DysVqFiobc6t0YHHsVjCDg8hiLnfaHhQak2GgZ1e6Aq7QatlZQTSOL/AP/yos7dpoE8dHcf4EIhqqsoVSE7Zt+9wteWgw4PPPi27wlATW4aPDEDEl7+ldz6wUotaEytp79+nPnzXGHvC0RaLfOqM/fOMrjF6uvHgAW9XWOxUKABYSfN7pyrzt+zBPnnsiAqHxOx16/THuliqfiCwPyYTD8tIRDA4Tb2d0AJ6M0W3lmzTgLffNC6eNV95QQLD9KyVyREABPxw+n3jqwue104qdDnkzdV3UoAQ6UYpcWQIOjtgcMDxZWuLiiWuaaMRRIRQoDWxNfSpQ/KL815AGOoXBJxbcw6FYYBpuFLuDfX78NFRrJXzzwwkp5yW2JtQsd52rzR3O2RLw6cX9bUb2u8XJ44bQfd424YCzMzpcxdsW/MzE3JyQtR34gNCNzfho7N2OqN7o/L1k0bA166brlAGTl7VV76zhYAXn5OHDrbr407Q1Syc+URvFGBfQp04rgwDWrT4fUFtzZ9doulZ2+sVr75sxIcBmPF+sC1a6mYKzl+yLAv6Y1JJvpzUAGCaePhJGQy0lYcW0MVlyuSc+2Ilbb/xllUbaj3d+Pm5jv2PyQeE+rww+hBaVk2qTVUIhdEwG9wMBUUijsGgMM1m93H7z0S5zOt/U7OdwJ4uoe76wMUS5PPOuO3prn/vAq3u21wWrlfWWbIzpJs9bRE+b/vYbfF/s6J5/RsAAP//M+6Pht32h4sAAAAASUVORK5CYII=",
+      "domains": [
+          "forever21.com"
+      ]
+  }
+]

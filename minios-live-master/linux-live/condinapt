@@ -1,0 +1,1252 @@
+#!/bin/bash
+#
+# NAME: CondinAPT
+#
+# DESCRIPTION:
+#   Installs packages from a package list file with conditions.
+#
+# USAGE:
+#   $(basename "${0}") [OPTIONS]
+#
+#   Options:
+#     -l, --package-list PATH       Path to the package list file.
+#     -c, --config PATH             Path to the main configuration file
+#     -C, --check-only              Only check if packages exist (no actual installation).
+#     -m, --filter-mapping PATH     Path to the filter mapping file (Optional).
+#     -P, --priority-list PATH      (Optional) Path to a priority filter file.
+#                                   File contains regex patterns to match packages.
+#                                   Matched packages are moved to priority queue (preserving filters).
+#     -s, --simulation              Enable simulation mode (no actual installation).
+#     -v, --verbose                 Enable verbose mode.
+#     -vv, --very-verbose           Enable very verbose mode.
+#     -x, --xtrace                  Enable shell tracing.
+#     -h, --help                    Display this help message and exit.
+#
+# AUTHOR: crims0n <https://minios.dev>
+
+set -o pipefail
+set -u
+
+#------------------------------------------------------------------------------
+# Console Colors and Message Printing Functions
+#------------------------------------------------------------------------------
+
+console_colors() {
+    RED=$'\e[31m'
+    GREEN=$'\e[32m'
+    YELLOW=$'\e[33m'
+    CYAN=$'\e[36m'
+    LIGHTGREEN=$'\e[92m'
+    LIGHTYELLOW=$'\e[93m'
+    BOLD=$'\e[1m'
+    DIM=$'\e[2m'
+    ENDCOLOR=$'\e[0m'
+}
+
+error() {
+    local MESSAGE="${1}"
+    echo -e "${BOLD}${RED}E:${ENDCOLOR} ${MESSAGE}" >&2
+}
+
+information() {
+    local MESSAGE="${1}"
+    echo -e "${BOLD}${CYAN}I:${ENDCOLOR} ${MESSAGE}"
+}
+
+warning() {
+    local MESSAGE="${1}"
+    echo -e "${BOLD}${YELLOW}W:${ENDCOLOR} ${MESSAGE}"
+}
+
+run_with_spinner() {
+    local MSG="$1"
+    shift
+    if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+        "$@"
+    else
+        # Create temporary log file for interactive output
+        local COMBINED_LOG="/tmp/condinapt_build_log_$$"
+
+        # Run command with stdout and stderr redirected to log file
+        "$@" >"${COMBINED_LOG}" 2>&1 &
+        local CMD_PID="$!"
+
+        local DELAY=0.1
+        local SPINSTR='|/-\\'
+        : ${SHOW_SPINNER_OUTPUT:="false"}
+        local TAIL_PID=""
+        local LAST_LINE_COUNT=0
+        local OUTPUT_LINES=0
+        local OUTPUT_ANIM_COUNTER=0
+        local LAST_REFRESH_TIME=$(date +%s)
+        console_colors
+
+        while kill -0 "${CMD_PID}" 2>/dev/null; do
+            if [ "$SHOW_SPINNER_OUTPUT" = "false" ]; then
+                for ((i = 0; i < ${#SPINSTR}; i++)); do
+                    # Check if process is still running before showing spinner
+                    if ! kill -0 "${CMD_PID}" 2>/dev/null; then
+                        break 2
+                    fi
+
+                    printf "\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${CYAN}${SPINSTR:$i:1}${ENDCOLOR}] ${DIM}(press ${ENDCOLOR}${BOLD}R${ENDCOLOR}${DIM} to toggle output)${ENDCOLOR}" >&2
+
+                    # Check for 'r' key with multiple attempts for better responsiveness
+                    local KEY_PRESSED=false
+                    for attempt in {1..3}; do
+                        if read -t 0.05 -n 1 -s KEY 2>/dev/null && [[ "$KEY" == "r" || "$KEY" == "R" || "$KEY" == "к" || "$KEY" == "К" ]]; then
+                            KEY_PRESSED=true
+                            break
+                        fi
+                    done
+                    if [ "$KEY_PRESSED" = "true" ]; then
+                        SHOW_SPINNER_OUTPUT="true"
+                        # Clear input buffer to prevent multiple rapid keypresses
+                        while read -t 0.01 -n 1 -s 2>/dev/null; do :; done
+                        printf "\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} ${DIM}(press ${ENDCOLOR}${BOLD}R${ENDCOLOR}${DIM} to toggle output)${ENDCOLOR}$(tput el)\n"
+                        # Show separator line
+                        printf "${DIM}────────────────────────────────────────────────────────────────────────────────${ENDCOLOR}\n"
+                        # Always show exactly 10 lines, padding with empty lines if needed
+                        local AVAILABLE_LINES=$(wc -l <"${COMBINED_LOG}" 2>/dev/null || echo 0)
+                        local LINES_TO_SHOW=10
+                        if [ "$AVAILABLE_LINES" -gt 0 ]; then
+                            tail -n ${LINES_TO_SHOW} "${COMBINED_LOG}" 2>/dev/null
+                            local ACTUAL_LINES=$(tail -n ${LINES_TO_SHOW} "${COMBINED_LOG}" 2>/dev/null | wc -l)
+                            # Pad with empty lines if we have fewer than 10 lines
+                            for ((i = ACTUAL_LINES; i < LINES_TO_SHOW; i++)); do
+                                echo ""
+                            done
+                        else
+                            # No content yet, show 10 empty lines
+                            for ((i = 0; i < LINES_TO_SHOW; i++)); do
+                                echo ""
+                            done
+                        fi
+                        # Show bottom separator line
+                        printf "${DIM}────────────────────────────────────────────────────────────────────────────────${ENDCOLOR}\n"
+                        # Set current line count so we only show new lines from this point
+                        LAST_LINE_COUNT=$(wc -l <"${COMBINED_LOG}" 2>/dev/null || echo 0)
+                        OUTPUT_LINES=$((1 + 1 + 10 + 1)) # Count header + top separator + exactly 10 lines + bottom separator
+                        break
+                    fi
+                done
+            else
+                # In output mode - maintain sliding window of exactly 10 lines
+                local CURRENT_LINE_COUNT=$(wc -l <"${COMBINED_LOG}" 2>/dev/null || echo 0)
+                local CURRENT_TIME=$(date +%s)
+                local TIME_SINCE_REFRESH=$((CURRENT_TIME - LAST_REFRESH_TIME))
+
+                # Update if new lines appeared OR if 10 seconds passed (for progress updates like mksquashfs)
+                if [ "$CURRENT_LINE_COUNT" -gt "$LAST_LINE_COUNT" ] || [ "$TIME_SINCE_REFRESH" -ge 10 ]; then
+                    # Always show exactly 10 lines, replacing the entire output area
+                    local MAX_LINES=10
+
+                    # Move to start of output area (after header)
+                    if [ "$OUTPUT_LINES" -gt 1 ]; then
+                        printf "\033[$((OUTPUT_LINES - 1))A"
+                    fi
+
+                    # Clear the output area and show latest 10 lines with separators
+                    printf "$(tput ed)"
+                    printf "${DIM}────────────────────────────────────────────────────────────────────────────────${ENDCOLOR}\n"
+                    # Always show exactly 10 lines, padding with empty lines if needed
+                    local AVAILABLE_LINES=$(wc -l <"${COMBINED_LOG}" 2>/dev/null || echo 0)
+                    if [ "$AVAILABLE_LINES" -gt 0 ]; then
+                        tail -n ${MAX_LINES} "${COMBINED_LOG}" 2>/dev/null
+                        local ACTUAL_LINES=$(tail -n ${MAX_LINES} "${COMBINED_LOG}" 2>/dev/null | wc -l)
+                        # Pad with empty lines if we have fewer than 10 lines
+                        for ((i = ACTUAL_LINES; i < MAX_LINES; i++)); do
+                            echo ""
+                        done
+                    else
+                        # No content yet, show 10 empty lines
+                        for ((i = 0; i < MAX_LINES; i++)); do
+                            echo ""
+                        done
+                    fi
+                    printf "${DIM}────────────────────────────────────────────────────────────────────────────────${ENDCOLOR}\n"
+
+                    LAST_LINE_COUNT="$CURRENT_LINE_COUNT"
+                    LAST_REFRESH_TIME="$CURRENT_TIME"
+                    OUTPUT_LINES=$((1 + 1 + 10 + 1)) # Header + top separator + exactly 10 lines + bottom separator
+                fi
+
+                # Animate the header line with spinner (same as normal mode but different color)
+                OUTPUT_ANIM_COUNTER=$((OUTPUT_ANIM_COUNTER + 1))
+                local SPINNER_CHAR=${SPINSTR:$((OUTPUT_ANIM_COUNTER % ${#SPINSTR})):1}
+
+                # Update the first line with spinner animation
+                if [ "$OUTPUT_LINES" -gt 0 ]; then
+                    printf "\033[${OUTPUT_LINES}A\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${LIGHTGREEN}${SPINNER_CHAR}${ENDCOLOR}] ${DIM}(press ${ENDCOLOR}${BOLD}R${ENDCOLOR}${DIM} to toggle output)${ENDCOLOR}$(tput el)\033[${OUTPUT_LINES}B\r"
+                fi
+
+                # Check for 'r' to return to spinner with multiple attempts
+                local KEY_PRESSED=false
+                for attempt in {1..3}; do
+                    if read -t 0.05 -n 1 -s KEY 2>/dev/null && [[ "$KEY" == "r" || "$KEY" == "R" || "$KEY" == "к" || "$KEY" == "К" ]]; then
+                        KEY_PRESSED=true
+                        break
+                    fi
+                done
+                if [ "$KEY_PRESSED" = "true" ]; then
+                    SHOW_SPINNER_OUTPUT="false"
+                    # Clear input buffer to prevent multiple rapid keypresses
+                    while read -t 0.01 -n 1 -s 2>/dev/null; do :; done
+                    # Move cursor up to the first "Output mode" line and replace it
+                    printf "\033[${OUTPUT_LINES}A\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${CYAN}${SPINSTR:0:1}${ENDCOLOR}] ${DIM}(press ${ENDCOLOR}${BOLD}R${ENDCOLOR}${DIM} to toggle output)${ENDCOLOR}$(tput el)$(tput ed)"
+                    OUTPUT_LINES=0
+                else
+                    # Short sleep to prevent high CPU usage in output mode
+                    sleep 0.1
+                fi
+            fi
+        done
+
+        # Clean up
+        if [ -n "$TAIL_PID" ]; then
+            kill "$TAIL_PID" 2>/dev/null
+        fi
+
+        wait "${CMD_PID}"
+        local EXIT_CODE=$?
+
+        rm -f "${COMBINED_LOG}"
+
+        # Move to the header line and show [done], clearing everything below
+        if [ "$SHOW_SPINNER_OUTPUT" = "true" ] && [ "$OUTPUT_LINES" -gt 0 ]; then
+            printf "\033[${OUTPUT_LINES}A\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${GREEN}done${ENDCOLOR}]$(tput el)$(tput ed)\n" >&2
+        else
+            printf "\r${BOLD}${CYAN}I:${ENDCOLOR} ${MSG} [${GREEN}done${ENDCOLOR}]$(tput el)\n" >&2
+        fi
+
+        return $EXIT_CODE
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Helper Functions
+#------------------------------------------------------------------------------
+
+# Checks if the script is running in a chroot environment.
+is_in_chroot() {
+    if [ -d /proc/1/root ] && [ "$(stat -c %m /proc/1/root)" != "/" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Display detailed help information.
+help() {
+    console_colors
+    echo -e "${CYAN}Usage: $(basename "${0}") [OPTIONS]${ENDCOLOR}"
+    echo "Installs packages from a package list file with conditions."
+    echo ""
+    echo "Options:"
+    echo "  -l, --package-list PATH       Path to the package list file."
+    echo "  -c, --config PATH             Path to the main configuration file."
+    echo "  -C, --check-only              Only check if packages exist (no actual installation)."
+    echo "  -m, --filter-mapping PATH     Path to the filter mapping file (Optional)."
+    echo "  -P, --priority-list PATH      Path to a priority filter file (Optional)."
+    echo "                                File contains regex patterns to match packages."
+    echo "                                Matched packages are moved to priority queue (preserving filters)."
+    echo "  -s, --simulation              Enable simulation mode (no actual installation)."
+    echo "  -v, --verbose                 Enable verbose mode."
+    echo "  -vv, --very-verbose           Enable very verbose mode."
+    echo "  -x, --xtrace                  Enable shell tracing."
+    echo "  -h, --help                    Display this help message and exit."
+    exit 0
+}
+
+brief_help() {
+    echo "Usage: $(basename "${0}") [OPTIONS]"
+    echo "Try '$(basename "${0}") --help' for more information."
+    exit 1
+}
+
+#------------------------------------------------------------------------------
+# Filter Mapping Loading Function
+#------------------------------------------------------------------------------
+
+# Loads the filter mapping from an external file.
+# The file must contain lines in the format: PREFIX=VariableName
+load_filter_mapping() {
+    local MAPPING_FILE="${1}"
+    if [ ! -f "${MAPPING_FILE}" ]; then
+        error "Filter mapping config file '${MAPPING_FILE}' not found."
+        exit 1
+    fi
+    declare -gA FILTER_ENV_VARS
+    while IFS='=' read -r KEY VALUE; do
+        # Skip empty lines and comments.
+        if [[ -z "${KEY}" ]] || [[ "${KEY}" =~ ^# ]]; then
+            continue
+        fi
+        FILTER_ENV_VARS["$KEY"]="$VALUE"
+    done <"${MAPPING_FILE}"
+}
+
+#------------------------------------------------------------------------------
+# Helper Function: extract_package_name
+#------------------------------------------------------------------------------
+
+# Extracts the package name from a condition line by taking the first token
+# and removing any leading '!' (mandatory marker) and any version specifier
+# (anything starting with '=' or '==').
+extract_package_name() {
+    local LINE="$1"
+    local TOKEN
+
+    # take first whitespace-separated token
+    TOKEN=$(echo "$LINE" | awk '{print $1}')
+
+    # remove leading '!' if present (mandatory flag)
+    TOKEN=${TOKEN#!}
+
+    # strip off any version specifier (e.g. '=1.2' or '==1.2')
+    TOKEN=$(echo "$TOKEN" | sed 's/[=].*$//')
+
+    echo "$TOKEN"
+}
+
+#------------------------------------------------------------------------------
+# Package Condition Processing Functions
+#------------------------------------------------------------------------------
+
+# Processes a single package condition.
+process_condition() {
+    local CONDITION="${1}"
+    local IS_MANDATORY="${2}"
+    local VERBOSITY_LEVEL="${3}"
+    local PACKAGE_PART PACKAGE_CONDITION_STRING PACKAGE_NAME PACKAGE_VERSION
+    local STRICT_VERSION=false
+    local INCLUDE=true
+    local FILTER_STRING=""
+
+    IFS=' ' read -r PACKAGE_PART PACKAGE_CONDITION_STRING <<<"${CONDITION}"
+    if [[ "${PACKAGE_PART}" == *"=="* ]]; then
+        STRICT_VERSION=true
+        PACKAGE_NAME="${PACKAGE_PART%%==*}"
+        PACKAGE_VERSION="${PACKAGE_PART#*==}"
+    elif [[ "${PACKAGE_PART}" == *"="* ]]; then
+        PACKAGE_NAME="${PACKAGE_PART%%=*}"
+        PACKAGE_VERSION="${PACKAGE_PART#*=}"
+    else
+        PACKAGE_NAME="${PACKAGE_PART}"
+        PACKAGE_VERSION=""
+    fi
+
+    IFS=' ' read -r -a FILTERS <<<"${PACKAGE_CONDITION_STRING}"
+
+    declare -A PLUS_EXISTS_BY_TYPE
+    declare -A PLUS_PASSED_BY_TYPE
+
+    for FILTER in "${FILTERS[@]}"; do
+        case "${FILTER}" in
+        +\{*)
+            local GROUP_CONTENT="${FILTER#+\{}"
+            GROUP_CONTENT="${GROUP_CONTENT%\}}"
+            if [[ "${GROUP_CONTENT}" == *"&"* ]]; then
+                # Process a group of mandatory positive filters (+{a&b}).
+                local ALL_PASSED=true
+                IFS='&' read -r -a GROUP_FILTERS <<<"${GROUP_CONTENT}"
+                for AND_FILTER in "${GROUP_FILTERS[@]}"; do
+                    AND_FILTER="$(echo "${AND_FILTER}" | xargs)"
+                    if check_filter "${AND_FILTER}"; then
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Group&: '${AND_FILTER}' ${GREEN}Passed${ENDCOLOR}]; "
+                    else
+                        ALL_PASSED=false
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Group&: '${AND_FILTER}' ${RED}Failed${ENDCOLOR}]; "
+                        break
+                    fi
+                done
+                if ! ${ALL_PASSED}; then
+                    INCLUDE=false
+                fi
+            else
+                # Process a group of alternative positive filters (+{a|b}).
+                local GROUP_PASSED=false
+                IFS='|' read -r -a GROUP_FILTERS <<<"${GROUP_CONTENT}"
+                for ALT_FILTER in "${GROUP_FILTERS[@]}"; do
+                    ALT_FILTER="$(echo "${ALT_FILTER}" | xargs)"
+                    if check_filter "${ALT_FILTER}"; then
+                        GROUP_PASSED=true
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Group|: '${ALT_FILTER}' ${GREEN}Passed${ENDCOLOR}]; "
+                        break
+                    else
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Group|: '${ALT_FILTER}' ${RED}Failed${ENDCOLOR}]; "
+                    fi
+                done
+                if ! ${GROUP_PASSED}; then
+                    INCLUDE=false
+                fi
+            fi
+            ;;
+        +*)
+            # Process a positive filter.
+            local FILTER_VALUE="${FILTER#+}"
+            local PREFIX="${FILTER_VALUE%%=*}"
+            PLUS_EXISTS_BY_TYPE["${PREFIX}"]=true
+            if check_filter "${FILTER_VALUE}"; then
+                PLUS_PASSED_BY_TYPE["${PREFIX}"]=true
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[+${FILTER_VALUE} ${GREEN}Passed${ENDCOLOR}]; "
+            else
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[+${FILTER_VALUE} ${RED}Failed${ENDCOLOR}]; "
+            fi
+            ;;
+        -\{*)
+            local GROUP_CONTENT="${FILTER#-\{}"
+            GROUP_CONTENT="${GROUP_CONTENT%\}}"
+            if [[ "${GROUP_CONTENT}" == *"&"* ]]; then
+                # Process a group of mandatory negative filters (-{a&b}).
+                # Exclude only if ALL conditions are true.
+                local ALL_NEGATIVE_CONDITIONS_MET=true
+                IFS='&' read -r -a GROUP_FILTERS <<<"${GROUP_CONTENT}"
+                for AND_FILTER in "${GROUP_FILTERS[@]}"; do
+                    AND_FILTER="$(echo "${AND_FILTER}" | xargs)"
+                    if ! check_filter "${AND_FILTER}"; then
+                        ALL_NEGATIVE_CONDITIONS_MET=false
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Neg-Group&: '${AND_FILTER}' ${GREEN}Passed${ENDCOLOR}]; "
+                        break
+                    else
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Neg-Group&: '${AND_FILTER}' ${RED}Failed${ENDCOLOR}]; "
+                    fi
+                done
+                if ${ALL_NEGATIVE_CONDITIONS_MET}; then
+                    INCLUDE=false
+                fi
+            else
+                # Process a group of alternative negative filters (-{a|b}).
+                # Exclude if ANY condition is true.
+                IFS='|' read -r -a GROUP_FILTERS <<<"${GROUP_CONTENT}"
+                for OR_FILTER in "${GROUP_FILTERS[@]}"; do
+                    OR_FILTER="$(echo "${OR_FILTER}" | xargs)"
+                    if check_filter "${OR_FILTER}"; then
+                        INCLUDE=false
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Neg-Group|: '${OR_FILTER}' ${RED}Failed${ENDCOLOR}]; "
+                        break
+                    else
+                        [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[Neg-Group|: '${OR_FILTER}' ${GREEN}Passed${ENDCOLOR}]; "
+                    fi
+                done
+            fi
+            ;;
+        -*)
+            # Process a negative filter.
+            local FILTER_VALUE="${FILTER#-}"
+            if check_filter "${FILTER_VALUE}"; then
+                INCLUDE=false
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[-${FILTER_VALUE} ${RED}Failed${ENDCOLOR}]; "
+            else
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && FILTER_STRING+="[-${FILTER_VALUE} ${GREEN}Passed${ENDCOLOR}]; "
+            fi
+            ;;
+        esac
+    done
+
+    FILTER_MSG="${FILTER_STRING:+ Filters: ${FILTER_STRING%??}}"
+
+    # Verify that all required positive filters have passed.
+    for PREFIX in "${!PLUS_EXISTS_BY_TYPE[@]}"; do
+        if [ "${PLUS_PASSED_BY_TYPE["${PREFIX}"]:-false}" != true ]; then
+            INCLUDE=false
+        fi
+    done
+
+    if ! ${INCLUDE}; then
+        [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "${PACKAGE_NAME} will not be installed.${FILTER_MSG}"
+        return 3
+    fi
+
+    check_package "${PACKAGE_NAME}" "${PACKAGE_VERSION}" "${STRICT_VERSION}"
+    local CP_RC=${?}
+    if [ ${CP_RC} -eq 0 ]; then
+        [ "${CHECK_ONLY}" = "true" ] && [ -z "${FILTER_MSG}" ] && error "${PACKAGE_NAME} not installed." && CHECK_FAILED=true
+        [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "${PACKAGE_NAME} will be installed.${FILTER_MSG}"
+        if [[ -n "${PACKAGE_VERSION}" ]]; then
+            if [ "${FOUND_EXACT_VERSION}" = true ]; then
+                PACKAGES_TO_INSTALL+=("${PACKAGE_NAME}=${PACKAGE_VERSION}")
+                PACKAGES_TO_HOLD+=("${PACKAGE_NAME}")
+            else
+                PACKAGES_TO_INSTALL+=("${PACKAGE_NAME}")
+            fi
+        else
+            PACKAGES_TO_INSTALL+=("${PACKAGE_NAME}")
+        fi
+        return 0
+    elif [ ${CP_RC} -eq 2 ]; then
+        return 0
+    else
+        MISSING_PACKAGES+=("${PACKAGE_NAME}")
+        [ "${CHECK_ONLY}" = "true" ] && [ -z "${FILTER_MSG}" ] && error "${PACKAGE_NAME} not installed." && CHECK_FAILED=true
+        [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "${PACKAGE_NAME} will not be installed.${FILTER_MSG}"
+        ${IS_MANDATORY} && error "Mandatory package ${PACKAGE_NAME} not found. Installation aborted."
+        return 1
+    fi
+}
+
+# Processes package conditions that may contain multiple alternatives.
+process_package_conditions() {
+    local PACKAGE_CONDITIONS="${1}"
+    local VERBOSITY_LEVEL="${2}"
+    local IS_MANDATORY=false
+
+    if [[ ${PACKAGE_CONDITIONS:0:1} == "!" ]]; then
+        PACKAGE_CONDITIONS="${PACKAGE_CONDITIONS:1}"
+        IS_MANDATORY=true
+    fi
+
+    local -a ALTERNATIVES
+    if [[ "${PACKAGE_CONDITIONS}" == *"||"* ]]; then
+        IFS=$'\n' read -r -d '' -a ALTERNATIVES < <(echo "${PACKAGE_CONDITIONS}" | awk -F '\\|\\|' '{for(i=1;i<=NF;i++) {gsub(/^[ \t]+|[ \t]+$/, "", $i); print $i}}') || true
+    else
+        ALTERNATIVES=("${PACKAGE_CONDITIONS}")
+    fi
+
+    local ANY_ALTERNATIVE_SUCCESS=false
+    local FATAL_FAILURE=false
+
+    for ALTERNATIVE in "${ALTERNATIVES[@]}"; do
+        local -a CONDITIONS
+        if [[ "${ALTERNATIVE}" == *"&&"* ]]; then
+            IFS=$'\n' read -r -d '' -a CONDITIONS < <(echo "${ALTERNATIVE}" | awk -F '&&' '{for(i=1;i<=NF;i++) {gsub(/^[ \t]+|[ \t]+$/, "", $i); print $i}}') || true
+        else
+            CONDITIONS=("${ALTERNATIVE}")
+        fi
+
+        local ALL_CONDITIONS_MET=true
+        local ALT_RC=0
+        for CONDITION in "${CONDITIONS[@]}"; do
+            process_condition "${CONDITION}" "${IS_MANDATORY}" "${VERBOSITY_LEVEL}"
+            local RET=${?}
+            if [ ${RET} -ne 0 ]; then
+                ALL_CONDITIONS_MET=false
+                ALT_RC=${RET}
+                break
+            fi
+        done
+
+        if ${ALL_CONDITIONS_MET}; then
+            ANY_ALTERNATIVE_SUCCESS=true
+            break
+        else
+            [ ${ALT_RC} -eq 1 ] && FATAL_FAILURE=true
+        fi
+    done
+
+    if ${ANY_ALTERNATIVE_SUCCESS}; then
+        return 0
+    elif ${IS_MANDATORY} && ${FATAL_FAILURE}; then
+        error "Mandatory package cannot be installed. Installation aborted."
+        [ "${SIMULATION_MODE}" = false ] && exit 1
+    fi
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Package Installation Queue Processing Functions
+#------------------------------------------------------------------------------
+
+process_queue() {
+    local QUEUE_ID="${1}"
+    shift
+    local SIMULATION_MODE="${1}"
+    shift
+    local TARGET_RELEASE="${1}"
+    shift
+    local -a QUEUE=("$@")
+    local FATAL_FAILURE=false
+
+    [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Installation Queue #${QUEUE_ID}:"
+
+    PACKAGES_TO_INSTALL=()
+    PACKAGES_TO_HOLD=()
+
+    for PACKAGE_CONDITIONS in "${QUEUE[@]}"; do
+        process_package_conditions "${PACKAGE_CONDITIONS}" "${VERBOSITY_LEVEL}"
+    done
+
+    [ "${CHECK_ONLY}" = "true" ] && return
+
+    if [ "${PREINSTALL_APT_CACHE}" = "true" ] && [ "${SIMULATION_MODE}" = false ]; then
+        run_with_spinner "Refreshing package archive" \
+            env DEBIAN_FRONTEND=noninteractive apt-get --download-only -y \
+            -o Dpkg::Options::="--force-confdef" \
+            -o Dpkg::Options::="--force-confold" --allow-downgrades --no-install-suggests "${PACKAGES_TO_INSTALL[@]}" \
+            -qq
+    fi
+
+    if [ "${SIMULATION_MODE}" = true ]; then
+        if [ "${#PACKAGES_TO_INSTALL[@]}" -gt 0 ]; then
+            information "Simulation mode ON. These packages would be installed: ${PACKAGES_TO_INSTALL[*]}"
+        else
+            [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "No packages to install in Queue #${QUEUE_ID} (simulation mode)."
+        fi
+        return
+    fi
+
+    if [ "${#PACKAGES_TO_INSTALL[@]}" -gt 0 ]; then
+        if [ "${VERBOSITY_LEVEL}" -ge 1 ]; then
+            if [[ -n "${TARGET_RELEASE}" ]]; then
+                DEBIAN_FRONTEND=noninteractive apt-get -y -t "${TARGET_RELEASE}" install \
+                    -o Dpkg::Options::="--force-confdef" \
+                    -o Dpkg::Options::="--force-confold" --allow-downgrades --no-install-suggests "${PACKAGES_TO_INSTALL[@]}"
+            else
+                DEBIAN_FRONTEND=noninteractive apt-get -y install \
+                    -o Dpkg::Options::="--force-confdef" \
+                    -o Dpkg::Options::="--force-confold" --allow-downgrades --no-install-suggests "${PACKAGES_TO_INSTALL[@]}"
+            fi
+            if [ $? -ne 0 ]; then
+                FATAL_FAILURE=true
+            fi
+        else
+            if [[ -n "${TARGET_RELEASE}" ]]; then
+                run_with_spinner "Installing packages" \
+                    env DEBIAN_FRONTEND=noninteractive apt-get -y -t "${TARGET_RELEASE}" install \
+                    -o Dpkg::Options::="--force-confdef" \
+                    -o Dpkg::Options::="--force-confold" --allow-downgrades --no-install-suggests "${PACKAGES_TO_INSTALL[@]}" \
+                    -qq
+            else
+                run_with_spinner "Installing packages" \
+                    env DEBIAN_FRONTEND=noninteractive apt-get -y install \
+                    -o Dpkg::Options::="--force-confdef" \
+                    -o Dpkg::Options::="--force-confold" --allow-downgrades --no-install-suggests "${PACKAGES_TO_INSTALL[@]}" \
+                    -qq
+            fi
+            if [ $? -ne 0 ]; then
+                FATAL_FAILURE=true
+            fi
+        fi
+
+        if [ "${#PACKAGES_TO_HOLD[@]}" -gt 0 ]; then
+            for PKG in "${PACKAGES_TO_HOLD[@]}"; do
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Holding package ${PKG}"
+                apt-mark hold "${PKG}"
+            done
+        fi
+    else
+        [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "No packages to install in Queue #${QUEUE_ID}."
+    fi
+
+    if [ "${FATAL_FAILURE}" = true ]; then
+        error "Fatal failure during package installation in Queue #${QUEUE_ID}."
+        return 1
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Package Checking Functions
+#------------------------------------------------------------------------------
+
+# Check if a package is installed
+pkg_is_installed() {
+    local PACKAGE="${1}"
+    if [ -z "${PACKAGE}" ]; then
+        echo "Error: pkg_is_installed() requires a package name" >&2
+        return 2
+    fi
+    if dpkg-query -f'${db:Status-Status}\n' -W "${PACKAGE}" 2>/dev/null | grep -q '^installed'; then
+        return 0
+    fi
+    return 1
+}
+
+# Test installed package version against a relation
+pkg_test_version() {
+    local PACKAGE="${1}"
+    local RELATION="${2}"
+    local VERSION="${3}"
+    if [ -z "${PACKAGE}" ] || [ -z "${RELATION}" ] || [ -z "${VERSION}" ]; then
+        echo "Error: pkg_test_version() requires <package> <relation> <version>" >&2
+        return 2
+    fi
+    local INSTVER
+    INSTVER=$(dpkg-query -f'${Version}\n' -W "${PACKAGE}" 2>/dev/null)
+    if [ -z "${INSTVER}" ]; then
+        echo "Error: package ${PACKAGE} is not installed" >&2
+        return 2
+    fi
+    if dpkg --compare-versions "${INSTVER}" "${RELATION}" "${VERSION}"; then
+        return 0
+    fi
+    return 1
+}
+
+# Check if package is available/installed with optional version
+check_package() {
+    local PACKAGE_NAME="${1}"
+    local PACKAGE_VERSION="${2}"
+    local STRICT_VERSION="${3:-false}"
+    FOUND_EXACT_VERSION=false
+
+    if [ "$CHECK_ONLY" = true ]; then
+        if pkg_is_installed "$PACKAGE_NAME"; then
+            return 2
+        else
+            return 1
+        fi
+    fi
+
+    local INSTALLED_VERSION
+    INSTALLED_VERSION=$(dpkg-query -W -f='${Version}' "${PACKAGE_NAME}" 2>/dev/null || echo "")
+    if [ -n "${INSTALLED_VERSION}" ]; then
+        if [ -z "${PACKAGE_VERSION}" ]; then
+            local REPO_CANDIDATE
+            REPO_CANDIDATE=$(apt-cache policy "${PACKAGE_NAME}" 2>/dev/null | awk '/Candidate:/ {print $2}')
+            if [ -n "${REPO_CANDIDATE}" ]; then
+                if [ "${INSTALLED_VERSION}" = "${REPO_CANDIDATE}" ]; then
+                    [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "${PACKAGE_NAME} is already installed."
+                    return 2
+                else
+                    [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "${PACKAGE_NAME} is installed (version ${INSTALLED_VERSION}), repository candidate is ${REPO_CANDIDATE}."
+                fi
+            else
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "${PACKAGE_NAME} is already installed."
+                return 2
+            fi
+        else
+            if [ "${INSTALLED_VERSION}" = "${PACKAGE_VERSION}" ]; then
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "${PACKAGE_NAME} is already installed."
+                return 2
+            else
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "${PACKAGE_NAME} is installed (version ${INSTALLED_VERSION}), required version is ${PACKAGE_VERSION}."
+            fi
+        fi
+    fi
+
+    SPECIAL_PACKAGES=("qemu-kvm")
+    for SPECIAL in "${SPECIAL_PACKAGES[@]}"; do
+        if [ "${PACKAGE_NAME}" = "${SPECIAL}" ]; then
+            if LANG=C apt-cache --quiet=0 show "${PACKAGE_NAME}" 2>&1 | grep -q 'purely virtual'; then
+                return 0
+            else
+                return 1
+            fi
+        fi
+    done
+    if [ -z "${PACKAGE_VERSION}" ]; then
+        if echo $(LANG=C apt-cache --quiet=0 policy "${PACKAGE_NAME}" 2>&1) | grep -qE 'Candidate: \(none\)|Unable to locate package|No packages found'; then
+            return 1
+        else
+            return 0
+        fi
+    else
+        if echo $(LANG=C apt-cache --quiet=0 madison "${PACKAGE_NAME}" 2>&1) | grep -q "${PACKAGE_VERSION}"; then
+            FOUND_EXACT_VERSION=true
+            return 0
+        else
+            if [ "${STRICT_VERSION}" = true ]; then
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "Strict version: ${PACKAGE_VERSION} of ${PACKAGE_NAME} not available."
+                return 1
+            else
+                [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "Version ${PACKAGE_VERSION} of ${PACKAGE_NAME} not available. Installing available version."
+                if echo $(LANG=C apt-cache --quiet=0 policy "${PACKAGE_NAME}" 2>&1) | grep -qE 'Candidate: \(none\)|Unable to locate package|No packages found'; then
+                    return 1
+                else
+                    FOUND_EXACT_VERSION=false
+                    return 0
+                fi
+            fi
+        fi
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Filter Checking Function with Array Support
+#   Uses the associative array FILTER_ENV_VARS loaded from the external config.
+#   Supports both scalar and array variables.
+#------------------------------------------------------------------------------
+
+check_filter() {
+    local FILTER="${1}"
+    local PREFIX="${FILTER%%=*}"
+    local VALUE="${FILTER#*=}"
+    local VAR_NAME="${FILTER_ENV_VARS[${PREFIX}]:-}"
+
+    # If the prefix is not in the mapping file, use the prefix itself as the variable name.
+    if [ -z "${VAR_NAME}" ]; then
+        VAR_NAME="${PREFIX}"
+    fi
+
+    # Check if the target variable is an array.
+    local VAR_DECL
+    VAR_DECL=$(declare -p "$VAR_NAME" 2>/dev/null || echo "")
+    if [[ "$VAR_DECL" =~ "declare -a" ]]; then
+        local i ITEM
+        eval "local INDICES=(\"\${!${VAR_NAME}[@]}\")"
+        for i in "${INDICES[@]}"; do
+            eval "ITEM=\${${VAR_NAME}[${i}]}"
+            if [[ "$VALUE" == "$ITEM" ]]; then
+                return 0
+            fi
+        done
+        return 1
+    else
+        if [ "${VALUE}" == "${!VAR_NAME}" ]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Priority Queue Support
+#
+# If a priority filter file is provided via -P/--priority-list, the script
+# reads it as a list of regex patterns (one pattern per line). Then, it extracts
+# all packages matching these patterns from the main queues (preserving their
+# conditions and filters) and creates a dedicated priority queue.
+# The priority queue is inserted as the first queue.
+#------------------------------------------------------------------------------
+
+# Load priority filters (regex patterns) from file
+load_priority_filters() {
+    local PRIORITY_FILE="$1"
+    if [ ! -f "$PRIORITY_FILE" ]; then
+        error "Priority filter file '$PRIORITY_FILE' not found."
+        exit 1
+    fi
+    local PRIORITY_FILTERS=()
+    while IFS= read -r LINE; do
+        LINE=$(echo "$LINE" | xargs)
+        # Skip empty lines and comments.
+        if [[ -z "$LINE" ]] || [[ "$LINE" =~ ^# ]]; then
+            continue
+        fi
+        PRIORITY_FILTERS+=("$LINE")
+    done <"$PRIORITY_FILE"
+    echo "${PRIORITY_FILTERS[@]}"
+}
+
+# Check if a package name matches any priority filter (regex pattern)
+matches_priority_filter() {
+    local PACKAGE_NAME="$1"
+    shift
+    local FILTERS=("$@")
+
+    for FILTER in "${FILTERS[@]}"; do
+        # Use regex matching with =~ operator
+        if [[ "$PACKAGE_NAME" =~ $FILTER ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Extract packages matching priority filters from queue
+# Returns two outputs separated by a delimiter:
+# 1. Lines that match priority filters (for priority queue)
+# 2. Lines that don't match (remain in normal queue)
+extract_priority_from_queue() {
+    local QUEUE_CONTENT="$1"
+    shift
+    local PRIORITY_FILTERS=("$@")
+    local PRIORITY_LINES=""
+    local REMAINING_LINES=""
+
+    while IFS= read -r LINE; do
+        local PKG
+        PKG=$(extract_package_name "$LINE")
+
+        if matches_priority_filter "$PKG" "${PRIORITY_FILTERS[@]}"; then
+            # Package matches priority filter - add FULL LINE with all conditions
+            PRIORITY_LINES+="$LINE"$'\n'
+        else
+            # Package doesn't match - keep in normal queue
+            REMAINING_LINES+="$LINE"$'\n'
+        fi
+    done <<<"$QUEUE_CONTENT"
+
+    # Output priority lines first, then delimiter, then remaining lines
+    echo "<<<PRIORITY_SEPARATOR>>>"
+    echo "$PRIORITY_LINES" | sed '/^$/d'
+    echo "<<<REMAINING_SEPARATOR>>>"
+    echo "$REMAINING_LINES" | sed '/^$/d'
+}
+
+#------------------------------------------------------------------------------
+# Main Function: install_packages
+#------------------------------------------------------------------------------
+
+install_packages() {
+    local PACKAGE_LIST=""
+    local MAIN_CONFIG_FILE=""
+    local FILTER_MAPPING_FILE=""
+    local PRIORITY_LIST_FILE=""
+    local SIMULATION_MODE=false
+    local CHECK_ONLY=false
+    CHECK_FAILED=false
+    local VERBOSITY_LEVEL=0
+    local XTRACE_MODE=false
+    local PREINSTALL_APT_CACHE=false
+    local FORCE_UPDATE=false
+    local PRIORITY_QUEUE=()
+    DEBIAN_FRONTEND=noninteractive
+    LANG=C
+
+    PACKAGE_ARRAY=()
+    PACKAGES_TO_INSTALL=()
+    PACKAGES_TO_HOLD=()
+
+    console_colors
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        -l | --package-list)
+            PACKAGE_LIST="$2"
+            shift 2
+            ;;
+        -c | --config)
+            MAIN_CONFIG_FILE="$2"
+            shift 2
+            ;;
+        -C | --check-only)
+            CHECK_ONLY=true
+            shift
+            ;;
+        -m | --filter-mapping)
+            FILTER_MAPPING_FILE="$2"
+            shift 2
+            ;;
+        -P | --priority-list)
+            PRIORITY_LIST_FILE="$2"
+            shift 2
+            ;;
+        -s | --simulation)
+            SIMULATION_MODE=true
+            shift
+            ;;
+        -v | --verbose)
+            VERBOSITY_LEVEL=1
+            shift
+            ;;
+        -vv | --very-verbose)
+            VERBOSITY_LEVEL=2
+            shift
+            ;;
+        -x | --xtrace)
+            XTRACE_MODE=true
+            shift
+            ;;
+        -f | --force)
+            FORCE_UPDATE=true
+            shift
+            ;;
+        -h | --help)
+            help
+            exit 0
+            ;;
+        -* | --*)
+            error "Unsupported flag $1"
+            brief_help
+            ;;
+        *)
+            error "Invalid input $1"
+            brief_help
+            ;;
+        esac
+    done
+
+    [ "${XTRACE_MODE}" = true ] && set -x
+
+    if [[ -z "${PACKAGE_LIST}" ]]; then
+        error "No package list provided."
+        exit 1
+    fi
+
+    if [[ ! -f "${PACKAGE_LIST}" ]]; then
+        error "Package list file '${PACKAGE_LIST}' does not exist."
+        exit 1
+    fi
+
+    if [[ ! -r "${PACKAGE_LIST}" ]]; then
+        error "Package list file '${PACKAGE_LIST}' is not readable."
+        exit 1
+    fi
+
+    if [[ -z "${MAIN_CONFIG_FILE}" ]]; then
+        error "No main configuration file provided. Use -c to specify it."
+        exit 1
+    else
+        if [[ -f "${MAIN_CONFIG_FILE}" && -r "${MAIN_CONFIG_FILE}" ]]; then
+            source "${MAIN_CONFIG_FILE}"
+        else
+            error "Main config file '${MAIN_CONFIG_FILE}' does not exist or is not readable."
+            exit 1
+        fi
+    fi
+
+    if [[ -z "${FILTER_MAPPING_FILE}" ]]; then
+        warning "No filter mapping file provided. Use -m to specify it."
+        #exit 1
+    else
+        load_filter_mapping "${FILTER_MAPPING_FILE}"
+    fi
+
+    if [ "${CHECK_ONLY}" = "false" ] && (${FORCE_UPDATE} || [ ! -e "/var/cache/apt/pkgcache.bin" ]); then
+        run_with_spinner "Updating package lists" \
+            env DEBIAN_FRONTEND=noninteractive apt-get update -qq --allow-releaseinfo-change
+    else
+        [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Package cache exists; update not required."
+    fi
+
+    # Group packages into queues.
+    NORMAL_QUEUES=()
+    CURRENT_NORMAL_QUEUE=""
+    declare -A TARGET_QUEUES=()
+    TARGET_ORDER=()
+
+    while IFS= read -r LINE || [ -n "${LINE}" ]; do
+        LINE=${LINE%%#*}
+        LINE=$(echo "${LINE}" | xargs)
+        if [[ -z "${LINE}" ]]; then
+            continue
+        fi
+
+        if [[ "${LINE}" == "---" ]]; then
+            if [[ -n "${CURRENT_NORMAL_QUEUE}" ]]; then
+                NORMAL_QUEUES+=("${CURRENT_NORMAL_QUEUE}")
+                CURRENT_NORMAL_QUEUE=""
+            fi
+            continue
+        fi
+
+        if [[ "${LINE}" == *"@"* ]]; then
+            TARGET_RELEASE=$(echo "${LINE}" | sed -n 's/.*@\([^ ]*\).*/\1/p')
+            CLEANED_LINE="${LINE/@${TARGET_RELEASE}/}"
+            CLEANED_LINE=$(echo "${CLEANED_LINE}" | xargs)
+            if [[ -z "${TARGET_QUEUES[${TARGET_RELEASE}]+_}" ]]; then
+                TARGET_QUEUES["${TARGET_RELEASE}"]="${CLEANED_LINE}"
+                TARGET_ORDER+=("${TARGET_RELEASE}")
+            else
+                TARGET_QUEUES["${TARGET_RELEASE}"]="${TARGET_QUEUES[${TARGET_RELEASE}]}"$'\n'"${CLEANED_LINE}"
+            fi
+        else
+            if [[ -z "${CURRENT_NORMAL_QUEUE}" ]]; then
+                CURRENT_NORMAL_QUEUE="${LINE}"
+            else
+                CURRENT_NORMAL_QUEUE="${CURRENT_NORMAL_QUEUE}"$'\n'"${LINE}"
+            fi
+        fi
+    done <"${PACKAGE_LIST}"
+
+    if [[ -n "${CURRENT_NORMAL_QUEUE}" ]]; then
+        NORMAL_QUEUES+=("${CURRENT_NORMAL_QUEUE}")
+    fi
+
+    # --- Priority Queue Processing ---
+    PRIORITY_FILTERS=()
+    PRIORITY_QUEUE_CONTENT=""
+    declare -A PRIORITY_TARGET_QUEUES=()
+    PRIORITY_TARGET_ORDER=()
+    if [[ -n "${PRIORITY_LIST_FILE}" ]]; then
+        # Load regex filters from priority file
+        IFS=' ' read -r -a PRIORITY_FILTERS <<<"$(load_priority_filters "${PRIORITY_LIST_FILE}")"
+
+        # Extract matching packages from normal queues (preserving all conditions)
+        for IDX in "${!NORMAL_QUEUES[@]}"; do
+            if [[ -z "${NORMAL_QUEUES[$IDX]}" ]]; then
+                continue
+            fi
+
+            local EXTRACT_RESULT
+            EXTRACT_RESULT=$(extract_priority_from_queue "${NORMAL_QUEUES[$IDX]}" "${PRIORITY_FILTERS[@]}")
+
+            # Parse the result: extract priority and remaining sections
+            local IN_PRIORITY=false
+            local IN_REMAINING=false
+            local PRIORITY_PART=""
+            local REMAINING_PART=""
+
+            while IFS= read -r LINE; do
+                if [[ "$LINE" == "<<<PRIORITY_SEPARATOR>>>" ]]; then
+                    IN_PRIORITY=true
+                    IN_REMAINING=false
+                    continue
+                elif [[ "$LINE" == "<<<REMAINING_SEPARATOR>>>" ]]; then
+                    IN_PRIORITY=false
+                    IN_REMAINING=true
+                    continue
+                fi
+
+                if [[ "$IN_PRIORITY" == true ]]; then
+                    PRIORITY_PART+="$LINE"$'\n'
+                elif [[ "$IN_REMAINING" == true ]]; then
+                    REMAINING_PART+="$LINE"$'\n'
+                fi
+            done <<<"$EXTRACT_RESULT"
+
+            # Add priority packages to global priority queue (for normal repos)
+            if [[ -n "$PRIORITY_PART" ]]; then
+                PRIORITY_QUEUE_CONTENT+="$PRIORITY_PART"
+            fi
+
+            # Update normal queue with remaining packages
+            NORMAL_QUEUES[$IDX]="$REMAINING_PART"
+        done
+
+        # Extract matching packages from target queues (preserving release info)
+        for KEY in "${!TARGET_QUEUES[@]}"; do
+            if [[ -z "${TARGET_QUEUES[$KEY]}" ]]; then
+                continue
+            fi
+
+            local EXTRACT_RESULT
+            EXTRACT_RESULT=$(extract_priority_from_queue "${TARGET_QUEUES[$KEY]}" "${PRIORITY_FILTERS[@]}")
+
+            # Parse the result
+            local IN_PRIORITY=false
+            local IN_REMAINING=false
+            local PRIORITY_PART=""
+            local REMAINING_PART=""
+
+            while IFS= read -r LINE; do
+                if [[ "$LINE" == "<<<PRIORITY_SEPARATOR>>>" ]]; then
+                    IN_PRIORITY=true
+                    IN_REMAINING=false
+                    continue
+                elif [[ "$LINE" == "<<<REMAINING_SEPARATOR>>>" ]]; then
+                    IN_PRIORITY=false
+                    IN_REMAINING=true
+                    continue
+                fi
+
+                if [[ "$IN_PRIORITY" == true ]]; then
+                    PRIORITY_PART+="$LINE"$'\n'
+                elif [[ "$IN_REMAINING" == true ]]; then
+                    REMAINING_PART+="$LINE"$'\n'
+                fi
+            done <<<"$EXTRACT_RESULT"
+
+            # Add priority packages to SEPARATE priority target queue (preserves release)
+            if [[ -n "$PRIORITY_PART" ]]; then
+                if [[ -z "${PRIORITY_TARGET_QUEUES[$KEY]+_}" ]]; then
+                    PRIORITY_TARGET_QUEUES[$KEY]="$PRIORITY_PART"
+                    PRIORITY_TARGET_ORDER+=("$KEY")
+                else
+                    PRIORITY_TARGET_QUEUES[$KEY]+="$PRIORITY_PART"
+                fi
+            fi
+
+            # Update target queue with remaining packages
+            TARGET_QUEUES[$KEY]="$REMAINING_PART"
+        done
+
+        # Build the priority queue array from collected content
+        PRIORITY_QUEUE=()
+        if [[ -n "$PRIORITY_QUEUE_CONTENT" ]]; then
+            while IFS= read -r LINE; do
+                [[ -n "$LINE" ]] && PRIORITY_QUEUE+=("$LINE")
+            done <<<"$PRIORITY_QUEUE_CONTENT"
+        fi
+
+        # Count total prioritized packages
+        local TOTAL_PRIORITY_COUNT=${#PRIORITY_QUEUE[@]}
+        for KEY in "${!PRIORITY_TARGET_QUEUES[@]}"; do
+            local TARGET_COUNT=$(echo "${PRIORITY_TARGET_QUEUES[$KEY]}" | grep -c '^' || echo 0)
+            TOTAL_PRIORITY_COUNT=$((TOTAL_PRIORITY_COUNT + TARGET_COUNT))
+        done
+
+        # Show information about prioritized packages
+        if [ "$TOTAL_PRIORITY_COUNT" -gt 0 ]; then
+            [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && information "Priority filters matched ${TOTAL_PRIORITY_COUNT} package(s) for priority installation"
+
+            # Show detailed list in very-verbose mode
+            if [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 2 ]; then
+                if [ "${#PRIORITY_QUEUE[@]}" -gt 0 ]; then
+                    information "Prioritized packages (from main repos):"
+                    for PKG_LINE in "${PRIORITY_QUEUE[@]}"; do
+                        local PKG_NAME
+                        PKG_NAME=$(extract_package_name "$PKG_LINE")
+                        echo "  - ${PKG_NAME} (${PKG_LINE})"
+                    done
+                fi
+                for KEY in "${PRIORITY_TARGET_ORDER[@]}"; do
+                    information "Prioritized packages (from release: ${KEY}):"
+                    while IFS= read -r PKG_LINE; do
+                        [[ -z "$PKG_LINE" ]] && continue
+                        local PKG_NAME
+                        PKG_NAME=$(extract_package_name "$PKG_LINE")
+                        echo "  - ${PKG_NAME} @${KEY} (${PKG_LINE})"
+                    done <<<"${PRIORITY_TARGET_QUEUES[$KEY]}"
+                done
+            fi
+        else
+            [ "${CHECK_ONLY}" = "false" ] && [ "${VERBOSITY_LEVEL}" -ge 1 ] && warning "Priority filters did not match any packages"
+        fi
+    fi
+    # --- End Priority Queue Processing ---
+
+    # Create an array of queues; if a priority queue exists, it is inserted first.
+    ALL_QUEUES=()
+    if [ "${#PRIORITY_QUEUE[@]}" -gt 0 ]; then
+        ALL_QUEUES+=("$(printf "%s\n" "${PRIORITY_QUEUE[@]}")")
+    fi
+    ALL_QUEUES+=("${NORMAL_QUEUES[@]}")
+
+    QUEUE_NUMBER=1
+
+    # Process priority queue from main repos (without -t)
+    for QUEUE in "${ALL_QUEUES[@]}"; do
+        if [[ -z "$(echo "${QUEUE}" | xargs)" ]]; then
+            continue
+        fi
+        mapfile -t QUEUE_ARRAY < <(printf "%s\n" "${QUEUE}" | sed '/^$/d')
+        process_queue "${QUEUE_NUMBER}" "${SIMULATION_MODE}" "" "${QUEUE_ARRAY[@]}"
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+        QUEUE_NUMBER=$((QUEUE_NUMBER + 1))
+    done
+
+    # Process priority target queues (with -t release) - AFTER priority queue, BEFORE normal target queues
+    for TR in "${PRIORITY_TARGET_ORDER[@]}"; do
+        local QUEUE_CONTENT="${PRIORITY_TARGET_QUEUES[${TR}]}"
+        if [[ -z "$(echo "${QUEUE_CONTENT}" | xargs)" ]]; then
+            continue
+        fi
+        IFS=$'\n' read -r -d '' -a QUEUE_ARRAY < <(printf "%s\0" "${QUEUE_CONTENT}")
+        process_queue "${QUEUE_NUMBER}" "${SIMULATION_MODE}" "${TR}" "${QUEUE_ARRAY[@]}"
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+        QUEUE_NUMBER=$((QUEUE_NUMBER + 1))
+    done
+
+    # Process remaining target queues (with -t release)
+    for TR in "${TARGET_ORDER[@]}"; do
+        local QUEUE_CONTENT="${TARGET_QUEUES[${TR}]}"
+        if [[ -z "$(echo "${QUEUE_CONTENT}" | xargs)" ]]; then
+            continue
+        fi
+        IFS=$'\n' read -r -d '' -a QUEUE_ARRAY < <(printf "%s\0" "${QUEUE_CONTENT}")
+        process_queue "${QUEUE_NUMBER}" "${SIMULATION_MODE}" "${TR}" "${QUEUE_ARRAY[@]}"
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+        QUEUE_NUMBER=$((QUEUE_NUMBER + 1))
+    done
+
+    [ "${XTRACE_MODE}" = true ] && set +x
+
+    if [ "${SIMULATION_MODE}" = true ]; then
+        information "Simulation mode ON. No installation will be performed."
+        exit 1
+    fi
+
+    if [ "${CHECK_ONLY}" = true ]; then
+        if [ "${CHECK_FAILED}" = true ]; then
+            echo
+            echo "You can install missing packages with the command:"
+            echo "  sudo apt install ${MISSING_PACKAGES[*]}"
+            return 1
+        else
+            return 0
+        fi
+    fi
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    install_packages "$@"
+fi

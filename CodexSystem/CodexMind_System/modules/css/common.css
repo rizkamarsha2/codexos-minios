@@ -1,0 +1,124 @@
+:root,
+:host {
+  font: menu;
+  font-family: var(--opera-font-family);
+  font-size: var(--opera-default-font-size);
+  -webkit-font-smoothing: antialiased;
+}
+
+:root.transparent,
+:host-context(html.transparent) {
+  --opera-background-color: transparent;
+
+  body {
+    --opera-background-color: transparent;
+  }
+}
+
+:root.underwave,
+:host-context(html.underwave) {
+  --opera-primary-color: env(-gx-color-primary-100);
+}
+
+@font-face {
+  font-family: SourceSansPro;
+  font-style: normal;
+  src: url('chrome://op-resources/fonts/source_sans_pro_regular.otf.woff2');
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--opera-background-color);
+  color: var(--opera-font-color);
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: contain;
+  padding: 0;
+}
+
+html.underwave.popup body {
+  background-color: transparent;
+}
+
+html.zen.popup body {
+  background-color: transparent;
+}
+
+a.text-link:-webkit-any([role='link'], [href]) {
+  border-radius: 2px;
+  color: var(--opera-link-color);
+  cursor: pointer;
+  margin: 0;
+  padding: 3px 4px;
+}
+
+a.text-link:-webkit-any([role='link'], [href]):hover {
+  background-color: var(--opera-link-hover-background-color);
+}
+
+a.text-link:-webkit-any([role='link'], [href]):focus {
+  background-color: var(--opera-link-focus-background-color);
+  outline: none;
+}
+
+@layer defaults {
+  :focus {
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--opera-primary-color);
+    outline: none;
+  }
+
+  button {
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 28px;
+  }
+
+  a,
+  button,
+  input,
+  textarea {
+    font-family: var(--opera-font-family);
+  }
+}
+
+html.keyboard-focus button:focus,
+:host-context(html.keyboard-focus) button:focus {
+  box-shadow: 0 0 0 2px var(--opera-secondary-color),
+      rgb(0 0 0 / 0.5) 0 10px 20px -8px !important;
+}
+
+::selection {
+  background-color: var(--opera-primary-color);
+  color: var(--opera-primary-foreground-color);
+}
+
+html.color-theme input {
+  caret-color: var(--opera-primary-color, auto);
+
+}
+
+html.gx ::selection,
+:host-context(html.gx) ::selection {
+  background-color: var(--opera-primary-color);
+  color: env(-gx-color-text-1);
+}
+
+html.zen ::selection,
+:host-context(html.zen) ::selection {
+  background-color: var(--opera-selection-color, var(--opera-primary-color));
+}
+
+legacy-element {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+}

@@ -1,0 +1,73 @@
+# Dockerfile.build-iso
+# Containerized ISO builder for CodexOS MiniOS.
+#
+# Build the image:
+#   docker build -f Dockerfile.build-iso -t codexos-builder .
+#
+# Run the build (produces iso-output/CodexOS-*.iso on your host):
+#   docker run --privileged -v "$(pwd)/iso-output:/output" codexos-builder
+#
+# NOTE: --privileged is required for loop-device mounts inside the container.
+
+FROM debian:trixie-slim
+
+LABEL maintainer="CodexSystem AI" \
+      description="CodexOS MiniOS ISO builder"
+
+# ── Install build dependencies ────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    debootstrap \
+    squashfs-tools \
+    xorriso \
+    grub-pc-bin \
+    grub-efi-amd64-bin \
+    isolinux \
+    syslinux-common \
+    rsync \
+    python3 \
+    python3-pip \
+    git \
+    curl \
+    wget \
+    ca-certificates \
+    cpio \
+    gzip \
+    bzip2 \
+    xz-utils \
+    zstd \
+    pigz \
+    kmod \
+    util-linux \
+    mount \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Copy workspace into container ─────────────────────────────────────────────
+WORKDIR /workspace
+COPY . .
+
+# ── Set permissions ───────────────────────────────────────────────────────────
+RUN chmod +x minios-live-master/linux-live/scripts/10-codexsystem/install \
+             minios-live-master/linux-live/scripts/10-codexsystem/prepare-files.sh \
+             build-iso.sh && \
+    find minios-live-master/linux-live/scripts -name "install" -exec chmod +x {} \; && \
+    find minios-live-master/linux-live/scripts -name "postinstall" -exec chmod +x {} \; && \
+    chmod +x minios-live-master/minios-live 2>/dev/null || true
+
+# ── Sync CodexSystem files into module ────────────────────────────────────────
+RUN bash minios-live-master/linux-live/scripts/10-codexsystem/prepare-files.sh
+
+# ── Run the build ─────────────────────────────────────────────────────────────
+RUN mkdir -p /build-tmp /output
+
+CMD bash -c '\
+    cd /workspace/minios-live-master && \
+    ./minios-live build-bootstrap  --work-dir=/build-tmp && \
+    ./minios-live build-chroot     --work-dir=/build-tmp && \
+    ./minios-live build-live       --work-dir=/build-tmp && \
+    ./minios-live build-modules    --work-dir=/build-tmp && \
+    ./minios-live build-boot       --work-dir=/build-tmp && \
+    ./minios-live build-config     --work-dir=/build-tmp && \
+    ./minios-live build-iso        --work-dir=/build-tmp --output=/output && \
+    echo "==== BUILD COMPLETE ====" && \
+    ls -lh /output/*.iso 2>/dev/null && \
+    cp /output/*.iso /output/ 2>/dev/null || true'

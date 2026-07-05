@@ -1,0 +1,18 @@
+fluxbox-flux
+feh
+compton
+alsa-utils
+volumeicon-alsa
+greybird-gtk-theme
+libnotify4
+scrot
+#rofi
+xlunch
+systrayicon
+gtkask
+flux-tools
+cbatticon
+xfce4-xkb-plugin
+xfce4-panel
+qt5-gtk2-platformtheme
+librsvg2-bin +d=buster +d=bullseye +d=bionic +d=focal

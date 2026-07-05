@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -e          # exit on error
+set -o pipefail # exit on pipeline error
+set -u          # treat unset variable as error
+
+. /minioslib
+. /minios_build.conf
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+[ "${DISTRIBUTION}" = "bionic" ] && PACKAGE="firefox" || PACKAGE="firefox-esr"
+
+# Conditional statements for package installation
+if [ "${DISTRIBUTION_TYPE}" = "ubuntu" ]; then
+    # Check if software-properties-common is available in repositories
+    apt-get update
+    if apt-cache show software-properties-common >/dev/null 2>&1; then
+        apt-get install -y software-properties-common
+        add-apt-repository -y ppa:mozillateam/ppa
+        apt-get update
+    else
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys AEBDF4819BE21867 9BDB3D89CE49EC21
+        echo "deb https://ppa.launchpadcontent.net/mozillateam/ppa/ubuntu ${DISTRIBUTION} main" > /etc/apt/sources.list.d/mozillateam-ppa.list
+        apt-get update
+    fi
+    
+    # Set package priority to prevent snap installation
+    cat <<EOF >/etc/apt/preferences.d/mozilla-firefox
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+EOF
+fi
+
+# Conditional statements for package installation
+/condinapt -l "${SCRIPT_DIR}/packages.list" -c "${SCRIPT_DIR}/minios_build.conf" -m "${SCRIPT_DIR}/condinapt.map"
+if [ $? -ne 0 ]; then
+    echo "Failed to install packages."
+    exit 1
+fi
+
+# Conditional Desktop environment settings
+if [[ "${DESKTOP_ENVIRONMENT}" == *"xfce"* ]] && [ "${PACKAGE_VARIANT}" != "puzzle" ]; then
+    mkdir -p /etc/skel/.config/xfce4
+    if grep -q "xterm" /etc/skel/.config/xfce4/helpers.rc; then
+        cat <<EOF >/etc/skel/.config/xfce4/helpers.rc
+TerminalEmulator=xterm
+FileManager=Thunar
+WebBrowser=firefox
+EOF
+    elif grep -q "xfce4-terminal" /etc/skel/.config/xfce4/helpers.rc; then
+        cat <<EOF >/etc/skel/.config/xfce4/helpers.rc
+TerminalEmulator=xfce4-terminal
+FileManager=Thunar
+WebBrowser=firefox
+EOF
+    fi
+fi
+
+if [[ "${DESKTOP_ENVIRONMENT}" == *"lxqt"* ]] && [ -f /etc/skel/.config/lxqt/panel.conf ]; then
+    sed -i "46i apps\\3\\desktop=\/usr\/share\/applications\/${PACKAGE}.desktop" /etc/skel/.config/lxqt/panel.conf
+    sed -i 's/apps\\size=2/apps\\size=3/' /etc/skel/.config/lxqt/panel.conf
+fi
+
+echo "application/pdf=${PACKAGE}.desktop" >>/usr/share/applications/mimeapps.list
+
+if [ "${DISTRIBUTION_TYPE}" = "debian" ] && [[ "${DESKTOP_ENVIRONMENT}" == *"xfce"* ]]; then
+    sed -i "s,^Exec=/usr/lib,Exec=env XDG_CURRENT_DESKTOP=XFCE /usr/lib,g" /usr/share/applications/${PACKAGE}.desktop
+elif [ "${DESKTOP_ENVIRONMENT}" == "flux" ]; then
+    FILES="/usr/share/applications/firefox.desktop /usr/share/applications/firefox-esr.desktop"
+    for FILE in ${FILES}; do
+        if [ -f "${FILE}" ]; then
+            rm -f ${FILE}
+        fi
+    done
+fi
+
+echo "PACKAGE=\"${PACKAGE}\"" >/.package
+echo "VERSION=\"$(dpkg -s "${PACKAGE}" | grep Version | sed 's/Version: //g' | sed 's/:/-/g')\"" >>/.package

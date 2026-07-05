@@ -1,0 +1,13 @@
+_minios_live() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+    opts="-h --help build-bootstrap build-chroot build-live build-modules build-boot build-config build-iso remove-sources -"
+
+    # Complete commands and the range operator
+    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+
+    return 0
+}
+complete -F _minios_live minios-live

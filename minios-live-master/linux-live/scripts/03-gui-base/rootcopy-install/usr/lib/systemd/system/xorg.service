@@ -1,0 +1,16 @@
+[Unit]
+Description=X-Window
+ConditionKernelCommandLine=!text
+ConditionKernelCommandLine=!live-config.nox11autologin
+ConditionKernelCommandLine=!nox11autologin
+ConditionKernelCommandLine=!live-config.noautologin
+ConditionKernelCommandLine=!noautologin
+After=systemd-user-sessions.service
+
+[Service]
+ExecStart=/usr/bin/start-xorg.sh
+ExecStop=/usr/bin/stop-xorg.sh
+TimeoutStopSec=20s
+
+[Install]
+WantedBy=graphical.target

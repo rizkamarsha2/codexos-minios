@@ -1,0 +1,411 @@
+# Indonesian translations for minios-live package.
+# Copyright (C) 2025 MiniOS Linux.
+# This file is distributed under the same license as the minios-tools package.
+# crims0n <crims0n@minios.dev>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: minios-live 4.1.2\n"
+"Report-Msgid-Bugs-To: support@minios.dev\n"
+"POT-Creation-Date: 2026-06-21 03:09+0300\n"
+"PO-Revision-Date: 2026-06-21 00:09+0000\n"
+"Last-Translator: Muhammad Iqbal Rifai <mail@iqbalrifai.eu.org>\n"
+"Language-Team: none\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+"X-Poedit-Basepath: .\n"
+
+#: linux-live/minioslib:693 minios-live:149
+msgid "Command not found:"
+msgstr "Perintah tidak ditemukan:"
+
+#: linux-live/minioslib:2759
+msgid "grub.template.cfg template not found"
+msgstr "Template grub.template.cfg tidak ditemukan"
+
+#: minios-cmd:48 minios-cmd:140 minios-live:86
+msgid "Usage:"
+msgstr "Penggunaan:"
+
+#: minios-cmd:49
+msgid "Creates a system image with the specified parameters."
+msgstr "Membuat citra sistem dengan parameter yang ditentukan."
+
+#: minios-cmd:51
+msgid "Options:"
+msgstr "Opsi:"
+
+#: minios-cmd:53
+msgid "Config Options:"
+msgstr "Opsi Konfigurasi:"
+
+#: minios-cmd:54
+msgid "Specify the configuration file path. All other options are ignored."
+msgstr "Tentukan jalur berkas konfigurasi. Semua opsi lain diabaikan."
+
+#: minios-cmd:55
+msgid ""
+"Generate the configuration file only and do not start the build process."
+msgstr "Hasilkan berkas konfigurasi saja dan jangan memulai proses pembuatan."
+
+#: minios-cmd:57
+msgid "Build Options:"
+msgstr "Opsi Pembuatan:"
+
+#: minios-cmd:58
+msgid "Specify the build directory."
+msgstr "Tentukan direktori pembangunan."
+
+#: minios-cmd:60
+msgid "System Options:"
+msgstr "Opsi Sistem:"
+
+#: minios-cmd:61
+msgid "Specify the distribution name (e.g., 'bookworm'). REQUIRED"
+msgstr "Tentukan nama distribusi (misalnya, 'bookworm'). WAJIB"
+
+#: minios-cmd:62
+msgid "Specify the architecture (e.g., 'amd64'). REQUIRED"
+msgstr "Tentukan arsitekturnya (misalnya, 'amd64'). WAJIB"
+
+#: minios-cmd:63
+msgid "Specify the desktop environment (e.g., 'xfce'). REQUIRED"
+msgstr "Tentukan lingkungan desktop (misalnya, 'xfce'). WAJIB"
+
+#: minios-cmd:64
+msgid "Specify the package variant (e.g., 'standard'). REQUIRED"
+msgstr "Tentukan varian paket (misalnya, 'standar'). WAJIB"
+
+#: minios-cmd:65
+msgid "Specify the compression type (e.g., 'zstd')."
+msgstr "Tentukan jenis kompresi (misalnya, 'zstd')."
+
+#: minios-cmd:67
+msgid "Kernel Options:"
+msgstr "Opsi Kernel:"
+
+#: minios-cmd:68
+msgid "Specify the kernel flavour (e.g., 'none')."
+msgstr "Tentukan flavour kernel (misalnya, 'none')."
+
+#: minios-cmd:69
+msgid "Enable AUFS support in the kernel."
+msgstr "Aktifkan dukungan AUFS di kernel."
+
+#: minios-cmd:70
+msgid "Enable compilation of additional drivers during kernel installation."
+msgstr "Aktifkan kompilasi driver tambahan selama instalasi kernel."
+
+#: minios-cmd:72
+msgid "Locale and Timezone Options:"
+msgstr "Opsi Lokal dan Zona Waktu:"
+
+#: minios-cmd:73
+msgid "Specify the system locale (e.g., 'en_US')."
+msgstr "Tentukan lokal sistem (misalnya, 'en_US')."
+
+#: minios-cmd:74
+msgid "Enable multilingual support."
+msgstr "Aktifkan dukungan multibahasa."
+
+#: minios-cmd:75
+msgid "Keep all available locales."
+msgstr "Simpan semua lokal yang tersedia."
+
+#: minios-cmd:76
+msgid "Specify the timezone (e.g., 'Etc/UTC')."
+msgstr "Tentukan zona waktu (misalnya, 'Etc/UTC')."
+
+#: minios-cmd:78
+msgid "Boot Loader Options:"
+msgstr "Opsi Boot Loader:"
+
+#: minios-cmd:79
+msgid "Specify the initramfs builder ('livekit' or 'dracut')."
+msgstr "Tentukan pembuat initramfs ('livekit' atau 'dracut')."
+
+#: minios-cmd:81
+msgid "Boot Menu Options:"
+msgstr "Opsi Menu Boot:"
+
+#: minios-cmd:82
+msgid ""
+"Specify the boot menu language ('multilang' for language selection or "
+"specific language code like 'ru_RU')."
+msgstr ""
+"Tentukan bahasa menu boot ('multilang' untuk pemilihan bahasa atau kode "
+"bahasa spesifik seperti 'ru_RU')."
+
+#: minios-cmd:84
+msgid "Ubuntu Pro Options:"
+msgstr "Opsi Ubuntu Pro:"
+
+#: minios-cmd:85
+msgid ""
+"Specify Ubuntu Pro subscription token for fresh packages during build "
+"(removed from final image)."
+msgstr ""
+"Masukkan token langganan Ubuntu Pro untuk paket terbaru saat build (akan "
+"dihapus dari image akhir)."
+
+#: minios-cmd:87
+msgid "Default Settings:"
+msgstr "Pengaturan Default:"
+
+#: minios-cmd:89
+msgid "Kernel Settings:"
+msgstr "Pengaturan Kernel:"
+
+#: minios-cmd:92
+msgid "Locale & Timezone Settings:"
+msgstr "Pengaturan Lokal dan Zona Waktu:"
+
+#: minios-cmd:96
+msgid "Boot Loader Settings:"
+msgstr "Pengaturan Boot Loader:"
+
+#: minios-cmd:99
+msgid "Boot Menu Settings:"
+msgstr "Pengaturan Menu Boot:"
+
+#: minios-cmd:102 minios-live:109
+msgid "Examples:"
+msgstr "Contoh:"
+
+#: minios-cmd:104
+msgid "1. Create a MiniOS Standard system image (default settings):"
+msgstr "1. Buat citra sistem MiniOS Standar (pengaturan default):"
+
+#: minios-cmd:107
+msgid "2. Create a MiniOS Toolbox system image (default settings):"
+msgstr "2. Buat citra sistem MiniOS Toolbox (pengaturan default):"
+
+#: minios-cmd:110
+msgid ""
+"3. Create a system image with the 'bookworm' distribution, 'amd64' "
+"architecture, 'toolbox' package variant, and Russian locale:"
+msgstr ""
+"3. Buat citra sistem dengan distribusi 'bookworm', arsitektur 'amd64', "
+"varian paket 'toolbox', dan lokal Rusia:"
+
+#: minios-cmd:113
+msgid ""
+"4. Create a system image with the 'bookworm' distribution, 'amd64' "
+"architecture, 'standard' package variant and 'lxqt' desktop environment:"
+msgstr ""
+"4. Buat citra sistem dengan distribusi 'bookworm', arsitektur 'amd64', "
+"varian paket 'standar' dan lingkungan desktop 'lxqt':"
+
+#: minios-cmd:116
+msgid ""
+"5. Create a system image with 'buster' distribution, 'i386' architecture, "
+"and 'xfce' desktop environment:"
+msgstr ""
+"5. Buat citra sistem dengan distribusi 'buster', arsitektur 'i386', dan "
+"lingkungan desktop 'xfce':"
+
+#: minios-cmd:119
+msgid ""
+"6. Create a system image with the 'jammy' distribution and 'standard' "
+"package variant:"
+msgstr ""
+"6. Buat citra sistem dengan distribusi 'jammy' dan varian paket 'standar':"
+
+#: minios-cmd:122
+msgid ""
+"7. Create a system image with 'trixie' distribution, 'amd64' architecture, "
+"and 'xfce' desktop environment with multilingual support enabled:"
+msgstr ""
+"7. Buat citra sistem dengan distribusi 'trixie', arsitektur 'amd64', dan "
+"lingkungan desktop 'xfce' dengan dukungan multibahasa diaktifkan:"
+
+#: minios-cmd:125
+msgid "8. Create a system image with Russian boot menu language:"
+msgstr "8. Buat citra sistem dengan bahasa menu boot Rusia:"
+
+#: minios-cmd:128
+msgid "9. Create a system image with livekit initramfs builder:"
+msgstr "9. Buat image sistem dengan pembuat initramfs livekit:"
+
+#: minios-cmd:131
+msgid ""
+"10. Create an Ubuntu system image with Ubuntu Pro subscription for fresh "
+"packages:"
+msgstr ""
+"10. Buat image sistem Ubuntu dengan langganan Ubuntu Pro untuk paket terbaru:"
+
+#: minios-cmd:134
+msgid ""
+"has many more options available. Please refer to the above options list for "
+"more details."
+msgstr ""
+"memiliki lebih banyak pilihan yang tersedia. Silakan lihat daftar pilihan di "
+"atas untuk keterangan lebih rinci."
+
+#: minios-cmd:141
+msgid "Try '%s --help' for more information."
+msgstr "Coba '%s --help' untuk informasi lebih lanjut."
+
+#: minios-live:87
+msgid "This script builds bootable MiniOS ISO image."
+msgstr "Skrip ini membangun citra ISO MiniOS yang dapat di-boot."
+
+#: minios-live:89
+msgid "Commands:"
+msgstr "Perintah:"
+
+#: minios-live:91
+msgid "Install a minimal base system using debootstrap"
+msgstr "Instal sistem dasar minimal menggunakan debootstrap"
+
+#: minios-live:92
+msgid "Install core components and desktop environment in chroot"
+msgstr "Instal komponen inti dan lingkungan desktop di chroot"
+
+#: minios-live:93
+msgid "Create the main SquashFS image of the core system"
+msgstr "Buat image SquashFS utama dari sistem inti"
+
+#: minios-live:94
+msgid "Build additional SquashFS modules with extra packages"
+msgstr "Bangun modul SquashFS tambahan dengan paket ekstra"
+
+#: minios-live:95
+msgid "Generate boot files, initrd, and boot configuration"
+msgstr "Hasilkan file boot, initrd, dan konfigurasi boot"
+
+#: minios-live:96
+msgid "Generate configuration files for the build"
+msgstr "Hasilkan file konfigurasi untuk proses build"
+
+#: minios-live:97
+msgid "Create the final bootable ISO image"
+msgstr "Buat image ISO final yang dapat di-boot"
+
+#: minios-live:98
+msgid "Remove source files after the build"
+msgstr "Hapus file sumber setelah proses build selesai"
+
+#: minios-live:100
+msgid "How it works:"
+msgstr "Cara kerja:"
+
+#: minios-live:102
+msgid "No arguments or -h/--help: display this help (no root required)"
+msgstr ""
+"Tanpa argumen atau -h/--help: tampilkan bantuan ini (tidak perlu akses root)"
+
+#: minios-live:103
+msgid "Single command: run only that build stage (requires root)"
+msgstr ""
+"Satu perintah: jalankan hanya tahap build tersebut (memerlukan akses root)"
+
+#: minios-live:104
+msgid "start_cmd - end_cmd: run all commands in the range"
+msgstr "start_cmd - end_cmd: jalankan semua perintah dalam rentang tersebut"
+
+#: minios-live:105
+msgid "Use '- end_cmd' to run from the first command to end_cmd"
+msgstr ""
+"Gunakan '- end_cmd' untuk menjalankan dari perintah pertama hingga end_cmd"
+
+#: minios-live:106
+msgid "Use 'start_cmd -' to run from start_cmd to the last command"
+msgstr ""
+"Gunakan 'start_cmd -' untuk menjalankan dari start_cmd hingga perintah "
+"terakhir"
+
+#: minios-live:107
+msgid "Use '-' alone to run the entire build from start to finish"
+msgstr ""
+"Gunakan '-' saja untuk menjalankan seluruh proses build dari awal hingga "
+"akhir"
+
+#: minios-live:111
+msgid "Display this help and exit:"
+msgstr "Tampilkan bantuan ini dan keluar:"
+
+#: minios-live:114
+msgid "Run the build from start to finish:"
+msgstr "Jalankan build dari awal hingga akhir:"
+
+#: minios-live:117
+msgid ""
+"Start the build by building the base environment and finish by installing "
+"the entire system in chroot:"
+msgstr ""
+"Mulai build dengan membuat environment dasar dan akhiri dengan instalasi "
+"seluruh sistem di chroot:"
+
+#: minios-live:120
+msgid ""
+"Start the build from the beginning and finish by installing the entire "
+"system in chroot:"
+msgstr ""
+"Mulai build dari awal dan akhiri dengan instalasi seluruh sistem di chroot:"
+
+#: minios-live:123
+msgid "Start the build by building the base environment and run to completion:"
+msgstr ""
+"Mulai build dengan membuat environment dasar dan jalankan hingga selesai:"
+
+#: minios-live:126
+msgid "Build only ISO image from previously prepared data:"
+msgstr "Bangun hanya image ISO dari data yang sudah dipersiapkan sebelumnya:"
+
+#: linux-live/scripts/04-flux-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-1/launcher.desktop:4
+msgid "Launcher"
+msgstr "Launcher"
+
+#: linux-live/scripts/04-flux-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-1/launcher.desktop:5
+msgid "Application launcher screen"
+msgstr "Layar peluncur aplikasi"
+
+#: linux-live/scripts/04-lxqt-desktop/rootcopy-install/usr/share/applications/xterm.desktop:8
+#: linux-live/scripts/04-lxqt-desktop/rootcopy-install/usr/share/applications/xterm.desktop:9
+msgid "Terminal emulator"
+msgstr "Emulator terminal"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-3/TerminalEmulator.desktop:11
+msgid "Terminal Emulator"
+msgstr "Terminal Emulator"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-3/TerminalEmulator.desktop:12
+msgid "Use the command line"
+msgstr "Gunakan baris perintah"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-4/FileManager.desktop:12
+msgid "File Manager"
+msgstr "File Manager"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-4/FileManager.desktop:13
+msgid "Browse the file system"
+msgstr "Jelajahi sistem file"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-5/WebBrowser.desktop:12
+msgid "Web Browser"
+msgstr "Web Browser"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/skel/.config/xfce4/panel/launcher-5/WebBrowser.desktop:13
+msgid "Browse the web"
+msgstr "Jelajahi web"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/etc/xdg/autostart/volumeicon.desktop:5
+msgid "volumeicon"
+msgstr "volumeicon"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/usr/share/applications/taskmanager.desktop:2
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/usr/share/applications/taskmanager.desktop:100
+msgid "Task Manager"
+msgstr "Manajer Tugas"
+
+#: linux-live/scripts/04-xfce-desktop/rootcopy-install/usr/share/applications/taskmanager.desktop:51
+msgid "Easy to use task manager"
+msgstr "Manajer tugas yang mudah digunakan"
+
+#: linux-live/scripts/05-apps/rootcopy-install/usr/share/applications/clonezilla.desktop:2
+msgid "Clonezilla"
+msgstr "Clonezilla"

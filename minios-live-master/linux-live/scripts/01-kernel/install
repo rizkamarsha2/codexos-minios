@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -e          # exit on error
+set -o pipefail # exit on pipeline error
+set -u          # treat unset variable as error
+
+. "/minioslib"
+
+#------------------------------------------------------------------------------
+# Kernel Installation Section
+#------------------------------------------------------------------------------
+
+if [ "${KERNEL_AUFS}" = "true" ]; then
+    if [ "${DISTRIBUTION_ARCH}" = "i386" ]; then
+        # i386 architecture always uses 6.1
+        KERNEL_VERSION="6.1"
+    elif [ "${DISTRIBUTION}" = "buster" ] || [ "${DISTRIBUTION}" = "bullseye" ] || [ "${DISTRIBUTION}" = "bookworm" ] || [ "${DISTRIBUTION}" = "jammy" ]; then
+        # Older distributions use 6.1
+        KERNEL_VERSION="6.1"
+    elif [ "${DISTRIBUTION}" = "trixie" ] || [ "${DISTRIBUTION}" = "noble" ] || [ "${DISTRIBUTION}" = "resolute" ] || [ "${DISTRIBUTION}" = "sid" ]; then
+        # Newer distributions use 6.12
+        KERNEL_VERSION="6.12"
+    else
+        # Default fallback for unknown distributions
+        KERNEL_VERSION="6.1"
+    fi
+fi
+
+# AUFS kernel selection (MiniOS custom kernel)
+if [ "${KERNEL_AUFS}" = "true" ]; then
+    KERNEL_IMAGE="linux-image-${KERNEL_VERSION}-mos-${KERNEL_ARCH}"
+# Standard kernel selection
+elif [ "${DISTRIBUTION_TYPE}" = "debian" ]; then
+    if [ "${KERNEL_FLAVOUR}" = "none" ]; then
+        KERNEL_IMAGE="linux-image-${KERNEL_ARCH}"
+    else
+        KERNEL_IMAGE="linux-image-${KERNEL_FLAVOUR}-${KERNEL_ARCH}"
+    fi
+elif [ "${DISTRIBUTION_TYPE}" = "ubuntu" ]; then
+    if [ "${KERNEL_FLAVOUR}" = "none" ]; then
+        KERNEL_IMAGE="linux-image-generic"
+    else
+        KERNEL_IMAGE="linux-image-${KERNEL_FLAVOUR}"
+    fi
+fi
+
+# Create a temporary package list file for condinapt.
+TMP_PKGLIST=$(mktemp /tmp/kernel-package.list.XXXXXX)
+
+if [ "${INSTALL_KERNEL}" = "true" ]; then
+    run_with_spinner "Updating package lists" apt-get update --allow-releaseinfo-change
+    run_with_spinner "Installing initramfs-tools" apt-get install -y --no-install-recommends initramfs-tools
+    chmod -x /etc/kernel/postinst.d/initramfs-tools
+    chmod -x /etc/kernel/postrm.d/initramfs-tools
+
+    if [ -d "/rootcopy-install" ]; then
+        # Check for a local .deb package in /rootcopy-install.
+        DEB=$(cd /rootcopy-install && ls linux-image-*${KERNEL_ARCH}.deb 2>/dev/null || true | head -n 1)
+        if [ -n "${DEB}" ]; then
+            # Use the local .deb file.
+            DEB_PATH="/rootcopy-install/${DEB}"
+            echo "${DEB_PATH}" >"${TMP_PKGLIST}"
+        else
+            # No local .deb found; use repository package.
+            echo "${KERNEL_IMAGE}" >"${TMP_PKGLIST}"
+        fi
+    else
+        # No /rootcopy-install directory; install from repository.
+        echo "${KERNEL_IMAGE}" >"${TMP_PKGLIST}"
+    fi
+
+    # Call the external condinapt script.
+    /condinapt -l "${TMP_PKGLIST}" -c "/minios_build.conf" -m "/condinapt.map"
+    if [ $? -ne 0 ]; then
+        echo "Failed to install packages."
+        exit 1
+    fi
+
+    # If installing from the repository, hold the kernel package.
+    if [ ! -d "/rootcopy-install" ] || [ -z "${DEB}" ]; then
+        apt-mark hold "${KERNEL_IMAGE}" >/dev/null
+    fi
+fi
+
+# Cleanup temporary package list file.
+rm -f "${TMP_PKGLIST}"

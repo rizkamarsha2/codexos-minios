@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodexSystem AI
+GenericName=AI Desktop Environment
+Comment=Autostart CodexOS Desktop Environment
+Exec=/usr/local/bin/codexsystem-launch
+Icon=codexsystem
+Terminal=false
+Categories=Network;AI;Office;
+X-GNOME-Autostart-enabled=true

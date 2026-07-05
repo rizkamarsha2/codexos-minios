@@ -1,0 +1,116 @@
+name: Build CodexOS ISO
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'CodexSystem/**'
+      - 'minios-live-master/**'
+      - '.github/workflows/build-iso.yml'
+  workflow_dispatch:
+    inputs:
+      desktop:
+        description: 'Desktop environment'
+        required: false
+        default: 'xfce'
+        type: choice
+        options: [xfce, lxqt, flux, core]
+      variant:
+        description: 'Package variant'
+        required: false
+        default: 'standard'
+        type: choice
+        options: [minimum, standard, toolbox]
+
+jobs:
+  build-iso:
+    name: Build CodexOS MiniOS ISO
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Free disk space ──────────────────────────────────────────────────────
+      - name: Free disk space
+        run: |
+          sudo docker image prune --all --force
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"
+          df -h /
+
+      # ── Build dependencies ────────────────────────────────────────────────────
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin \
+            isolinux syslinux-common mtools rsync python3 curl wget ca-certificates \
+            cpio gzip bzip2 xz-utils zstd pigz kmod util-linux gettext
+          sudo systemctl stop docker.service || true
+
+      # ── Optional: override build.conf from workflow_dispatch inputs ───────────
+      - name: Apply build inputs (manual trigger only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          CONF=minios-live-master/linux-live/build.conf
+          sed -i "s/^DESKTOP_ENVIRONMENT=.*/DESKTOP_ENVIRONMENT=\"${{ inputs.desktop }}\"/" "$CONF"
+          sed -i "s/^PACKAGE_VARIANT=.*/PACKAGE_VARIANT=\"${{ inputs.variant }}\"/"       "$CONF"
+          echo "=== Applied Build Config ==="
+          grep -E "^DESKTOP_ENVIRONMENT|^PACKAGE_VARIANT|^DISTRIBUTION" "$CONF"
+
+      # ── Fix permissions ───────────────────────────────────────────────────────
+      - name: Set script permissions
+        run: |
+          chmod +x minios-live-master/minios-live
+          find minios-live-master/linux-live/scripts -type f \( -name "install" -o -name "postinstall" -o -name "build" -o -name "*.sh" \) -exec chmod +x {} +
+
+      # ── Sync CodexSystem & Fix Skeleton ───────────────────────────────────────
+      - name: Inject CodexSystem and Skeleton Fixes into Build Pipeline
+        run: |
+          bash minios-live-master/linux-live/scripts/10-codexsystem/prepare-files.sh || true
+          
+          POST_INSTALL_SCRIPT="minios-live-master/linux-live/scripts/postinstall"
+          mkdir -p "$(dirname "$POST_INSTALL_SCRIPT")"
+          
+          cat << 'EOF' >> "$POST_INSTALL_SCRIPT"
+          
+          # === CodexOS Injection System ===
+          echo "Configuring XFCE skeleton inside chroot..."
+          mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
+          touch /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml
+          # ================================
+          EOF
+          chmod +x "$POST_INSTALL_SCRIPT"
+
+      # ── Full build ────────────────────────────────────────────────────────────
+      - name: Build ISO
+        run: |
+          cd minios-live-master
+          sudo ./minios-live -
+          
+          echo "=== Checking Build Output ==="
+          find build/ -name "*.iso" -exec ls -lh {} \;
+
+      # ── Collect ISO ───────────────────────────────────────────────────────────
+      - name: Collect ISO
+        run: |
+          mkdir -p iso-output
+          ISO_FILES=$(find minios-live-master/build -name "*.iso")
+          if [ -z "$ISO_FILES" ]; then
+            echo "❌ ERROR: No ISO file was generated!"
+            exit 1
+          fi
+          
+          echo "$ISO_FILES" | xargs -I {} cp {} iso-output/
+          ls -lh iso-output/
+
+      # ── Upload ────────────────────────────────────────────────────────────────
+      - name: Upload ISO as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodexOS-ISO-${{ github.run_number }}-${{ inputs.desktop || 'xfce' }}
+          path: iso-output/*.iso
+          retention-days: 7
+          if-no-files-found: error

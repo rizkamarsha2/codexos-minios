@@ -1,0 +1,67 @@
+#!/bin/bash
+# CodexSystem AI — MiniOS module installer
+# Runs inside the chroot during the MiniOS build.
+
+set -e
+set -o pipefail
+set -u
+
+. /minioslib || exit 1
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PACKAGE="codexsystem"
+PACKAGE_FULLNAME="CodexSystem AI Desktop"
+CODEX_DIR="/opt/codexsystem"
+
+# ── 1. Install runtime packages ───────────────────────────────────────────────
+/condinapt -l "${SCRIPT_DIR}/packages.list" -c "${SCRIPT_DIR}/minios_build.conf" -m "${SCRIPT_DIR}/condinapt.map"
+
+# ── 2. Ensure target directory exists ─────────────────────────────────────────
+mkdir -p "${CODEX_DIR}"
+
+# ── 3. Detect systemd path ────────────────────────────────────────────────────
+if [ -d "/usr/lib/systemd/system" ]; then
+    SYSTEMD_PATH="/usr/lib/systemd"
+elif [ -d "/lib/systemd/system" ]; then
+    SYSTEMD_PATH="/lib/systemd"
+else
+    echo "ERROR: Cannot find systemd path" >&2
+    exit 1
+fi
+
+# ── 4. Write systemd service ──────────────────────────────────────────────────
+cat > "${SYSTEMD_PATH}/system/codexsystem.service" << 'EOF'
+[Unit]
+Description=CodexSystem AI HTTP Server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=live
+WorkingDirectory=/opt/codexsystem
+ExecStart=/usr/bin/python3 /opt/codexsystem/server.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# ── 5. Enable service ─────────────────────────────────────────────────────────
+systemctl enable codexsystem.service
+
+# ── 6. Set ownership and permissions ───────────────────────────────────────
+chown -R root:root "${CODEX_DIR}"
+chmod -R 755 "${CODEX_DIR}"
+chmod 755 /usr/local/bin/codexsystem-launch
+
+# ── 7. Write .package metadata ────────────────────────────────────────────────
+CODEX_VERSION="2.4"
+echo "PACKAGE=${PACKAGE}" > /.package
+echo "VERSION=${CODEX_VERSION}" >> /.package
+
+echo "[CodexSystem] Module installed successfully."

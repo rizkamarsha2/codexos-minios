@@ -1,0 +1,4 @@
+---
+- [CodexSystem Architecture](codexsystem-arch.md) — Vanilla HTML/CSS/JS + Python http.server port 5000; ai-engine.js handles all 11 AI providers with streaming; CORS proxy at POST /api/chat
+- [AI Engine Design](ai-engine-design.md) — Direct fetch for OpenAI/Groq/Gemini/Mistral/Together/OpenRouter/Ollama; server proxy required for Claude/Cohere/Qwen; config in localStorage codexmind_config
+- [Memory & RAG](memory-rag.md) — BM25+cosine hybrid RAG in rag-engine.js; localStorage keys: codex_memory_conversations/knowledge/summaries/userProfile/trainData

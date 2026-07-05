@@ -1,0 +1,70 @@
+name: trixie-xfce-ultra-amd64
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone minios-live Repository
+      run: |
+        git clone --depth 1 --branch ${{ github.event.inputs.tag }} https://github.com/minios-linux/minios-live.git
+        cd minios-live
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          sudo binutils debootstrap squashfs-tools xz-utils lz4 zstd \
+          xorriso mtools rsync grub-common gettext \
+          dosfstools curl
+
+    - name: Run build - Debian 13 XFCE Ultra amd64
+      run: |
+        cd minios-live
+        echo "Starting build for Debian 13 XFCE Ultra amd64..."
+        # Extract version from tag (remove 'v' prefix if present)
+        RELEASE_VERSION="${{ github.event.inputs.tag }}"
+        RELEASE_VERSION="${RELEASE_VERSION#v}"
+        export RELEASE_VERSION
+        echo "Building with RELEASE_VERSION: $RELEASE_VERSION"
+        sudo -E ./minios-cmd -d trixie -a amd64 -de xfce -pv ultra -dkms -kl -ib dracut
+        sudo mkdir -p build/output/trixie-xfce-ultra-amd64
+        sudo mv build/iso/*.iso build/output/trixie-xfce-ultra-amd64/
+        sudo mv build/iso/*.sha256 build/output/trixie-xfce-ultra-amd64/ || true
+        echo "Build completed for Debian 13 XFCE Ultra amd64."
+
+    - name: Archive build output - Debian 13 XFCE Ultra amd64
+      uses: actions/upload-artifact@v4
+      with:
+        name: minios-trixie-xfce-ultra-amd64
+        path: minios-live/build/output/trixie-xfce-ultra-amd64
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Set Release Tag Name
+        id: set_tag
+        run: echo "tag_name=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+
+      - name: Upload Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          repo=${{ github.repository }}
+          tag_name=${{ steps.set_tag.outputs.tag_name }}
+          for artifact_dir in ./artifacts/*; do
+            for artifact in "$artifact_dir"/*; do
+              gh release upload "$tag_name" "$artifact" --repo "$repo" --clobber
+            done
+          done

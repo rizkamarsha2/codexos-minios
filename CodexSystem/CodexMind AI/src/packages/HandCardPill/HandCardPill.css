@@ -1,0 +1,73 @@
+.hand-card-pill {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  will-change: transform, opacity, max-width;
+  contain: layout paint;
+}
+@keyframes pillAppearScale {
+  from {
+    transform: scale(0.8) translateX(var(--pill-landing-offset, 0px));
+    opacity: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  to {
+    transform: scale(1) translateX(4px);
+    opacity: 1;
+    max-width: 200px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+@keyframes pillAppearSettle {
+  from {
+    transform: scale(1) translateX(4px);
+  }
+  to {
+    transform: scale(1) translateX(0);
+  }
+}
+@keyframes pillDismiss {
+  0% {
+    opacity: 1;
+    max-width: 200px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  25% {
+    opacity: 0;
+    max-width: 200px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  100% {
+    opacity: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+@keyframes xPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.88);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-pill {
+  animation:
+    pillAppearScale 133ms cubic-bezier(0.4, 0, 0.6, 1) forwards,
+    pillAppearSettle 200ms cubic-bezier(0, 0, 0.2, 1) 133ms forwards;
+}
+.animate-pill-out {
+  animation: pillDismiss 267ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+.animate-x-press {
+  animation: xPress 266ms cubic-bezier(0.4, 0, 0.6, 1);
+}

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodexSystem AI
+GenericName=AI Desktop Environment
+Comment=Autostart CodexOS Desktop Environment (Chromium)
+Exec=/usr/local/bin/codexsystem-launch
+Icon=codexsystem
+Terminal=false
+Categories=Network;AI;Office;
+Keywords=AI;chat;assistant;desktop;
+StartupWMClass=chromium
+X-GNOME-Autostart-enabled=true
+

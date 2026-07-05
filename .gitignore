@@ -1,0 +1,16 @@
+# Large files
+zipFile.zip
+
+# Build output
+build-tmp/
+iso-output/
+minios-live-master/build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,52 @@
+/* Override Toolkit colors with theme colors in vanilla */
+:root,:host
+{
+	--opera-background-color:var(--theme-color-frame-background);
+	--opera-button-background-color:var(--theme-color-webui-button-background);
+	--opera-button-background-color-hover:var(--theme-color-webui-button-background-hover);
+	--opera-button-background-color-pressed:var(--theme-color-webui-button-background-pressed);
+	--opera-button-border-color:var(--theme-color-webui-input-border);
+	--opera-button-disabled-background-color:var(--theme-color-webui-input-background);
+	--opera-button-disabled-border-color:var(--theme-color-toolbar-text-button-border-disabled);
+	--opera-button-disabled-font-color:var(--theme-color-toolbar-button-disabled);
+	--opera-button-font-color:var(--theme-color-webui-text);
+	--opera-checkbox-border-color:var(--theme-color-webui-control-active);
+	--opera-controls-disabled-color:var(--theme-color-separator);
+	--opera-controls-primary-color:var(--opera-switch-active-color);
+	--opera-controls-primary-focus-color:var(--theme-color-webui-primary-button-background-pressed);
+	--opera-controls-primary-hover-color:var(--theme-color-webui-primary-button-background-hover);
+	--opera-controls-secondary-focus-color:var(--theme-color-webui-button-background-hover);
+	--opera-controls-secondary-hover-color:var(--theme-color-webui-button-background-pressed);
+	--opera-dark-scrollbar-color:var(--opera-button-background-color);
+	--opera-dark-scrollbar-hover-color:var(--opera-button-background-color-hover);
+	--opera-font-color:var(--theme-color-webui-text);
+	--opera-icon-background-color:var(--theme-color-webui-icon-background);
+	--opera-input-background-color:var(--theme-color-webui-input-background);
+	--opera-input-background-color-hover:var(--opera-button-background-color-hover);
+	--opera-input-background-color-pressed:var(--opera-button-background-color-pressed);
+	--opera-input-border-color:var(--theme-color-webui-input-border);
+	--opera-light-scrollbar-color:var(--opera-button-background-color);
+	--opera-light-scrollbar-hover-color:var(--opera-button-background-color-hover);
+	--opera-link-color:var(--theme-color-webui-link);
+	--opera-link-focus-background-color:var(--theme-color-webui-active-clicked);
+	--opera-link-hover-background-color:var(--theme-color-webui-active-hover);
+	--opera-modal-header-font-color:var(--theme-color-sidebar-header-content);
+	--opera-primary-button-background-color:var(--theme-color-webui-primary-button-background);
+	--opera-primary-button-background-color-hover:var(--theme-color-webui-primary-button-background-hover);
+	--opera-primary-button-background-color-pressed:var(--theme-color-webui-primary-button-background-pressed);
+	--opera-primary-button-border-color:var(--theme-color-webui-primary-button-border);
+	--opera-primary-button-font-color:var(--theme-color-webui-primary-button-font);
+	--opera-primary-color:var(--theme-color-active);
+	--opera-primary-foreground-color:var(--theme-color-accent-foreground);
+	--opera-secondary-background-color:var(--theme-color-webui-background);
+	--opera-secondary-background-hover-color: var(--theme-color-webui-button-background-hover);
+	--opera-secondary-color:var(--theme-color-webui-control-active);
+	--opera-separator-color:var(--theme-color-webui-separator);
+	--opera-switch-active-color:var(--theme-color-webui-control-active);
+	--opera-switch-active-color-hover:var(--theme-color-webui-control-active-hover);
+	--opera-switch-color:var(--theme-color-webui-switch-background);
+	--opera-switch-color-hover:var(--theme-color-webui-primary-button-background-hover);
+	--opera-vpn-off-button-background:var(--opera-button-background-color);
+	--opera-vpn-off-button-background-hover:var(--opera-button-background-color-hover);
+	--opera-vpn-off-button-background-pressed:var(--opera-button-background-color-pressed);
+}

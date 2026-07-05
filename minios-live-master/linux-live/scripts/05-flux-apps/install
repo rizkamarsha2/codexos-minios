@@ -1,0 +1,25 @@
+#!/bin/bash
+
+. /minioslib
+. /minios_build.conf
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+/condinapt -l "${SCRIPT_DIR}/packages.list" -c "${SCRIPT_DIR}/minios_build.conf" -m "${SCRIPT_DIR}/condinapt.map"
+if [ $? -ne 0 ]; then
+    echo "Failed to install packages."
+    exit 1
+fi
+
+rm -f /usr/share/applications/mousepad.desktop
+rm -f /usr/share/applications/org.xfce.mousepad.desktop
+rm -f /usr/share/applications/org.xfce.mousepad-settings.desktop
+rm -f /usr/share/applications/qalculate-gtk.desktop
+rm -f /usr/share/applications/galculator.desktop
+rm -f /usr/share/applications/pcmanfm.desktop
+rm -f /usr/share/applications/connman-gtk.desktop
+rm -f /usr/share/applications/nm-applet.desktop
+rm -f /usr/share/applications/nm-connection-editor.desktop
+rm -f /usr/share/applications/xarchiver.desktop
+rm -f /usr/share/applications/lxtask.desktop
+rm -f /usr/share/applications/pcmanfm-desktop-pref.desktop

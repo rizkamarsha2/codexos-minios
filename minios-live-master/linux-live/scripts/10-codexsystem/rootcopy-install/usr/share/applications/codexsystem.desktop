@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodexSystem AI
+GenericName=AI Desktop Environment
+Comment=Powered by CodexMind AI — 11 AI providers, RAG, web search
+Exec=/usr/local/bin/codexsystem-launch
+Icon=codexsystem
+Terminal=false
+Categories=Network;AI;Office;
+Keywords=AI;chat;assistant;desktop;
+StartupWMClass=chromium

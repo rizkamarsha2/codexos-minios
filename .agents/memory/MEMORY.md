@@ -1,0 +1,6 @@
+---
+- [CodexSystem Architecture](codexsystem-arch.md) — Vanilla HTML/CSS/JS + Python http.server port 5000; run with `cd CodexSystem && python server.py`
+- [CodexOS Desktop](codexos-desktop.md) — New desktop environment at desktop.html; window manager in desktop.js with shared global drag/resize listeners; `desktopInited` guard ensures initDesktop() runs once
+- [AI Engine Design](ai-engine-design.md) — Direct fetch for OpenAI/Groq/Gemini/Mistral/Together/OpenRouter/Ollama; server proxy required for Claude/Cohere/Qwen; config in localStorage codexmind_config
+- [Memory & RAG](memory-rag.md) — BM25+cosine hybrid RAG in rag-engine.js; localStorage keys: codex_memory_conversations/knowledge/summaries/userProfile/trainData
+- [MiniOS Integration](minios-integration.md) — CodexSystem baked into MiniOS as module 10-codexsystem; prepare-files.sh path fix: 4 levels up (not 6) from scripts/10-codexsystem to workspace root

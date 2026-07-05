@@ -1,0 +1,119 @@
+html[data-theme="opera-dark"] {
+  /**
+   * Design System for Opera One:
+   * https://www.figma.com/design/nudrsKyfXqjNMyKlmah7nN/Design-System?node-id=1-51&node-type=canvas&m=dev
+   */
+  --color-stroke-components: #41455a;
+  --color-surface-primary: #252835;
+  --color-surface-on-hover-op-60: #1c1e2c99;
+  --color-surface-on-hover: #2e3241;
+  --color-surface-input-field-bg: #252835;
+  --color-buttons-secondary: #ffffff;
+  --color-buttons-label-tertiary: #ffffffcc;
+  --color-buttons-primary-border-hover: #401acc;
+  --color-buttons-primary-border-active: #5e52e3;
+  --color-buttons-primary-bg: #5021ff;
+  --color-buttons-primary-bg-hover: #401acc;
+  --color-buttons-primary-bg-active: #5e52e3;
+  --color-buttons-primary-text: #ffffff;
+  --color-buttons-secondary-border: #484d64;
+  --color-buttons-secondary-border-hover: #323544;
+  --color-buttons-secondary-border-active: #484d64;
+  --color-buttons-secondary-bg: #484d64;
+  --color-buttons-secondary-bg-hover: #323544;
+  --color-buttons-secondary-bg-active: #484d64;
+  --color-buttons-secondary-text: #ffffff;
+  --color-buttons-tertiary-border: #41455a;
+  --color-buttons-tertiary-border-hover: #484d64;
+  --color-buttons-tertiary-border-active: #41455a;
+  --color-buttons-tertiary-bg: #242733;
+  --color-buttons-tertiary-bg-hover: #484d64;
+  --color-buttons-tertiary-bg-active: #242733;
+  --color-buttons-tertiary-text: #ffffff;
+  --color-highlight-yellow: #ff7a00;
+  --color-highlight-green: #00aba0;
+  --color-highlight-pink: #ff2f7b;
+  --color-description: #ffffffcc;
+  --color-description-settings: #2e3241;
+  --color-welcome-screen: #000000;
+  --color-midnight-blue: #0b0426;
+  --color-extra-content-bg: #1c1e2c99;
+  --color-border-unselected: #94999e;
+  --color-cobalt-blue: #5021ff;
+  --color-coral-island: #e24c5e;
+  --color-settings-gray-2: #484d65;
+  --color-solid-dolphin: #252836;
+  --color-surface-input-field: #41455a;
+  --opera-prompt-command-image-background: rgba(255, 255, 255, 0.16);
+
+  /* TODO: separate layout and colors */
+  --opera-confirmation-popup-box-shadow: 0px 0px 40px rgba(3, 6, 21, 0.53);
+  --tooltip-box-shadow: 0px 0px 8px 0px rgba(97, 104, 137, 0.8);
+  --new-chat-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.46);
+
+  --opera-chatbot-background: #000;
+  --opera-screenshot-background: var(--opera-chatbot-background);
+  --opera-chatbot-tab-view-background: #111113;
+  --opera-chatbot-input: #fff;
+  --opera-chatbot-message-title: #fff;
+  --opera-chatbot-message-highlight-menu-sep: #484d64;
+  --opera-chatbot-message-highlight-border: var(--opera-chatbot-message-highlight-menu-sep);
+  --opera-chatbot-message-highlight-active-border: #5021ff;
+  --opera-chatbot-message-highlight-bg-custom-1: #ffc01f;
+  --opera-chatbot-message-highlight-bg-custom-2: #00aba0;
+  --opera-chatbot-message-highlight-bg-custom-3: #ff2f7b;
+  --opera-chatbot-message-highlight-bg-default: rgba(37, 40, 53, 1);
+  --opera-chatbot-message-highlight-bg: #542870;
+  --opera-chatbot-message-highlight-color: #fff;
+  --opera-chatbot-message-highlight-rephrase-init-background-color-start: var(
+    --opera-chatbot-message-highlight-bg
+  );
+  --opera-chatbot-message-highlight-rephrase-init-background-color-end: transparent;
+  --opera-chatbot-message-highlight-rephrase-done-background-color-start: var(
+    --opera-chatbot-message-highlight-bg
+  );
+  --opera-chatbot-message-highlight-rephrase-done-background-color-end: transparent;
+  --opera-chatbot-to-content: #fff;
+  --opera-chatbot-from-content: #fff;
+  --opera-chatbot-form-input-bg: #252836;
+  --opera-chatbot-burger-bg: #484d65;
+  --opera-menu-input: #dae2ea;
+  --opera-menu-option: #484d65;
+  --opera-menu-option-buttons-bg: transparent;
+  --opera-menu-checked-box: #58c095;
+  --opera-menu-edit-input-color: #fff;
+  --opera-chatbot-message-active-border: rgba(80, 33, 255, 0.64);
+  --opera-menu-edit-input-bg: #484d65;
+  --opera-confirmation-popup-background: rgba(0, 0, 0, 0.67);
+  --opera-icon-color: #fff;
+  --opera-menu-footer-text: rgba(255, 255, 255, 0.8);
+  --opera-menu-footer-bg: transparent;
+  --opera-chatbot-button-primary-active: #5021ff;
+  --opera-chatbot-button-primary-hovered: #401acc;
+  --opera-chatbot-button-primary-color: #fff;
+  --opera-chatbot-button-secondary-active-border: #484d65;
+  --opera-chatbot-button-secondary-active-bg: transparent;
+  --opera-chatbot-button-secondary-hovered: #2e3241;
+  --opera-chatbot-button-secondary-color: #fff;
+  --opera-chatbot-scrollbar-thumb: #2a2e32;
+  --opera-input-scrollbar-track: #030615;
+  --opera-menu-scrollbar-track: #252836;
+  --opera-chatbot-link-bg: var(--color-neutral-90);
+  --opera-chatbot-blockquote-link-bg: rgba(255, 255, 255, 0.2);
+  --opera-chatbot-table-link-bg: rgba(255, 255, 255, 0.2);
+  --opera-chatbot-table-bg: #484d65;
+  --opera-chatbot-codebox-header-bg: #484d65;
+  --opera-icon-copy: url(@/assets/icons/copy.svg);
+  --opera-icon-done: url(@/assets/icons/edit-submit-icon.svg);
+  --opera-remove-icon: url(@/assets/icons/cross_icon.svg);
+  --opera-chatbot-scroll-down-border-color: rgb(80, 33, 255);
+  --opera-chatbot-blockquote-bg: var(--color-neutral-92-60);
+  --chat-header-bg-color: #2e3241;
+  --tooltip-bg-color: #252835;
+  --tooltip-color: #ffffff;
+
+  --aria-bg-shape-shadow-color: #181819;
+  --aria-bg-shape-fill-color: var(--color-level-1);
+
+  --skill-card-details-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3);
+}

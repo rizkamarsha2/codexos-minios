@@ -1,0 +1,324 @@
+#!/bin/bash
+
+# ----[ HEADER AND DEFINITIONS ]----
+set -e          # exit on error
+set -o pipefail # exit on pipeline error
+set -u          # treat unset variable as error
+
+MAIN_EXECUTABLE="minios-cmd"
+
+# The purpose of these variables is described in the help for the toggle_shell_options function in minioslib.
+SET_E=""
+SET_U=""
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+export TEXTDOMAIN="minios-live"
+if [[ "$SCRIPT_DIR" == "/usr/bin" ]]; then
+    export TEXTDOMAINDIR="/usr/share/locale"
+else
+    export TEXTDOMAINDIR="$SCRIPT_DIR/locale"
+    if [[ -d "$SCRIPT_DIR/po" ]]; then
+        if command -v msgfmt >/dev/null 2>&1; then
+            for po_file in "$SCRIPT_DIR"/po/*.po; do
+                [[ -f "$po_file" ]] || continue
+                lang=$(basename "$po_file" .po)
+                mo_file="$TEXTDOMAINDIR/$lang/LC_MESSAGES/minios-live.mo"
+                if [[ ! -f "$mo_file" || "$po_file" -nt "$mo_file" ]]; then
+                    mkdir -p "$(dirname "$mo_file")"
+                    msgfmt -o "$mo_file" "$po_file" 2>/dev/null || true
+                fi
+            done
+        fi
+    fi
+fi
+: "${BUILD_SCRIPTS:="linux-live"}"
+if [ "$SCRIPT_DIR" = "/usr/bin" ]; then
+    BUILD_SCRIPTS_DIR="/usr/share/minios-live"
+elif [ -d "$SCRIPT_DIR/$BUILD_SCRIPTS" ]; then
+    BUILD_SCRIPTS_DIR="$SCRIPT_DIR/$BUILD_SCRIPTS"
+fi
+
+# ----[ LIBRARY SOURCING ]----
+MINIOSLIB="$BUILD_SCRIPTS_DIR/minioslib"
+. "$MINIOSLIB" || exit 1
+
+# ----[ INTERNAL FUNCTIONS ]----
+help() {
+    console_colors
+    echo -e "${BOLD}$(gettext "Usage:") $(basename $0) [OPTIONS]${ENDCOLOR}"
+    echo "$(gettext "Creates a system image with the specified parameters.")"
+    echo ""
+    echo -e "${BOLD}$(gettext "Options:")${ENDCOLOR}"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Config Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}--config-file${ENDCOLOR} FILE                $(gettext "Specify the configuration file path. All other options are ignored.")"
+    echo -e "  ${LIGHTGREEN}--config-only${ENDCOLOR}                     $(gettext "Generate the configuration file only and do not start the build process.")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Build Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-b, --build-dir${ENDCOLOR} DIR               $(gettext "Specify the build directory.")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "System Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-d, --distribution${ENDCOLOR} NAME           $(gettext "Specify the distribution name (e.g., 'bookworm'). REQUIRED")"
+    echo -e "  ${LIGHTGREEN}-a, --architecture${ENDCOLOR} NAME           $(gettext "Specify the architecture (e.g., 'amd64'). REQUIRED")"
+    echo -e "  ${LIGHTGREEN}-de, --desktop-environment${ENDCOLOR} NAME   $(gettext "Specify the desktop environment (e.g., 'xfce'). REQUIRED")"
+    echo -e "  ${LIGHTGREEN}-pv, --package-variant${ENDCOLOR} NAME       $(gettext "Specify the package variant (e.g., 'standard'). REQUIRED")"
+    echo -e "  ${LIGHTGREEN}-c, --compression-type${ENDCOLOR} NAME       $(gettext "Specify the compression type (e.g., 'zstd').")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Kernel Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-kf, --kernel-flavour${ENDCOLOR} NAME        $(gettext "Specify the kernel flavour (e.g., 'none').")"
+    echo -e "  ${LIGHTGREEN}-aufs, --kernel-aufs${ENDCOLOR}              $(gettext "Enable AUFS support in the kernel.")"
+    echo -e "  ${LIGHTGREEN}-dkms, --kernel-build-dkms${ENDCOLOR}        $(gettext "Enable compilation of additional drivers during kernel installation.")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Locale and Timezone Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-l, --locale${ENDCOLOR} NAME                 $(gettext "Specify the system locale (e.g., 'en_US').")"
+    echo -e "  ${LIGHTGREEN}-ml, --multilingual${ENDCOLOR}               $(gettext "Enable multilingual support.")"
+    echo -e "  ${LIGHTGREEN}-kl, --keep-locales${ENDCOLOR}               $(gettext "Keep all available locales.")"
+    echo -e "  ${LIGHTGREEN}-tz, --timezone${ENDCOLOR} NAME              $(gettext "Specify the timezone (e.g., 'Etc/UTC').")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Boot Loader Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-ib, --initramfs-builder${ENDCOLOR} NAME     $(gettext "Specify the initramfs builder ('livekit' or 'dracut').")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Boot Menu Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}-mln, --menu-language${ENDCOLOR} NAME        $(gettext "Specify the boot menu language ('multilang' for language selection or specific language code like 'ru_RU').")"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Ubuntu Pro Options:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}--ubuntu-pro-token${ENDCOLOR} TOKEN          $(gettext "Specify Ubuntu Pro subscription token for fresh packages during build (removed from final image).")"
+    echo ""
+    echo -e "${BOLD}$(gettext "Default Settings:")${ENDCOLOR}"
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Kernel Settings:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}KERNEL_FLAVOUR${ENDCOLOR}=\"none\""
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Locale & Timezone Settings:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}LOCALE${ENDCOLOR}=\"en_US\""
+    echo -e "  ${LIGHTGREEN}LIVE_TIMEZONE${ENDCOLOR}=\"Etc/UTC\""
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Boot Loader Settings:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}INITRAMFS_BUILDER${ENDCOLOR}=\"dracut\""
+    echo ""
+    echo -e "${LIGHTBLUE}$(gettext "Boot Menu Settings:")${ENDCOLOR}"
+    echo -e "  ${LIGHTGREEN}MENU_LANG${ENDCOLOR}=\"multilang\""
+    echo ""
+    echo -e "${BOLD}$(gettext "Examples:")${ENDCOLOR}"
+    echo ""
+    echo -e "  $(gettext "1. Create a MiniOS Standard system image (default settings):")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de xfce -pv standard -c zstd -aufs -dkms -kl"
+    echo ""
+    echo -e "  $(gettext "2. Create a MiniOS Toolbox system image (default settings):")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de xfce -pv toolbox -c zstd -aufs -dkms -kl"
+    echo ""
+    echo -e "  $(gettext "3. Create a system image with the 'bookworm' distribution, 'amd64' architecture, 'toolbox' package variant, and Russian locale:")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de xfce -pv toolbox -l ru_RU"
+    echo ""
+    echo -e "  $(gettext "4. Create a system image with the 'bookworm' distribution, 'amd64' architecture, 'standard' package variant and 'lxqt' desktop environment:")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de lxqt -pv standard"
+    echo ""
+    echo -e "  $(gettext "5. Create a system image with 'buster' distribution, 'i386' architecture, and 'xfce' desktop environment:")"
+    echo -e "     $(basename $0) -d buster -a i386 -de xfce -pv standard"
+    echo ""
+    echo -e "  $(gettext "6. Create a system image with the 'jammy' distribution and 'standard' package variant:")"
+    echo -e "     $(basename $0) -d jammy -pv standard -a amd64 -de xfce"
+    echo ""
+    echo -e "  $(gettext "7. Create a system image with 'trixie' distribution, 'amd64' architecture, and 'xfce' desktop environment with multilingual support enabled:")"
+    echo -e "     $(basename $0) -d trixie -a amd64 -de xfce -pv standard -ml"
+    echo ""
+    echo -e "  $(gettext "8. Create a system image with Russian boot menu language:")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de xfce -pv standard -mln ru_RU"
+    echo ""
+    echo -e "  $(gettext "9. Create a system image with livekit initramfs builder:")"
+    echo -e "     $(basename $0) -d bookworm -a amd64 -de flux -pv standard -ib livekit"
+    echo ""
+    echo -e "  $(gettext "10. Create an Ubuntu system image with Ubuntu Pro subscription for fresh packages:")"
+    echo -e "     $(basename $0) -d jammy -a amd64 -de xfce -pv standard --ubuntu-pro-token YOUR_TOKEN_HERE"
+    echo ""
+    echo -e "  $(basename $0) $(gettext "has many more options available. Please refer to the above options list for more details.")"
+    exit 0
+}
+
+brief_help() {
+    console_colors
+    echo "$(gettext "Usage:") $(basename $0) [-h | --help] [OPTIONS]"
+    printf "$(gettext "Try '%s --help' for more information.")\n" "$(basename $0)"
+    exit 1
+}
+
+# ----[ COMMON SETUP ]----
+console_colors  # Set console colors
+
+if [[ $# -eq 0 ]] || [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
+    help
+fi
+
+CONFIG_ONLY="false"
+while (("$#")); do
+    case "$1" in
+    --config-file)
+        BUILD_CONF="$2"
+        shift 2
+        ;;
+    --config-only)
+        CONFIG_ONLY="true"
+        shift
+        ;;
+    -b | --build-dir)
+        BUILD_DIR="$2"
+        shift 2
+        ;;
+    -d | --distribution)
+        DISTRIBUTION="$2"
+        shift 2
+        ;;
+    -a | --architecture)
+        DISTRIBUTION_ARCH="$2"
+        shift 2
+        ;;
+    -de | --desktop-environment)
+        DESKTOP_ENVIRONMENT="$2"
+        shift 2
+        ;;
+    -pv | --package-variant)
+        PACKAGE_VARIANT="$2"
+        shift 2
+        ;;
+    -c | --compression-type)
+        COMP_TYPE="$2"
+        shift 2
+        ;;
+    -kf | --kernel-flavour)
+        KERNEL_FLAVOUR="$2"
+        shift 2
+        ;;
+    -aufs | --kernel-aufs)
+        KERNEL_AUFS=true
+        shift
+        ;;
+    -dkms | --kernel-build-dkms)
+        KERNEL_BUILD_DKMS=true
+        shift
+        ;;
+    -l | --locale)
+        LOCALE="$2"
+        shift 2
+        ;;
+    -ml | --multilingual)
+        MULTILINGUAL=true
+        shift
+        ;;
+    -kl | --keep-locales)
+        KEEP_LOCALES=true
+        shift
+        ;;
+    -tz | --timezone)
+        LIVE_TIMEZONE="$2"
+        shift 2
+        ;;
+    -ib | --initramfs-builder)
+        INITRAMFS_BUILDER="$2"
+        shift 2
+        ;;
+    -mln | --menu-language)
+        MENU_LANG="$2"
+        shift 2
+        ;;
+    --ubuntu-pro-token)
+        UBUNTU_PRO_TOKEN="$2"
+        USE_UBUNTU_PRO="true"
+        shift 2
+        ;;
+    -h | --help)
+        help
+        ;;
+    --)
+        shift
+        break
+        ;;
+    -* | --*)
+        error "Unsupported flag $1"
+        brief_help
+        ;;
+    *)
+        error "Invalid input $1"
+        brief_help
+        ;;
+    esac
+done
+
+# Default settings
+: "${BUILD_DIR:="$PWD/build"}"
+: "${BUILD_CONF:=}"
+: "${DISTRIBUTION:=}"
+: "${DISTRIBUTION_ARCH:=}"
+: "${DESKTOP_ENVIRONMENT:=}"
+: "${PACKAGE_VARIANT:=}"
+: "${COMP_TYPE:="zstd"}"
+: "${INSTALL_KERNEL:=true}"
+: "${KERNEL_FLAVOUR:="none"}"
+: "${KERNEL_AUFS:=false}"
+: "${KERNEL_BUILD_DKMS:=false}"
+: "${LOCALE:="en_US"}"
+: "${MULTILINGUAL:=false}"
+: "${KEEP_LOCALES:=false}"
+: "${LIVE_TIMEZONE:="Etc/UTC"}"
+: "${INITRAMFS_BUILDER:="dracut"}"
+: "${MENU_LANG:="multilang"}"
+: "${UBUNTU_PRO_TOKEN:=""}"
+: "${USE_UBUNTU_PRO:="false"}"
+
+# Check if mandatory parameters are set ONLY if config file is NOT provided
+if [[ -z "$BUILD_CONF" && ! -f "$BUILD_CONF" && (-z "$DISTRIBUTION" || -z "$DISTRIBUTION_ARCH" || -z "$DESKTOP_ENVIRONMENT" || -z "$PACKAGE_VARIANT") ]]; then
+    error "The following options are required: -d/--distribution, -a/--architecture, -de/--desktop-environment, -pv/--package-variant"
+    brief_help
+fi
+
+allow_root_only
+
+# ----[ MAIN ]----
+
+WORK_DIR="$BUILD_DIR/$DISTRIBUTION-$PACKAGE_VARIANT-$DISTRIBUTION_ARCH"
+
+if [ "$CONFIG_ONLY" != "true" ]; then
+    trap 'mountpoint -q "$WORK_DIR" && unmount_dirs "$WORK_DIR"' EXIT
+fi
+[ -n "$BUILD_CONF" ] && BUILD_CONF=$(realpath "$BUILD_CONF")
+
+if [ "$CONFIG_ONLY" == "true" ]; then
+    CONFIG_TARGET="${BUILD_CONF:-"$BUILD_DIR/build.conf"}"
+    mkdir -p "$(dirname "$CONFIG_TARGET")"
+    if [ -f "$SCRIPT_DIR/$BUILD_SCRIPTS/build.conf" ]; then
+        cp "$SCRIPT_DIR/$BUILD_SCRIPTS/build.conf" "$CONFIG_TARGET"
+    else
+        cp "/etc/minios-live/build.conf" "$CONFIG_TARGET"
+    fi
+    if bash -n "$CONFIG_TARGET"; then
+        update_config "$CONFIG_TARGET"
+    fi
+    exit 0
+fi
+
+if [ -n "$BUILD_CONF" ] && [ ! -f "$BUILD_CONF" ]; then
+    error "The configuration file ${CYAN}$BUILD_CONF${ENDCOLOR} does not exist. Please provide a valid configuration file."
+    exit 1
+fi
+
+mkdir -p "$WORK_DIR"
+if [ -n "$BUILD_CONF" ] && [ -f "$BUILD_CONF" ]; then
+    cp "$BUILD_CONF" "$WORK_DIR/build.conf"
+elif [ -f "$SCRIPT_DIR/$BUILD_SCRIPTS/build.conf" ]; then
+    cp "$SCRIPT_DIR/$BUILD_SCRIPTS/build.conf" "$WORK_DIR/build.conf"
+else
+    cp "/etc/minios-live/build.conf" "$WORK_DIR/build.conf"
+fi
+
+if bash -n "$WORK_DIR/build.conf"; then
+    update_config "$WORK_DIR/build.conf"
+else
+    error "The configuration file ${BOLD}$WORK_DIR/build.conf${ENDCOLOR} contains syntax errors. Please make the necessary changes and try again."
+    exit 1
+fi
+
+# Execute minios-live script.
+BUILD_DIR="$BUILD_DIR" \
+    WORK_DIR="$WORK_DIR" \
+    BUILD_CONF="$WORK_DIR/build.conf" \
+    MAIN_EXECUTABLE="$MAIN_EXECUTABLE" \
+    "$SCRIPT_DIR/minios-live" -

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="codexsystem-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodexMind AI — CodexSystem</title>
+  <link rel="icon" href="assets_logo/logo.png" type="image/png">
+  <link rel="stylesheet" href="codexmind.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="cm-sidebar" id="cm-sidebar">
+    <div class="cm-sidebar-header">
+      <img src="assets_logo/logo.png" alt="CodexMind AI" class="cm-sidebar-logo">
+      <div class="cm-sidebar-brand">
+        <span class="cm-brand-name">CodexMind AI</span>
+        <span class="cm-brand-sub">by CodexSystem</span>
+      </div>
+      <button class="cm-sidebar-toggle" id="cm-sidebar-toggle" title="Tutup sidebar">
+        <img src="icons/menu.svg" alt="Menu" class="icon-svg light-icon">
+      </button>
+    </div>
+
+    <button class="cm-new-chat" id="cm-new-chat">
+      <img src="icons/add.svg" alt="Baru" class="icon-svg light-icon">
+      <span>Percakapan Baru</span>
+    </button>
+
+    <!-- AI MODES -->
+    <div class="cm-section-label">Mode AI</div>
+    <nav class="cm-modes">
+      <button class="cm-mode-btn active" data-mode="chat">
+        <span class="cm-mode-icon">&#128172;</span>
+        <span class="cm-mode-label">Chat</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="research">
+        <span class="cm-mode-icon">&#128270;</span>
+        <span class="cm-mode-label">Research</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="deep_research">
+        <span class="cm-mode-icon">&#128300;</span>
+        <span class="cm-mode-label">Deep Research</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="local_research">
+        <span class="cm-mode-icon">&#127758;</span>
+        <span class="cm-mode-label">Local Research</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="minute_research">
+        <span class="cm-mode-icon">&#9201;</span>
+        <span class="cm-mode-label">1 Minute Research</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="make">
+        <span class="cm-mode-icon">&#128736;</span>
+        <span class="cm-mode-label">Make</span>
+      </button>
+      <button class="cm-mode-btn" data-mode="do">
+        <span class="cm-mode-icon">&#9889;</span>
+        <span class="cm-mode-label">Do</span>
+      </button>
+    </nav>
+
+    <div class="cm-section-label">Neon Mode</div>
+    <nav class="cm-modes">
+      <button class="cm-mode-btn neon" data-mode="neon_chat">
+        <span class="cm-mode-icon">&#127774;</span>
+        <span class="cm-mode-label">Neon Chat</span>
+      </button>
+      <button class="cm-mode-btn neon" data-mode="neon_do">
+        <span class="cm-mode-icon">&#128161;</span>
+        <span class="cm-mode-label">Neon Do</span>
+      </button>
+      <button class="cm-mode-btn neon" data-mode="neon_make">
+        <span class="cm-mode-icon">&#10024;</span>
+        <span class="cm-mode-label">Neon Make</span>
+      </button>
+    </nav>
+
+    <div class="cm-section-label">Alat Khusus</div>
+    <nav class="cm-modes">
+      <button class="cm-mode-btn tool" data-mode="code_review">
+        <span class="cm-mode-icon">&#128196;</span>
+        <span class="cm-mode-label">Code Review</span>
+      </button>
+      <button class="cm-mode-btn tool" data-mode="creative_kick">
+        <span class="cm-mode-icon">&#127912;</span>
+        <span class="cm-mode-label">Creative Kick</span>
+      </button>
+      <button class="cm-mode-btn tool" data-mode="priority_matrix">
+        <span class="cm-mode-icon">&#128202;</span>
+        <span class="cm-mode-label">Priority Matrix</span>
+      </button>
+      <button class="cm-mode-btn tool" data-mode="wallet_wise">
+        <span class="cm-mode-icon">&#128176;</span>
+        <span class="cm-mode-label">Wallet Wise</span>
+      </button>
+    </nav>
+
+    <!-- CHAT HISTORY -->
+    <div class="cm-section-label">Riwayat</div>
+    <div class="cm-history" id="cm-history">
+      <!-- dynamic -->
+    </div>
+
+    <div class="cm-sidebar-footer">
+      <a href="index.html" class="cm-back-link">
+        &#8592; Kembali ke CodexSystem
+      </a>
+      <div class="cm-version">CodexSystem v2.1.0</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT AREA -->
+  <main class="cm-main" id="cm-main">
+
+    <!-- TOPBAR -->
+    <header class="cm-topbar">
+      <div class="cm-topbar-left">
+        <button class="cm-topbar-menu" id="cm-topbar-menu">
+          <img src="icons/menu.svg" alt="Menu" class="icon-svg light-icon">
+        </button>
+        <div class="cm-mode-indicator" id="cm-mode-indicator">
+          <span class="cm-mode-icon-small">&#128172;</span>
+          <span id="cm-mode-name">Chat</span>
+        </div>
+      </div>
+      <div class="cm-topbar-center">
+        <img src="assets_logo/logo.png" alt="CodexMind AI" class="cm-topbar-logo">
+        <span class="cm-topbar-title">CodexMind AI</span>
+      </div>
+      <div class="cm-topbar-right">
+        <button class="cm-topbar-btn" id="cm-user-btn" title="Akun">
+          <img src="icons/user.svg" alt="User" class="icon-svg light-icon">
+        </button>
+        <a href="index.html" class="cm-topbar-btn" title="Kembali ke CodexSystem">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- MESSAGES -->
+    <div class="cm-messages" id="cm-messages">
+      <!-- Welcome screen -->
+      <div class="cm-welcome" id="cm-welcome">
+        <img src="assets_logo/logo2.gif" alt="CodexMind AI" class="cm-welcome-gif"
+             onerror="this.src='assets_logo/logo.png'">
+        <h1 class="cm-welcome-title">
+          <span class="cm-welcome-gradient" id="cm-welcome-text">Selamat datang di CodexMind AI</span>
+        </h1>
+        <p class="cm-welcome-sub">Asisten AI terintegrasi dalam platform <strong>CodexSystem</strong>.<br>Pilih mode AI di kiri atau mulai percakapan langsung.</p>
+        <div class="cm-suggestion-grid">
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#128200;</span>
+            <span>Analisis data penjualan saya</span>
+          </button>
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#128187;</span>
+            <span>Buat kode Python untuk API REST</span>
+          </button>
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#128196;</span>
+            <span>Ringkas dokumen ini untukku</span>
+          </button>
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#127760;</span>
+            <span>Terjemahkan teks ke Bahasa Inggris</span>
+          </button>
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#128270;</span>
+            <span>Riset topik: kecerdasan buatan</span>
+          </button>
+          <button class="cm-suggestion" onclick="sendSuggestion(this)">
+            <span class="cm-sug-icon">&#127912;</span>
+            <span>Bantu saya menulis konten kreatif</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div class="cm-input-area" id="cm-input-area">
+      <!-- HAND CARD PILLS (quick actions) -->
+      <div class="cm-pills-row" id="cm-pills-row">
+        <button class="hand-card-pill animate-pill" data-action="attach">
+          <img src="icons/attach.svg" alt="Lampirkan" class="icon-svg light-icon pill-icon">
+          <span>Lampirkan</span>
+        </button>
+        <button class="hand-card-pill animate-pill" data-action="note">
+          <img src="icons/note.svg" alt="Catatan" class="icon-svg light-icon pill-icon">
+          <span>Catatan</span>
+        </button>
+        <button class="hand-card-pill animate-pill" data-action="mic">
+          <img src="icons/mic.svg" alt="Suara" class="icon-svg light-icon pill-icon">
+          <span>Suara</span>
+        </button>
+      </div>
+
+      <div class="cm-input-box" id="cm-input-box">
+        <button class="cm-attach-btn" title="Lampirkan file">
+          <img src="icons/attach.svg" alt="Attach" class="icon-svg light-icon">
+        </button>
+        <div class="cm-textarea-wrap">
+          <textarea
+            class="cm-textarea"
+            id="cm-textarea"
+            placeholder="Kirim pesan ke CodexMind AI..."
+            rows="1"
+          ></textarea>
+        </div>
+        <div class="cm-input-actions">
+          <button class="cm-mic-btn" title="Pesan suara">
+            <img src="icons/mic.svg" alt="Mic" class="icon-svg light-icon">
+          </button>
+          <button class="cm-send-btn" id="cm-send-btn" title="Kirim">
+            <img src="icons/send.svg" alt="Kirim" class="icon-svg light-icon">
+          </button>
+        </div>
+      </div>
+
+      <div class="cm-input-footer">
+        <span class="cm-input-disclaimer">CodexMind AI dapat membuat kesalahan. Selalu verifikasi informasi penting.</span>
+        <span class="cm-input-model" id="cm-input-model">CodexMind Chat</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Hidden file input untuk attach -->
+  <input type="file" id="cm-file-input" multiple accept="*/*" style="display:none">
+  <!-- Hidden TTS audio indicator -->
+  <div id="cm-tts-indicator" style="display:none;position:fixed;bottom:80px;right:24px;z-index:9999;
+    background:rgba(80,33,255,.15);border:1px solid rgba(80,33,255,.4);color:#7b5eff;
+    padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;backdrop-filter:blur(10px)">
+    🔊 Membaca...
+  </div>
+  <!-- AI Engine + RAG + Web Search + Taskbar -->
+  <link rel="stylesheet" href="taskbar.css">
+  <script src="ai-engine.js"></script>
+  <script src="rag-engine.js"></script>
+  <script src="web-search.js"></script>
+  <script src="codexmind.js"></script>
+  <script src="taskbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+# ========================================
+# == Base (All Editions)                ==
+# ========================================
+#apt-transport-https
+libterm-readline-gnu-perl
+minios-tools
+minios-live-config
+minios-live-config-systemd
+minios-live-config-doc
+minios-welcome
+user-setup
+gpg
+gnupg
+file
+cpio
+kbd
+keyboard-configuration
+locales
+console-setup
+linux-base
+xz-utils
+network-manager
+netplan.io +d=jammy +d=noble +d=resolute
+dracut-core +ib=dracut
+
+# ========================================
+# == Additional Packages (All Editions) ==
+# ========================================
+pciutils
+usbutils
+psmisc
+hdparm
+sdparm
+mdadm
+smartmontools
+dosfstools
+ntfs-3g
+btrfs-progs
+gettext-base || gettext
+xorriso
+squashfs-tools
+zstd
+bash-completion -{pv=minimum&de=xfce}
+ssh
+eject
+mc -{pv=minimum&de=xfce}
+zip -{pv=minimum&de=xfce}
+unzip -{pv=minimum&de=xfce}
+man-db -{pv=minimum&de=xfce}
+gpm -{pv=minimum&de=xfce}
+rfkill
+usb-modeswitch
+htop -{de=flux|pv=minimum&de=xfce}
+systemd-timesyncd -d=buster
+systemd-timesyncd@buster-backports +d=buster
+polkitd || policykit-1
+pkexec || policykit-1
+tlp -{pv=minimum&de=xfce}
+wpasupplicant
+
+# ========================================
+# == Standard Edition (and above)       ==
+# ========================================
+dnsmasq-base -pv=minimum
+lz4 -pv=minimum || liblz4-tools -pv=minimum
+ncdu -pv=minimum
+bzip2 -pv=minimum
+lsof -pv=minimum
+xfsprogs -pv=minimum
+exfatprogs -pv=minimum || exfat-utils -pv=minimum && exfat-fuse -pv=minimum
+cifs-utils -pv=minimum
+nfs-common -pv=minimum
+ipset -pv=minimum
+fuse3 -pv=minimum || fuse -pv=minimum
+libfuse2 -pv=minimum
+dynfilefs -pv=minimum -d=buster -d=bullseye
+parted -pv=minimum
+7zip -pv=minimum
+whois -pv=minimum
+genisoimage -pv=minimum
+
+# ========================================
+# == Toolbox Edition (and above)        ==
+# ========================================
+gpart +pv=toolbox +pv=ultra
+mtools +pv=toolbox +pv=ultra
+gddrescue +pv=toolbox +pv=ultra
+rsync +pv=toolbox +pv=ultra
+netcat +pv=toolbox +pv=ultra
+netcat-openbsd +pv=toolbox +pv=ultra
+zfsutils-linux +kbd=true -kf=none +pv=toolbox +pv=ultra
+davfs2 +pv=toolbox +pv=ultra
+f2fs-tools +pv=toolbox +pv=ultra
+hfsutils +pv=toolbox +pv=ultra
+hfsprogs +pv=toolbox +pv=ultra
+jfsutils +pv=toolbox +pv=ultra
+reiserfsprogs +pv=toolbox +pv=ultra
+reiser4progs +pv=toolbox +pv=ultra
+udftools +pv=toolbox +pv=ultra
+nilfs-tools +pv=toolbox +pv=ultra
+sshfs +pv=toolbox +pv=ultra
+lvm2 +pv=toolbox +pv=ultra
+cryptsetup +pv=toolbox +pv=ultra
+pv +pv=toolbox +pv=ultra
+pigz +pv=toolbox +pv=ultra
+pixz +pv=toolbox +pv=ultra
+plzip +pv=toolbox +pv=ultra
+lrzip +pv=toolbox +pv=ultra
+lshw +pv=toolbox +pv=ultra
+lzop +pv=toolbox +pv=ultra
+pbzip2 +pv=toolbox +pv=ultra
+clonezilla +pv=toolbox +pv=ultra
+partclone +pv=toolbox +pv=ultra
+partimage +pv=toolbox +pv=ultra
+testdisk +pv=toolbox +pv=ultra
+open-vm-tools +pv=toolbox +pv=ultra
+qemu-guest-agent +pv=toolbox +pv=ultra
+virtualbox-guest-utils +pv=toolbox +pv=ultra +d=trixie +d=sid
+hyperv-daemons +pv=toolbox +pv=ultra
+iw +pv=toolbox +pv=ultra
+chntpw +pv=toolbox +pv=ultra
+screen +pv=toolbox +pv=ultra
+nmon +pv=toolbox +pv=ultra
+qemu-system-x86 +pv=toolbox +pv=ultra
+qemu-utils +pv=toolbox +pv=ultra
+libvirt-daemon-system +pv=toolbox +pv=ultra
+memtest86+ +pv=toolbox +pv=ultra
+virt-what +pv=toolbox +pv=ultra
+zulucrypt-cli +pv=toolbox +pv=ultra
+zulumount-cli +pv=toolbox +pv=ultra
+reglookup +pv=toolbox +pv=ultra
+cabextract +pv=toolbox +pv=ultra
+nmap +pv=toolbox +pv=ultra
+ncat +pv=toolbox +pv=ultra
+ndiff +pv=toolbox +pv=ultra
+hexedit +pv=toolbox +pv=ultra
+xmount +pv=toolbox +pv=ultra
+aria2 +pv=toolbox +pv=ultra
+inxi +pv=toolbox +pv=ultra
+fio +pv=toolbox +pv=ultra
+bonnie++ +pv=toolbox +pv=ultra
+iozone3 +pv=toolbox +pv=ultra
+iperf3 +pv=toolbox +pv=ultra
+stress +pv=toolbox +pv=ultra
+sysbench +pv=toolbox +pv=ultra
+#extlinux +pv=toolbox +pv=ultra
+
+# ========================================
+# == Ultra Edition (Only)               ==
+# ========================================
+open-iscsi +pv=ultra
+tgt +pv=ultra
+uidmap +pv=ultra
+docker-ce +pv=ultra && docker-ce-cli +pv=ultra && containerd.io +pv=ultra && docker-buildx-plugin +pv=ultra && docker-compose-plugin +pv=ultra || docker.io +pv=ultra && docker-compose +pv=ultra
+lazydocker +pv=ultra
+selinux-policy-default +pv=ultra

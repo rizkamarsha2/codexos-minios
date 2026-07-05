@@ -1,0 +1,21 @@
+/**
+ * Copyright © 2026 Opera Norway AS. All rights reserved.
+ *
+ * This file is an original work developed by Opera.
+ */
+
+@keyframes cardReflowAppear {
+  from {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.card-reflow-appear {
+  animation: cardReflowAppear 200ms ease-in-out forwards;
+  transform-origin: center center;
+}

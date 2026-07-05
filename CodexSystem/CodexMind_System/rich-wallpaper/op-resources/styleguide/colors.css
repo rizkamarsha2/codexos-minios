@@ -1,0 +1,199 @@
+:root,
+:host {
+  --opera-primary-color: #0199ff;
+  --opera-primary-color-rgb: 1, 153, 255;
+  --opera-primary-foreground-color: var(--opera-font-color);
+
+  --opera-secondary-color: #0199ffa0;
+  --opera-error-color: #f54a4b;
+
+  --opera-controls-primary-color: var(--opera-primary-color);
+  --opera-controls-primary-hover-color: #0084ff;
+  --opera-controls-primary-focus-color: #0077e6;
+
+  --opera-font-color: var(--theme-text-color, #121314);
+  --opera-secondary-font-color: #6a6a75;
+  --opera-modal-header-font-color: #6a6a75;
+  --opera-modal-font-color: #121314;
+  --opera-hint-font-color: #6e767a;
+  --opera-shadow-color: var(--theme-shadow-color, transparent);
+
+  --opera-focus-outline-color: #0199ff66;
+
+  --opera-controls-danger-color: #fa1e4e;
+  --opera-controls-danger-hover-color: #e01b46;
+  --opera-controls-danger-focus-color: #c7183e;
+
+  --opera-controls-secondary-color: #ffffff;
+  --opera-controls-secondary-hover-color: #d8e2eb;
+  --opera-controls-secondary-focus-color: #b2cce3;
+
+  --opera-controls-disabled-color: #d8e2eb;
+
+  --opera-icon-color: #2a343d;
+  --opera-icon-disabled-color: #b6c6d3;
+  --opera-icon-background-color: var(--opera-background-color);
+
+  --opera-background-color: #eef3f7;
+  --opera-secondary-background-color: #ffffff;
+  --opera-secondary-background-hover-color: #eef3f7;
+
+  --opera-link-color: #007acc;
+  --opera-link-hover-background-color: #007acc14;
+  --opera-link-focus-background-color: #007acc3d;
+
+  --opera-separator-color: var(--opera-controls-disabled-color);
+
+  --opera-folder-background-color: #e6eef5;
+
+  --opera-tile-background-color: #ffffff;
+  --opera-tile-text-color: #000000;
+
+  --opera-dark-scrollbar-color: #99999955;
+  --opera-dark-scrollbar-hover-color: #66666688;
+  --opera-light-scrollbar-color: #66666655;
+  --opera-light-scrollbar-hover-color: #99999988;
+
+  --opera-startpage-secondary-background-color: #e7edf1;
+  --opera-startpage-secondary-text-color: #5021ff;
+
+  --opera-vpn-off-button-background: linear-gradient(
+    180deg,
+    #c3cad0 0%,
+    #8997a3 100%
+  );
+  --opera-vpn-off-button-background-hover: linear-gradient(
+    180deg,
+    #c3cad0 0%,
+    #8997a3 100%
+  );
+  --opera-vpn-off-button-background-pressed: linear-gradient(
+    180deg,
+    #c3cad0 0%,
+    #8997a3 100%
+  );
+
+  --opera-accent-color-r: env(-opera-accent-color-r);
+  --opera-accent-color-g: env(-opera-accent-color-g);
+  --opera-accent-color-b: env(-opera-accent-color-b);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host {
+    --opera-primary-color: #45b0e6;
+    --opera-primary-color-rgb: 69, 176, 230;
+
+    --opera-secondary-color: #45b0e6a0;
+    --opera-error-color: #ff776c;
+
+    --opera-controls-primary-color: var(--opera-primary-color);
+    --opera-controls-primary-hover-color: #5abfed;
+    --opera-controls-primary-focus-color: #6fcef3;
+
+    --opera-font-color: var(--theme-text-color, #fafafa);
+    --opera-secondary-font-color: var(--theme-secondary-text-color, #a8abad);
+    --opera-modal-font-color: #fafafa;
+    --opera-hint-font-color: #b4c1cc;
+
+    --opera-focus-outline-color: #45b0e67a;
+
+    --opera-controls-secondary-color: #2a343d;
+    --opera-controls-secondary-hover-color: #3e4852;
+    --opera-controls-secondary-focus-color: #4d647a;
+
+    --opera-controls-disabled-color: #3e4852;
+
+    --opera-icon-color: #ffffff;
+    --opera-icon-disabled-color: var(--opera-separator-color);
+    --opera-icon-background-color: var(--opera-input-background-color);
+
+    --opera-background-color: #101214;
+    --opera-secondary-background-color: #171b1f;
+    --opera-secondary-background-hover-color: #222325;
+
+    --opera-link-color: #96deff;
+    --opera-link-hover-background-color: #96ddff3d;
+    --opera-link-focus-background-color: #96ddff7a;
+
+    --opera-folder-background-color: #2a343d;
+
+    --opera-tile-background-color: var(--opera-folder-background-color);
+    --opera-tile-text-color: #f0f0f0;
+
+    --opera-startpage-secondary-background-color: #484d65;
+    --opera-startpage-secondary-text-color: #ffffff;
+
+    --opera-checkbox-border-color: #484d65;
+  }
+}
+
+:root,
+:host-context(html) {
+  --opera-primary-color: #5021ff;
+  --opera-secondary-background-hover-color: #bbcbd799;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host-context(html) {
+    --opera-primary-color: #5021ff;
+
+    --opera-secondary-background-color: #252836;
+    --opera-secondary-background-hover-color: #484d64;
+  }
+}
+
+:root.gx,
+:host-context(html.gx) {
+  --opera-secondary-font-color: env(-gx-color-secondary-40);
+  --opera-font-color: env(-gx-color-secondary-00);
+
+  --opera-tile-background-color: env(-gx-color-secondary-96);
+  --opera-tile-border-color: env(-gx-color-secondary-20-80);
+  --opera-folder-background-color: env(-gx-color-secondary-24);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.gx,
+  :host-context(html.gx) {
+    --opera-secondary-font-color: env(-gx-color-secondary-76);
+    --opera-font-color: env(-gx-color-text-2);
+
+    --opera-tile-background-color: env(-gx-color-secondary-16);
+    --opera-folder-background-color: env(-gx-color-secondary-12);
+  }
+}
+
+:root.zen,
+:host-context(html.zen) {
+  --opera-modal-font-color: #ffffff;
+  --opera-background-color: rgb(249 249 249 / 1);
+  --opera-secondary-background-color: rgb(255 255 255 / 0.48);
+  --opera-secondary-font-color: rgb(17 17 17 / 1);
+  --opera-selection-color: #b8e0d9;
+  --opera-primary-color: rgb(17 17 17 / 0.88);
+  --opera-font-color: rgb(17 17 17 / 0.8);
+}
+
+:root.neon,
+:host-context(html.neon) {
+  --opera-primary-color: #1877d7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.neon,
+  :host-context(html.neon) {
+    --opera-secondary-background-color: #232629;
+  }
+
+  :root.zen,
+  :host-context(html.zen) {
+    --opera-background-color: rgb(39 39 39);
+    --opera-secondary-background-color: rgb(241 241 241 / 0.08);
+    --opera-secondary-font-color: rgb(255 255 255 / 1);
+    --opera-selection-color: #b8e0d9;
+    --opera-primary-color: rgb(255 255 255 / 0.96);
+    --opera-font-color: rgb(255 255 255 / 0.72);
+  }
+}

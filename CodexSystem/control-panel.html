@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="codexsystem-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Panel — CodexSystem</title>
+  <link rel="icon" href="assets_logo/logo.png" type="image/png">
+  <link rel="stylesheet" href="codexmind.css">
+  <link rel="stylesheet" href="control-panel.css">
+  <link rel="stylesheet" href="taskbar.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<header class="cp-topnav">
+  <div class="cp-topnav-left">
+    <img src="assets_logo/logo.png" alt="CodexSystem" class="cp-topnav-logo">
+    <span class="cp-topnav-title">Control Panel</span>
+    <span class="cp-topnav-sub">CodexSystem</span>
+  </div>
+  <div class="cp-topnav-right">
+    <a href="/" class="cp-nav-btn">🏠 Home</a>
+    <a href="/codexmind.html" class="cp-nav-btn">🧠 CodexMind AI</a>
+  </div>
+</header>
+
+<div class="cp-layout">
+
+  <!-- SIDEBAR NAV -->
+  <nav class="cp-sidebar">
+    <div class="cp-nav-group">
+      <div class="cp-nav-label">AI ENGINE</div>
+      <button class="cp-nav-item active" data-section="api-keys">🔑 API Keys</button>
+      <button class="cp-nav-item" data-section="models">🤖 Model Manager</button>
+      <button class="cp-nav-item" data-section="rag">📚 RAG Engine</button>
+      <button class="cp-nav-item" data-section="memory">🧠 Memory System</button>
+    </div>
+    <div class="cp-nav-group">
+      <div class="cp-nav-label">INTERFACE</div>
+      <button class="cp-nav-item" data-section="taskbar">📌 Taskbar</button>
+      <button class="cp-nav-item" data-section="appearance">🎨 Appearance</button>
+    </div>
+    <div class="cp-nav-group">
+      <div class="cp-nav-label">SYSTEM</div>
+      <button class="cp-nav-item" data-section="training">🎓 Training Data</button>
+      <button class="cp-nav-item" data-section="stats">📊 Statistics</button>
+      <button class="cp-nav-item" data-section="about">ℹ️ About</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="cp-main">
+
+    <!-- ═══ API KEYS ═══ -->
+    <section class="cp-section active" id="section-api-keys">
+      <div class="cp-section-header">
+        <h2>🔑 API Keys</h2>
+        <p>Masukkan API key untuk setiap provider. Semua key disimpan lokal di browser Anda.</p>
+      </div>
+      <div id="api-keys-container">
+        <!-- dynamically rendered -->
+      </div>
+    </section>
+
+    <!-- ═══ MODEL MANAGER ═══ -->
+    <section class="cp-section" id="section-models">
+      <div class="cp-section-header">
+        <h2>🤖 Model Manager</h2>
+        <p>Pilih provider dan model aktif yang digunakan CodexMind AI.</p>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card-title">Provider & Model Aktif</div>
+        <div class="cp-form-row">
+          <label class="cp-label">Provider Aktif</label>
+          <select class="cp-select" id="active-provider-select">
+          </select>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Model Aktif</label>
+          <select class="cp-select" id="active-model-select">
+          </select>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Temperature</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <input type="range" id="temperature-range" min="0" max="2" step="0.1" value="0.7" style="flex:1;accent-color:#5021ff">
+            <span id="temperature-val" style="min-width:30px;color:#a99fff;font-weight:700">0.7</span>
+          </div>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Max Tokens</label>
+          <input type="number" class="cp-input" id="max-tokens-input" value="4096" min="256" max="128000" step="256">
+        </div>
+        <button class="cp-btn-primary" id="save-model-btn">💾 Simpan Pengaturan Model</button>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">Status Provider</div>
+        <div id="provider-status-list">
+          <!-- dynamically rendered -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ RAG ENGINE ═══ -->
+    <section class="cp-section" id="section-rag">
+      <div class="cp-section-header">
+        <h2>📚 RAG Engine</h2>
+        <p>Retrieval Augmented Generation — tambah pengetahuan kustom ke CodexMind AI.</p>
+        <div class="cp-badge-row">
+          <span class="cp-badge green">BM25 Active</span>
+          <span class="cp-badge blue">MiniLM v6 Mode</span>
+          <span class="cp-badge purple">Hybrid Retrieval</span>
+        </div>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card-title">📤 Upload Dokumen ke Knowledge Base</div>
+        <div class="cp-dropzone" id="rag-dropzone">
+          <div class="cp-dropzone-icon">📁</div>
+          <div class="cp-dropzone-text">Drag & drop file atau klik untuk memilih</div>
+          <div class="cp-dropzone-hint">Mendukung: .txt, .md, .csv, .json, .js, .py, .html (max 50KB per file)</div>
+          <input type="file" id="rag-file-input" multiple accept=".txt,.md,.csv,.json,.js,.py,.html,.css,.xml,.yaml,.yml" style="display:none">
+        </div>
+        <div id="rag-upload-status" style="margin-top:12px;font-size:13px;color:#a99fff"></div>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">📝 Tambah Pengetahuan Manual</div>
+        <div class="cp-form-row">
+          <label class="cp-label">Judul</label>
+          <input type="text" class="cp-input" id="rag-title-input" placeholder="Nama pengetahuan / topik">
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Konten</label>
+          <textarea class="cp-textarea" id="rag-content-input" rows="6" placeholder="Masukkan teks pengetahuan yang ingin ditambahkan ke basis pengetahuan AI..."></textarea>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Tags (pisahkan dengan koma)</label>
+          <input type="text" class="cp-input" id="rag-tags-input" placeholder="ai, teknologi, indonesia">
+        </div>
+        <button class="cp-btn-primary" id="rag-add-btn">➕ Tambah ke Knowledge Base</button>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">🗄️ Knowledge Base (<span id="kb-count">0</span> item)</div>
+        <div class="cp-form-row">
+          <input type="text" class="cp-input" id="kb-search" placeholder="🔍 Cari di knowledge base...">
+        </div>
+        <div id="kb-list" style="max-height:400px;overflow-y:auto">
+          <!-- dynamically rendered -->
+        </div>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">⚙️ RAG Settings</div>
+        <div class="cp-form-row">
+          <label class="cp-label">Top-K Dokumen</label>
+          <input type="number" class="cp-input" id="rag-topk" value="5" min="1" max="20">
+        </div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Aktifkan RAG di setiap pesan</span>
+          <label class="tbs-toggle"><input type="checkbox" id="rag-enabled" checked><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Tampilkan sumber dokumen di respons</span>
+          <label class="tbs-toggle"><input type="checkbox" id="rag-show-sources"><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <button class="cp-btn-secondary" id="rag-save-settings">💾 Simpan RAG Settings</button>
+      </div>
+    </section>
+
+    <!-- ═══ MEMORY SYSTEM ═══ -->
+    <section class="cp-section" id="section-memory">
+      <div class="cp-section-header">
+        <h2>🧠 Memory System</h2>
+        <p>Kelola memori percakapan, profil pengguna, dan data pelatihan AI.</p>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card-title">👤 Profil Pengguna</div>
+        <div class="cp-form-row">
+          <label class="cp-label">Nama</label>
+          <input type="text" class="cp-input" id="profile-name" placeholder="Nama Anda">
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Preferensi Bahasa</label>
+          <select class="cp-select" id="profile-lang">
+            <option value="id-ID">Bahasa Indonesia</option>
+            <option value="en-US">English</option>
+            <option value="mixed">Campur (ID + EN)</option>
+          </select>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Preferensi & Konteks</label>
+          <textarea class="cp-textarea" id="profile-pref" rows="3" placeholder="Ceritakan tentang diri Anda, bidang kerja, atau preferensi komunikasi..."></textarea>
+        </div>
+        <button class="cp-btn-primary" id="save-profile-btn">💾 Simpan Profil</button>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">💬 Riwayat Percakapan (<span id="conv-count">0</span>)</div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Simpan riwayat percakapan otomatis</span>
+          <label class="tbs-toggle"><input type="checkbox" id="memory-save-conv" checked><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Gunakan memori percakapan sebagai konteks</span>
+          <label class="tbs-toggle"><input type="checkbox" id="memory-use-conv" checked><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <div id="conv-list" style="max-height:300px;overflow-y:auto;margin-top:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="cp-btn-danger" id="clear-conv-btn">🗑️ Hapus Semua Percakapan</button>
+        </div>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">🎓 Data Pelatihan (<span id="train-count">0</span> pasang)</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px">Pasang input-output berkualitas tinggi untuk fine-tuning AI masa depan.</p>
+        <div class="cp-form-row">
+          <label class="cp-label">Input (Pertanyaan)</label>
+          <textarea class="cp-textarea" id="train-input" rows="2" placeholder="Pertanyaan atau input..."></textarea>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Output (Jawaban ideal)</label>
+          <textarea class="cp-textarea" id="train-output" rows="3" placeholder="Jawaban ideal dari AI..."></textarea>
+        </div>
+        <div class="cp-form-row">
+          <label class="cp-label">Rating (1-10)</label>
+          <input type="number" class="cp-input" id="train-rating" value="8" min="1" max="10" style="width:80px">
+        </div>
+        <button class="cp-btn-primary" id="add-train-btn">➕ Tambah Data Pelatihan</button>
+        <div id="train-list" style="max-height:250px;overflow-y:auto;margin-top:12px"></div>
+        <button class="cp-btn-secondary" id="export-train-btn" style="margin-top:8px">📥 Export Training Data (JSONL)</button>
+      </div>
+
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">⚙️ Memory Settings</div>
+        <div class="cp-form-row">
+          <label class="cp-label">Max riwayat percakapan</label>
+          <input type="number" class="cp-input" id="max-conv" value="200" min="10" max="1000">
+        </div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Buat ringkasan otomatis percakapan panjang</span>
+          <label class="tbs-toggle"><input type="checkbox" id="memory-auto-summary" checked><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <button class="cp-btn-danger" id="clear-all-memory-btn">💣 Hapus Semua Memori</button>
+      </div>
+    </section>
+
+    <!-- ═══ TASKBAR ═══ -->
+    <section class="cp-section" id="section-taskbar">
+      <div class="cp-section-header">
+        <h2>📌 Taskbar Manager</h2>
+        <p>Kelola bottom taskbar — aplikasi, auto-hide, dan tampilan.</p>
+      </div>
+      <div class="cp-card">
+        <div class="cp-card-title">⚙️ Pengaturan Taskbar</div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Aktifkan Taskbar</span>
+          <label class="tbs-toggle"><input type="checkbox" id="tb-main-enabled" checked><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Auto-Hide (sembunyikan otomatis)</span>
+          <label class="tbs-toggle"><input type="checkbox" id="tb-main-autohide"><span class="tbs-toggle-slider"></span></label>
+        </div>
+        <button class="cp-btn-primary" id="save-taskbar-btn">💾 Simpan Pengaturan Taskbar</button>
+      </div>
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">📱 Kelola Aplikasi di Taskbar</div>
+        <div id="cp-app-grid" class="cp-app-grid-manager"></div>
+      </div>
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">➕ Tambah Aplikasi Kustom</div>
+        <div class="cp-form-row"><label class="cp-label">Nama Aplikasi</label><input type="text" class="cp-input" id="cp-app-name" placeholder="Nama aplikasi"></div>
+        <div class="cp-form-row"><label class="cp-label">URL</label><input type="text" class="cp-input" id="cp-app-url" placeholder="https://..."></div>
+        <div class="cp-form-row"><label class="cp-label">Icon (emoji)</label><input type="text" class="cp-input" id="cp-app-icon" placeholder="🔗" style="width:60px"></div>
+        <button class="cp-btn-primary" id="cp-add-app-btn">➕ Tambah Aplikasi</button>
+      </div>
+    </section>
+
+    <!-- ═══ APPEARANCE ═══ -->
+    <section class="cp-section" id="section-appearance">
+      <div class="cp-section-header">
+        <h2>🎨 Appearance</h2>
+        <p>Sesuaikan tampilan CodexSystem sesuai preferensi Anda.</p>
+      </div>
+      <div class="cp-card">
+        <div class="cp-card-title">🌙 Tema Warna</div>
+        <div class="cp-theme-grid" id="theme-grid">
+          <div class="cp-theme-item active" data-theme="codexsystem-dark">
+            <div class="cp-theme-preview" style="background:linear-gradient(135deg,#0d0f1a,#252835)"></div>
+            <span>Dark (Default)</span>
+          </div>
+          <div class="cp-theme-item" data-theme="midnight">
+            <div class="cp-theme-preview" style="background:linear-gradient(135deg,#070b14,#1a2135)"></div>
+            <span>Midnight Blue</span>
+          </div>
+          <div class="cp-theme-item" data-theme="neon-purple">
+            <div class="cp-theme-preview" style="background:linear-gradient(135deg,#0d0018,#1a003a)"></div>
+            <span>Neon Purple</span>
+          </div>
+          <div class="cp-theme-item" data-theme="ocean">
+            <div class="cp-theme-preview" style="background:linear-gradient(135deg,#001428,#003455)"></div>
+            <span>Ocean Deep</span>
+          </div>
+        </div>
+      </div>
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">🔤 Font Size</div>
+        <div class="cp-toggle-row">
+          <span class="cp-toggle-label">Ukuran Font</span>
+          <select class="cp-select" id="font-size-select" style="width:auto">
+            <option value="13">Kecil (13px)</option>
+            <option value="14" selected>Normal (14px)</option>
+            <option value="15">Besar (15px)</option>
+            <option value="16">Sangat Besar (16px)</option>
+          </select>
+        </div>
+        <button class="cp-btn-primary" id="save-appearance-btn">💾 Simpan Tampilan</button>
+      </div>
+    </section>
+
+    <!-- ═══ TRAINING DATA ═══ -->
+    <section class="cp-section" id="section-training">
+      <div class="cp-section-header">
+        <h2>🎓 Training Data Manager</h2>
+        <p>Kelola dan latih CodexMind AI dengan data percakapan berkualitas tinggi.</p>
+      </div>
+      <div class="cp-card">
+        <div class="cp-card-title">📊 Ringkasan Data Pelatihan</div>
+        <div id="train-summary-cards" class="cp-stats-grid"></div>
+      </div>
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">📋 Semua Data Pelatihan</div>
+        <div id="full-train-list" style="max-height:500px;overflow-y:auto"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="cp-btn-secondary" id="export-jsonl-btn">📥 Export JSONL</button>
+          <button class="cp-btn-secondary" id="export-csv-btn">📊 Export CSV</button>
+          <button class="cp-btn-danger" id="clear-train-btn">🗑️ Hapus Semua</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ STATISTICS ═══ -->
+    <section class="cp-section" id="section-stats">
+      <div class="cp-section-header">
+        <h2>📊 System Statistics</h2>
+        <p>Monitor penggunaan dan performa CodexSystem.</p>
+      </div>
+      <div class="cp-stats-grid" id="stats-grid">
+        <!-- dynamically rendered -->
+      </div>
+      <div class="cp-card" style="margin-top:16px">
+        <div class="cp-card-title">💾 Storage</div>
+        <div id="storage-info"></div>
+      </div>
+    </section>
+
+    <!-- ═══ ABOUT ═══ -->
+    <section class="cp-section" id="section-about">
+      <div class="cp-section-header">
+        <h2>ℹ️ About CodexSystem</h2>
+      </div>
+      <div class="cp-card">
+        <div style="text-align:center;padding:32px 0">
+          <img src="assets_logo/logo.png" alt="CodexSystem" style="width:80px;height:80px;margin-bottom:16px">
+          <h1 style="font-size:24px;font-weight:800;background:linear-gradient(135deg,#5021ff,#a99fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">CodexSystem</h1>
+          <p style="color:rgba(255,255,255,0.6);margin-bottom:4px">Powered by <strong style="color:#a99fff">CodexMind AI</strong></p>
+          <p style="color:rgba(255,255,255,0.3);font-size:12px">Version 2.2.0</p>
+        </div>
+        <div class="cp-about-grid">
+          <div class="cp-about-item"><span>🤖</span><strong>14 Mode AI</strong><p>Chat, Research, Deep Research, Neon, Code Review, dan lebih</p></div>
+          <div class="cp-about-item"><span>🔌</span><strong>10+ Provider AI</strong><p>OpenAI, Groq, Gemini, Claude, Qwen, DeepSeek, Mistral, dll.</p></div>
+          <div class="cp-about-item"><span>📚</span><strong>RAG Engine</strong><p>BM25 + Cosine Similarity, MiniLM v6 mode</p></div>
+          <div class="cp-about-item"><span>🧠</span><strong>Memory System</strong><p>Percakapan, profil pengguna, data pelatihan</p></div>
+          <div class="cp-about-item"><span>📌</span><strong>Taskbar</strong><p>Bottom taskbar dengan 20+ aplikasi built-in</p></div>
+          <div class="cp-about-item"><span>🔒</span><strong>Privacy First</strong><p>Semua data tersimpan lokal, API key tidak dikirim ke server</p></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="ai-engine.js"></script>
+<script src="rag-engine.js"></script>
+<script src="taskbar.js"></script>
+<script src="control-panel.js"></script>
+</body>
+</html>

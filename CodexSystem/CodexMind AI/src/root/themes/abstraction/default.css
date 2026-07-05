@@ -1,0 +1,88 @@
+html {
+  color-scheme: light dark;
+
+  --welcome-text-background: linear-gradient(
+    270deg,
+    #be9eff 0%,
+    #1e90ff 25%,
+    #be9eff 50%,
+    #1e90ff 75%,
+    #be9eff 100%
+  );
+
+  --color-level-0: env(-aria-color-elevation-0, light-dark(#f1f2f3, #000000));
+  --color-level-1: env(-aria-color-elevation-1, light-dark(#ffffff, #232629));
+  --color-level-1-1: env(-aria-color-elevation-1-1, light-dark(#ffffff33, #23262980));
+  --color-level-2: env(-aria-color-elevation-2, light-dark(#f9fafa, #1c1f21));
+  --color-level-2-1: env(-aria-color-elevation-2-1, light-dark(#f9fafa99, #1c1f2199));
+  --color-level-3: env(-aria-color-elevation-3, light-dark(#f4f5f6, #1c1f21));
+  --color-level-4: env(-aria-color-elevation-4, light-dark(#ffffff, #1c1f21));
+  --color-level-5: env(-aria-color-elevation-5, light-dark(#ffffff, #1c1f21));
+  --color-level-6: env(-aria-color-elevation-6, light-dark(#ffffff, #131416));
+
+  --search-tooltip-background: light-dark(#131416, #131416);
+
+  --color-accent-0: env(-aria-color-primary-08, #06111d);
+  --color-accent-10: env(-aria-color-primary-16, #0a1e34);
+  --color-accent-20: env(-aria-color-primary-24, #0d2844);
+  --color-accent-25: env(-aria-color-primary-25, #133d67);
+  --color-accent-30: env(-aria-color-primary-30, #184c81);
+  --color-accent-40: env(-aria-color-primary-60, #1d5b9b);
+  --color-accent-45: env(-aria-color-primary-80, #2066ac);
+  --color-accent-50: env(-aria-color-primary-100, #1877d7);
+  --color-accent-60: env(-aria-color-primary-120, #56a2ef);
+  --color-accent-80: env(-aria-color-primary-140, #80b9f3);
+  --color-accent-95: env(-aria-color-primary-160, #abd1f7);
+  --color-accent-100: env(-aria-color-primary-180, #d5e8fb);
+
+  --color-neutral-0: env(-aria-color-secondary-00-98, light-dark(#000000, #f9fafa));
+  --color-neutral-0-40: env(-aria-color-secondary-00-98-40, light-dark(#00000066, #f9fafa66));
+  --color-neutral-0-60: env(-aria-color-secondary-00-98-60, light-dark(#00000099, #f9fafa99));
+  --color-neutral-0-80: env(-aria-color-secondary-00-98-80, light-dark(#000000cc, #f9fafacc));
+  --color-neutral-10: env(-aria-color-secondary-10-93, light-dark(#171a1c, #ecedef));
+  --color-neutral-76: env(-aria-color-secondary-76-50, light-dark(#bdc2c7, #757f8a));
+  --color-neutral-88: env(-aria-color-secondary-88-34, light-dark(#dee0e3, #50575e));
+  --color-neutral-90: env(-aria-color-secondary-90-30, light-dark(#e3e6e8, #464d53));
+  --color-neutral-92: env(-aria-color-secondary-92-27, light-dark(#e9ebec, #3f454a));
+  --color-neutral-92-40: env(-aria-color-secondary-92-27-40, light-dark(#e9ebec66, #3f454a66));
+  --color-neutral-92-60: env(-aria-color-secondary-92-27-60, light-dark(#e9ebec99, #3f454a99));
+  --color-neutral-93: env(-aria-color-secondary-93-24, light-dark(#ecedef, #383d42));
+  --color-neutral-95: env(-aria-color-secondary-95-20, light-dark(#f1f2f3, #2f3337));
+  --color-neutral-98: env(-aria-color-secondary-98-12, light-dark(#f9fafa, #1c1f21));
+  --color-neutral-100: env(-aria-color-secondary-100-00, light-dark(#ffffff, #131416));
+
+  --color-text-00: env(-opera-color-text-0, #ffffff);
+  --color-text-01: env(-aria-color-text-01, light-dark(#171a1c, #ffffff));
+  --color-text-02: env(-aria-color-text-02, light-dark(#3f4b5a, #dee0e3));
+  --color-text-03: env(-aria-color-text-03, light-dark(#868f98, #868f98));
+  --color-text-04: env(-aria-color-text-04, light-dark(#bdc2c7, #626b74));
+  --color-text-05: env(-aria-color-text-05, light-dark(#171a1c, #171a1c));
+  --color-text-a: env(-aria-color-text-a, light-dark(#1877d7, #56a2ef));
+  --color-text-a-hover: var(--color-text-a);
+  --color-text-b: env(-aria-color-text-b, #ffffff);
+  --color-text-c: env(-aria-color-text-c, #03c1aa);
+  --color-text-e: env(-aria-color-text-e, #f65164);
+
+  --color-state-correct: #03c1aa;
+  --color-state-error: #f65164;
+
+  --color-other-o1: light-dark(#a4c3e0, #4987c0);
+  --color-other-o2: light-dark(#a4e0dd, #48c1bb);
+  --color-other-o3: light-dark(#baa4e0, #7449c0);
+  --color-other-o4: light-dark(#f2d192, #e4a425);
+  --color-other-o5: light-dark(#e0a4d6, #c049ad);
+
+  --color-tabs-c1: light-dark(#d9e6f2, #2f5e89);
+  --color-tabs-c2: light-dark(#d9f2f1, #2f8985);
+  --color-tabs-c3: light-dark(#e2d9f2, #4f2f89);
+  --color-tabs-c4: light-dark(#f9ecd2, #a47314);
+  --color-tabs-c5: light-dark(#f2d9ee, #892f7a);
+
+  --color-screenshot-bg: env(-aria-color-elevation-1, light-dark(#ffffff, #232629));
+
+  --opera-chatbot-scrollbar-thumb: var(--color-neutral-93);
+  --box-shadow-chat-input-shadow-light: 0 4px 16px -6px rgba(23, 26, 28, 0.08);
+  --box-shadow-chat-input-shadow-dark:
+    0 4px 16px 0 rgba(23, 26, 28, 0.08), 0 6px 20px 0 rgba(45, 45, 45, 0.3);
+  --opera-chatbot-background-scrollbar: white;
+}

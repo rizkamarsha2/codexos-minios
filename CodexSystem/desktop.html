@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="codexsystem-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodexOS — Desktop Environment</title>
+  <link rel="icon" href="assets_logo/logo.png" type="image/png">
+  <link rel="stylesheet" href="desktop.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     BOOT SPLASH
+══════════════════════════════════════════ -->
+<div id="boot-splash" class="boot-splash">
+  <div class="boot-bg-glow"></div>
+  <div class="boot-center">
+    <div class="boot-gif-wrap">
+      <img src="assets_logo/boot.gif" alt="Boot" id="boot-gif"
+           onerror="this.src='assets_logo/logo.png'">
+    </div>
+    <div class="boot-brand-row">
+      <img src="assets_logo/logo.png" alt="CodexOS" class="boot-logo">
+      <div class="boot-brand-text">
+        <span class="boot-name">CodexOS</span>
+        <span class="boot-sub">Desktop Environment · Powered by <em>CodexMind AI</em></span>
+      </div>
+    </div>
+    <div class="boot-progress-wrap">
+      <div class="boot-bar"><div class="boot-fill" id="boot-fill"></div></div>
+      <div class="boot-label" id="boot-label">Initializing CodexOS kernel...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════ -->
+<div id="lock-screen" class="lock-screen hidden">
+  <div class="lock-bg">
+    <img src="CodexMind_System/rich-wallpaper/rich--wallpaper/wallpaper/main_resource.jpeg" class="lock-wallpaper"
+         onerror="this.style.display='none'">
+    <div class="lock-overlay"></div>
+  </div>
+  <div class="lock-content">
+    <img src="assets_logo/logo.png" alt="User" class="lock-avatar">
+    <div class="lock-username">CodexSystem</div>
+    <div class="lock-time-big" id="lock-time">00:00</div>
+    <div class="lock-date-big" id="lock-date">Senin, 1 Januari</div>
+    <div class="lock-input-wrap">
+      <input type="password" id="lock-input" placeholder="Tekan Enter untuk masuk"
+             class="lock-input" autocomplete="off">
+      <button class="lock-enter-btn" id="lock-enter">→</button>
+    </div>
+    <div class="lock-hint">Tekan Enter atau klik → untuk masuk</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DESKTOP
+══════════════════════════════════════════ -->
+<div id="desktop" class="desktop hidden">
+
+  <!-- WALLPAPER -->
+  <div class="desktop-wallpaper" id="desktop-wallpaper">
+    <img src="CodexMind_System/rich-wallpaper/rich--wallpaper/wallpaper/main_resource.jpeg" class="wallpaper-img" id="wp-img"
+         onerror="document.getElementById('desktop-wallpaper').classList.add('fallback-bg')">
+    <div class="wallpaper-overlay" id="wp-overlay"></div>
+  </div>
+
+  <!-- DESKTOP ICONS -->
+  <div class="desktop-icons" id="desktop-icons">
+    <!-- Icons injected by JS -->
+  </div>
+
+  <!-- WINDOWS LAYER -->
+  <div class="windows-layer" id="windows-layer">
+    <!-- Windows injected by JS -->
+  </div>
+
+  <!-- CONTEXT MENU -->
+  <div class="ctx-menu hidden" id="ctx-menu">
+    <div class="ctx-item" data-action="new-folder">📁 New Folder</div>
+    <div class="ctx-item" data-action="change-wallpaper">🖼️ Change Wallpaper</div>
+    <div class="ctx-item" data-action="display-settings">⚙️ Display Settings</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="refresh">🔄 Refresh Desktop</div>
+    <div class="ctx-item" data-action="open-terminal">💻 Open Terminal</div>
+  </div>
+
+  <!-- NOTIFICATION AREA -->
+  <div class="notif-area" id="notif-area"></div>
+
+  <!-- ── TASKBAR ── -->
+  <div class="taskbar" id="taskbar">
+
+    <!-- Start Button -->
+    <button class="tb-start-btn" id="tb-start-btn" title="App Launcher">
+      <img src="assets_logo/logo.png" alt="CodexOS" class="tb-start-logo">
+    </button>
+
+    <!-- Pinned / Running Apps -->
+    <div class="tb-apps" id="tb-apps">
+      <!-- Injected by JS -->
+    </div>
+
+    <div class="tb-spacer"></div>
+
+    <!-- System Tray -->
+    <div class="tb-tray">
+      <button class="tb-tray-btn" id="tb-search-btn" title="Search">🔍</button>
+      <button class="tb-tray-btn" id="tb-notif-btn" title="Notifications">🔔</button>
+      <div class="tb-divider"></div>
+      <div class="tb-clock" id="tb-clock">
+        <div class="tb-time" id="tb-time">00:00</div>
+        <div class="tb-date" id="tb-date">01/01</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── START MENU / APP LAUNCHER ── -->
+  <div class="start-menu hidden" id="start-menu">
+    <div class="sm-header">
+      <div class="sm-search-wrap">
+        <span class="sm-search-icon">🔍</span>
+        <input type="text" id="sm-search" placeholder="Cari aplikasi..." class="sm-search-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="sm-sections">
+      <div class="sm-section">
+        <div class="sm-section-label">Pinned</div>
+        <div class="sm-grid" id="sm-pinned-grid"></div>
+      </div>
+      <div class="sm-section">
+        <div class="sm-section-label">All Apps</div>
+        <div class="sm-list" id="sm-all-list"></div>
+      </div>
+    </div>
+    <div class="sm-footer">
+      <div class="sm-user">
+        <img src="assets_logo/logo.png" alt="User" class="sm-user-avatar">
+        <span class="sm-user-name">CodexSystem</span>
+      </div>
+      <button class="sm-power-btn" id="sm-power-btn" title="Power">⏻</button>
+    </div>
+  </div>
+
+  <!-- ── POWER MENU ── -->
+  <div class="power-menu hidden" id="power-menu">
+    <div class="pm-item" data-action="lock">🔒 Lock Screen</div>
+    <div class="pm-item" data-action="restart">🔄 Restart Desktop</div>
+    <div class="pm-divider"></div>
+    <div class="pm-item pm-danger" data-action="shutdown">⏻ Shut Down</div>
+  </div>
+
+  <!-- ── WALLPAPER PICKER ── -->
+  <div class="modal-overlay hidden" id="wp-modal-overlay">
+    <div class="wp-modal">
+      <div class="wp-modal-header">
+        <span>🖼️ Change Wallpaper</span>
+        <button class="wp-modal-close" id="wp-modal-close">✕</button>
+      </div>
+      <div class="wp-grid" id="wp-grid">
+        <div class="wp-thumb active" data-src="CodexMind_System/rich-wallpaper/rich--wallpaper/wallpaper/main_resource.jpeg">
+          <img src="CodexMind_System/rich-wallpaper/rich--wallpaper/wallpaper/main_resource.jpeg" alt="Default">
+          <span>Default</span>
+        </div>
+        <div class="wp-thumb" data-gradient="linear-gradient(135deg,#0b0426,#5021ff)">
+          <div class="wp-gradient-preview" style="background:linear-gradient(135deg,#0b0426,#5021ff)"></div>
+          <span>Cobalt Night</span>
+        </div>
+        <div class="wp-thumb" data-gradient="linear-gradient(135deg,#0d1117,#161b22)">
+          <div class="wp-gradient-preview" style="background:linear-gradient(135deg,#0d1117,#161b22)"></div>
+          <span>Midnight</span>
+        </div>
+        <div class="wp-thumb" data-gradient="linear-gradient(135deg,#1a0533,#ff2f7b40)">
+          <div class="wp-gradient-preview" style="background:linear-gradient(135deg,#1a0533,#ff2f7b40)"></div>
+          <span>Neon Pink</span>
+        </div>
+        <div class="wp-thumb" data-gradient="linear-gradient(135deg,#001a0d,#00aba040)">
+          <div class="wp-gradient-preview" style="background:linear-gradient(135deg,#001a0d,#00aba040)"></div>
+          <span>Matrix Green</span>
+        </div>
+        <div class="wp-thumb" data-gradient="linear-gradient(135deg,#0c0c1e,#1a237e)">
+          <div class="wp-gradient-preview" style="background:linear-gradient(135deg,#0c0c1e,#1a237e)"></div>
+          <span>Deep Blue</span>
+        </div>
+      </div>
+      <div class="wp-modal-footer">
+        <label class="wp-upload-btn">
+          📂 Upload Wallpaper
+          <input type="file" id="wp-file-input" accept="image/*" style="display:none">
+        </label>
+        <div class="wp-overlay-wrap">
+          <label>Overlay opacity</label>
+          <input type="range" id="wp-overlay-range" min="0" max="80" value="30" class="wp-range">
+          <span id="wp-overlay-val">30%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /desktop -->
+
+<script src="desktop.js"></script>
+</body>
+</html>

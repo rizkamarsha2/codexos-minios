@@ -1,0 +1,66 @@
+_minios_cmd() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+    opts="--help --build-dir --config-file --config-only --distribution --architecture --desktop-environment --package-variant --compression-type --kernel-flavour --kernel-backports --kernel-aufs --kernel-build-dkms --locale --multilingual --keep-locales --timezone --initramfs-builder --menu-language -b -d -a -de -pv -c -kf -bpo -aufs -dkms -l -ml -kl -tz -ib -mln"
+
+    if [[ ${cur} == -* ]]; then
+        COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+    fi
+
+    case "${prev}" in
+    --build-dir | -b)
+        local build_dirs=$(find . -type d -name '*')
+        COMPREPLY=($(compgen -W "${build_dirs}" -- ${cur}))
+        ;;
+    --config-file)
+        local build_dirs=$(find . -type d -name '*')
+        COMPREPLY=($(compgen -W "${build_dirs}" -- ${cur}))
+        ;;
+    --distribution | -d)
+        local distributions="buster bullseye bookworm trixie jammy noble"
+        COMPREPLY=($(compgen -W "${distributions}" -- ${cur}))
+        ;;
+    --architecture | -a)
+        local architectures="amd64 i386"
+        COMPREPLY=($(compgen -W "${architectures}" -- ${cur}))
+        ;;
+    --desktop-environment | -de)
+        local desktop_environments="xfce lxqt flux"
+        COMPREPLY=($(compgen -W "${desktop_environments}" -- ${cur}))
+        ;;
+    --package-variant | -pv)
+        local package_variants="minimum standard toolbox ultra"
+        COMPREPLY=($(compgen -W "${package_variants}" -- ${cur}))
+        ;;
+    --compression-type | -c)
+        local compression_types="zstd lz4 xz"
+        COMPREPLY=($(compgen -W "${compression_types}" -- ${cur}))
+        ;;
+    --kernel-flavour | -kf)
+        local kernel_flavours="none rt cloud"
+        COMPREPLY=($(compgen -W "${kernel_flavours}" -- ${cur}))
+        ;;
+    --locale | -l)
+        local locales="en_US ru_RU es_ES de_DE fr_FR it_IT pt_PT pt_BR id_ID"
+        COMPREPLY=($(compgen -W "${locales}" -- ${cur}))
+        ;;
+    --timezone | -tz)
+        local timezones="Etc/UTC Europe/Moscow Europe/London Europe/Berlin Europe/Paris Europe/Rome Europe/Madrid America/New_York America/Los_Angeles America/Sao_Paulo Asia/Tokyo"
+        COMPREPLY=($(compgen -W "${timezones}" -- ${cur}))
+        ;;
+    --initramfs-builder | -ib)
+        local initramfs_builders="livekit dracut"
+        COMPREPLY=($(compgen -W "${initramfs_builders}" -- ${cur}))
+        ;;
+    --menu-language | -mln)
+        local menu_languages="multilang en_US ru_RU de_DE es_ES it_IT id_ID pt_BR pt_PT fr_FR"
+        COMPREPLY=($(compgen -W "${menu_languages}" -- ${cur}))
+        ;;
+    esac
+
+    return 0
+}
+
+complete -F _minios_cmd minios-cmd

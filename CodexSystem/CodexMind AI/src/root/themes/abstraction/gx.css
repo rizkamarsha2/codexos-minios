@@ -1,0 +1,209 @@
+html[data-theme="opera-gx"],
+html[data-theme="opera-gx-dark"] {
+  color-scheme: light dark;
+
+  body {
+    background-color: var(--color-level-0);
+  }
+
+  &[data-search-tooltip] body {
+    background-color: var(--search-tooltip-background);
+  }
+
+  --welcome-text-background: linear-gradient(
+    270deg,
+    hsl(
+        calc(env(-opera-accent-color-h)),
+        calc(env(-opera-accent-color-s)),
+        calc(env(-opera-accent-color-l) * 1.1)
+      )
+      0%,
+    hsl(
+        calc(env(-opera-accent-color-h)),
+        calc(env(-opera-accent-color-s)),
+        calc(env(-opera-accent-color-l) * 0.9)
+      )
+      30%,
+    hsl(
+        calc(env(-opera-accent-color-h)),
+        calc(env(-opera-accent-color-s)),
+        calc(env(-opera-accent-color-l) * 1.2)
+      )
+      60%,
+    hsl(
+        calc(env(-opera-accent-color-h)),
+        calc(env(-opera-accent-color-s)),
+        calc(env(-opera-accent-color-l) * 2)
+      )
+      80%,
+    hsl(
+        calc(env(-opera-accent-color-h)),
+        calc(env(-opera-accent-color-s)),
+        calc(env(-opera-accent-color-l) * 1.2)
+      )
+      100%
+  );
+
+  --color-level-0: light-dark(#f5f5f5, #121212);
+  --color-level-1: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 15%)
+  );
+  --color-level-1-1: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 100%) 20%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 15%) 20%, transparent)
+  );
+  --color-level-2: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 13%)
+  );
+  --color-level-2-1: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 98%) 60%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 10%) 60%, transparent)
+  );
+  --color-level-3: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 96%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 12%)
+  );
+  --color-level-4: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 8%)
+  );
+  --color-level-5: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 8%)
+  );
+  --color-level-6: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 8%)
+  );
+
+  --search-tooltip-background: transparent;
+
+  --color-accent-0: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.08)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.8))
+  );
+  --color-accent-10: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.16)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.8))
+  );
+  --color-accent-20: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.24)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.8))
+  );
+  /* TODO: placeholder — designer to provide proper GX-themed value for A-25 */
+  --color-accent-25: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.25)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.7))
+  );
+  --color-accent-30: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.3)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.6))
+  );
+  --color-accent-40: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.6)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.4))
+  );
+  --color-accent-45: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.8)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.2))
+  );
+  --color-accent-50: hsl(
+    calc(env(-opera-accent-color-h)),
+    100%,
+    calc(env(-opera-accent-color-l) * 1)
+  );
+  --color-accent-60: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.2)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.8))
+  );
+  --color-accent-80: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.4)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.6))
+  );
+  --color-accent-95: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.6)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.3))
+  );
+  --color-accent-100: light-dark(
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 1.8)),
+    hsl(calc(env(-opera-accent-color-h)), 100%, calc(env(-opera-accent-color-l) * 0.24))
+  );
+
+  --color-neutral-0: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 0%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 98%)
+  );
+  --color-neutral-0-40: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 0%) 40%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 98%) 40%, transparent)
+  );
+  --color-neutral-0-60: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 0%) 60%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 98%) 60%, transparent)
+  );
+  --color-neutral-0-80: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 0%) 80%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 98%) 80%, transparent)
+  );
+  --color-neutral-10: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 10%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 93%)
+  );
+  /* TODO: placeholder — designer to provide proper GX-themed value for N-76 */
+  --color-neutral-76: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 76%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 50%)
+  );
+  --color-neutral-88: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 88%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 20%)
+  );
+  --color-neutral-90: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 90%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 18%)
+  );
+  --color-neutral-92: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 92%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 15%)
+  );
+  --color-neutral-92-40: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 92%) 40%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 15%) 40%, transparent)
+  );
+  --color-neutral-92-60: light-dark(
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 92%) 60%, transparent),
+    color-mix(in srgb, hsl(calc(env(-opera-background-color-h)), 8%, 15%) 60%, transparent)
+  );
+  --color-neutral-93: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 93%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 12%)
+  );
+  /* TODO: placeholder — designer to provide proper GX-themed value for N-95 */
+  --color-neutral-95: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 95%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 18%)
+  );
+  --color-neutral-98: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 98%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 10%)
+  );
+  --color-neutral-100: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 0%)
+  );
+
+  --color-text-00: env(-gx-color-text-1, red);
+  --color-text-01: light-dark(#1e1e1e, #e0e0e0);
+  --color-text-02: light-dark(#303030, #a0a0a0);
+  --color-text-03: light-dark(#606060, #7d7d7d);
+  --color-text-05: #1e1e1e;
+
+  --color-text-a: env(-opera-accent-color);
+
+  --color-screenshot-bg: light-dark(
+    hsl(calc(env(-opera-background-color-h)), 8%, 100%),
+    hsl(calc(env(-opera-background-color-h)), 8%, 15%)
+  );
+}

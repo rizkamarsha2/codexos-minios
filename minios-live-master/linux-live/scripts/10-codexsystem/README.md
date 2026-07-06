@@ -23,6 +23,18 @@ a bootable MiniOS Linux ISO.
 4. **CodexOS Desktop** appears full-screen in Chromium
 5. User sets AI provider API key in Control Panel → starts chatting
 
+## Developer: Agent Inspector / Local Debugging
+
+To run the CodexSystem agent locally and connect with Foundry Toolkit Agent Inspector:
+
+- Create a virtual environment and install dev requirements:
+    - Windows: `python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt`
+    - Unix: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
+- Run with `agentdev` and `debugpy` for Agent Inspector attach:
+    - `python -m debugpy --listen 5678 --wait-for-client -m agentdev run -- python agent_server.py`
+
+VS Code tasks and launch configurations are included under `.vscode/` to assist with starting and attaching the debugger.
+
 ## Building
 
 **Option A — local Debian/Ubuntu machine:**

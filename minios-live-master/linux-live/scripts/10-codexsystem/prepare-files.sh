@@ -20,15 +20,20 @@ fi
 echo "[prepare-files] Syncing CodexSystem → ${DEST}"
 mkdir -p "${DEST}"
 
-rsync -av --delete \
-    --exclude='.git' \
-    --exclude='__pycache__' \
-    --exclude='*.pyc' \
-    --exclude='.replit' \
-    --exclude='replit.nix' \
-    --exclude='.agents' \
-    --exclude='attached_assets' \
-    "${SRC}/" "${DEST}/"
+if command -v rsync >/dev/null 2>&1; then
+    rsync -av --delete \
+        --exclude='.git' \
+        --exclude='__pycache__' \
+        --exclude='*.pyc' \
+        --exclude='.replit' \
+        --exclude='replit.nix' \
+        --exclude='.agents' \
+        --exclude='attached_assets' \
+        "${SRC}/" "${DEST}/"
+else
+    rm -rf "${DEST}"/* "${DEST}"/.[!.]* "${DEST}"/..?* 2>/dev/null || true
+    cp -a "${SRC}/." "${DEST}/"
+fi
 
 echo "[prepare-files] Done. Files ready at ${DEST}"
 echo "[prepare-files] Size: $(du -sh "${DEST}" | cut -f1)"

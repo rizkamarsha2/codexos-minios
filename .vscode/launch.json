@@ -20,5 +20,31 @@
         }
       ]
     }
+    ,
+    {
+      "name": "Python: Launch Agent Server",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/agent_server.py",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    },
+    {
+      "name": "Python: Attach to agentdev",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/workspace"
+        }
+      ]
+    }
   ]
 }

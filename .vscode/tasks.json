@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install dev requirements",
+      "type": "shell",
+      "command": "python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Agent Server",
+      "type": "shell",
+      "command": "python agent_server.py",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run agentdev (with debugpy)",
+      "type": "shell",
+      "command": "python -m debugpy --listen 5678 --wait-for-client -m agentdev run -- python agent_server.py",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

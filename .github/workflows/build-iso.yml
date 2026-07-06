@@ -66,23 +66,25 @@ jobs:
           chmod +x minios-live-master/minios-live
           find minios-live-master/linux-live/scripts -type f \( -name "install" -o -name "postinstall" -o -name "build" -o -name "*.sh" \) -exec chmod +x {} +
 
-      # ── Sync CodexSystem & Fix Skeleton ───────────────────────────────────────
-      - name: Inject CodexSystem and Skeleton Fixes into Build Pipeline
+      # ── Prepare CodexSystem module for the selected desktop environment ───
+      - name: Prepare CodexSystem module for build
+        shell: bash
         run: |
-          bash minios-live-master/linux-live/scripts/10-codexsystem/prepare-files.sh || true
-          
-          POST_INSTALL_SCRIPT="minios-live-master/linux-live/scripts/postinstall"
-          mkdir -p "$(dirname "$POST_INSTALL_SCRIPT")"
-          
-          cat << 'EOF' >> "$POST_INSTALL_SCRIPT"
-          
-          # === CodexOS Injection System ===
-          echo "Configuring XFCE skeleton inside chroot..."
-          mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
-          touch /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/keyboard-layout.xml
-          # ================================
-          EOF
-          chmod +x "$POST_INSTALL_SCRIPT"
+          set -euo pipefail
+          CONF=minios-live-master/linux-live/build.conf
+          DESKTOP_ENVIRONMENT=$(grep '^DESKTOP_ENVIRONMENT=' "$CONF" | head -n1 | cut -d'"' -f2)
+          MODULE_DIR="minios-live-master/linux-live/environments/${DESKTOP_ENVIRONMENT}/10-codexsystem"
+
+          echo "Preparing CodexSystem module for desktop: ${DESKTOP_ENVIRONMENT}"
+          rm -rf "$MODULE_DIR"
+          mkdir -p "$MODULE_DIR"
+          cp -a minios-live-master/linux-live/scripts/10-codexsystem/. "$MODULE_DIR/"
+
+          bash minios-live-master/linux-live/scripts/10-codexsystem/prepare-files.sh
+
+          test -f "$MODULE_DIR/install"
+          test -f "$MODULE_DIR/packages.list"
+          echo "Prepared module at $MODULE_DIR"
 
       # ── Full build ────────────────────────────────────────────────────────────
       - name: Build ISO

@@ -64,6 +64,22 @@ fi
 
 echo "export QT_QPA_PLATFORMTHEME=gtk2" >>/etc/environment
 
+# Ensure XFCE keyboard layout XML exists so xmlstarlet won't fail
+KL_DIR=/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+mkdir -p "$KL_DIR"
+if [ ! -f "$KL_DIR/keyboard-layout.xml" ]; then
+    cat > "$KL_DIR/keyboard-layout.xml" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="keyboard-layout" version="1.0">
+  <property name="Default" type="empty">
+    <property name="XkbLayout" type="string" value="us"/>
+  </property>
+  <property name="Layouts" type="empty"/>
+</channel>
+EOF
+fi
+echo "[minios-build] created default keyboard-layout.xml in /etc/skel if it was missing" >&2
+
 case "$LOCALE" in
 "en_US" | "C")
     xmlstarlet ed -L \
